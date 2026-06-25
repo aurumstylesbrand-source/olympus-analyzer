@@ -1,0 +1,22 @@
+name: Deploy to Render
+
+# Render isn't connected via its GitHub App, so it gets no push webhook.
+# This workflow triggers a Render deploy on every push to main using the
+# RENDER_API_KEY repo secret (Settings -> Secrets and variables -> Actions).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/srv-d8ukqkbtqb8s73bd3aa0/deploys" \
+            -d '{"clearCache":"do_not_clear"}'
