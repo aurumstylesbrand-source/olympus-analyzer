@@ -14,6 +14,9 @@ const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
 
+// General, repo-agnostic judging rubric (loaded once; embedded verbatim into every /judge prompt).
+const JUDGE_RUBRIC = (() => { try { return fs.readFileSync(path.join(__dirname, 'judge_rubric.md'), 'utf8').trim(); } catch { return ''; } })();
+
 function cacheKey(repo, ref){ return repo.replace(/[^a-z0-9]/gi,'_') + '@' + ref.replace(/[^a-z0-9]/gi,'_') + '.json'; }
 
 // POST a Messages API request to Anthropic over raw HTTPS (keeps the service dependency-free).
@@ -96,7 +99,11 @@ ${blob(variant, 12, 12000)}
 
 THE LAYER DIRECTLY ABOVE (${above.length} files):
 ${blob(above, 8, 8000)}
+${JUDGE_RUBRIC ? `
+Ground your judgment in this general, language-agnostic rubric of code signals (applies to ANY repo). Map what you see in the code above to these signals, then apply the verdict-calibration lines:
 
+${JUDGE_RUBRIC}
+` : ''}
 ${JUDGE_TASK}`;
   return { prompt, variantFiles:variant.length, aboveFiles:above.length };
 }
@@ -168,15 +175,16 @@ http.createServer(async (req, res) => {
       }
     }
 
-    // GET: cached judgment wins; else use the API if a key is set; else hand back a paste-ready prompt.
+    // GET: an explicit ?mode=prompt always rebuilds the prompt; else cached wins; else API (if key) or prompt fallback.
     try {
-      if (fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
-      if (u.searchParams.get('mode') === 'prompt' || !ANTHROPIC_KEY) {
+      const wantPrompt = u.searchParams.get('mode') === 'prompt';
+      if (!wantPrompt && fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
+      if (wantPrompt || !ANTHROPIC_KEY) {
         const ctx = await buildJudgeContext(repo, ref, layer);
         res.writeHead(200); return res.end(JSON.stringify({
           needsJudgment: true, repo, ref, layer, variantFiles: ctx.variantFiles, aboveFiles: ctx.aboveFiles,
           prompt: ctx.prompt,
-          howto: 'No API key on the server. Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
+          howto: 'Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
         }));
       }
       const result = await judgeViaApi(repo, ref, layer);
