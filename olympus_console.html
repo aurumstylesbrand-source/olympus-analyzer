@@ -1,0 +1,1601 @@
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0B0D;--bg-2:#0D0F12;--surface:#15171B;--surface-2:#1A1D22;--surface-3:#23272E;
+  --line:#262B32;--line-2:#343A43;
+  --green:#A6E84D;--green-deep:#82C636;--green-soft:rgba(166,232,77,.13);--green-tint:rgba(166,232,77,.07);
+  --text:#EAEDE6;--text-2:#C0C5BA;--muted:#838B7C;--muted-2:#575E52;
+  --ok:#A6E84D;--ok-bg:rgba(166,232,77,.12);--warn:#E2B547;--warn-bg:rgba(226,181,71,.12);--bad:#E8765B;--bad-bg:rgba(232,118,91,.12);
+  --sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+  --r:14px;--r-lg:20px;--r-sm:10px;
+  --sh:0 1px 0 rgba(255,255,255,.02) inset,0 18px 44px -26px rgba(0,0,0,.8);
+  --sh-sm:0 8px 20px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}body{margin:0;background:var(--bg)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#app{display:flex;font-family:var(--sans);color:var(--text);background:var(--bg);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.mono{font-family:var(--mono)}
+/* left rail */
+.rail{position:fixed;left:0;top:0;bottom:0;width:86px;background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0 16px;z-index:50;gap:6px}
+.rail-top{margin-bottom:16px}
+.rail .glyph{width:36px;height:36px;border-radius:11px;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 0 22px rgba(166,232,77,.4)}
+.rail .glyph::after{content:"";width:12px;height:12px;border-radius:3px;background:var(--bg);transform:rotate(45deg)}
+.rail-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
+.rail-foot{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;margin-top:auto}
+.navbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;padding:12px 0;border:0;background:transparent;border-radius:14px;color:var(--muted);cursor:pointer;transition:.16s;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.navbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.navbtn:hover{color:var(--text);background:var(--surface)}
+.navbtn.active{color:var(--green);background:var(--green-tint)}
+.navbtn.active::before{content:"";position:absolute;left:-13px;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--green);box-shadow:0 0 14px rgba(166,232,77,.7)}
+.main{flex:1;margin-left:86px;min-width:0}
+/* topbar */
+.topbar{position:sticky;top:0;z-index:40;padding:20px 0 10px;background:linear-gradient(180deg,var(--bg) 72%,rgba(10,11,13,.85) 90%,transparent);backdrop-filter:blur(8px)}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+.brand{display:flex;align-items:baseline;gap:9px;line-height:1}
+.brand .word{font-weight:700;font-size:19px;letter-spacing:-.03em;color:var(--text)}
+.brand .word em{font-style:normal;color:var(--green)}
+.brand small{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--muted-2);text-transform:uppercase;margin-left:2px}
+.topstats{display:flex;gap:7px;flex-wrap:wrap}
+.topstats .tchip{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+.topstats .tchip b{color:var(--green)}
+/* type */
+h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;color:var(--text)}
+.mh3{font-weight:700;font-size:18px;margin:0;letter-spacing:-.02em}
+.lede{font-size:14px;color:var(--muted);margin:0 0 22px;max-width:74ch;line-height:1.6}
+.lede b{color:var(--text-2);font-weight:600}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.01em;text-transform:none;font-weight:400}
+.seclbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:500}
+.note{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);line-height:1.7;margin-top:12px}
+.err{color:var(--bad);font-family:var(--mono);font-size:12px;margin-top:10px;padding:10px 12px;border:1px solid rgba(232,118,91,.4);border-radius:10px;background:var(--bad-bg)}
+/* readout */
+.readout{display:flex;align-items:center;gap:15px;margin:0 0 20px;flex-wrap:wrap}
+.gauge{display:flex;gap:5px}.seg{width:26px;height:6px;border-radius:3px;background:var(--line-2)}
+.gauge.gold .seg.lit{background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.5)}
+.gauge.cyan .seg.lit{background:var(--text-2)}
+.stat{font-family:var(--mono);font-size:11.5px;color:var(--muted)}.stat b{color:var(--text);font-weight:600}
+.batchtag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase}
+/* panels + cards */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;margin-bottom:16px;box-shadow:var(--sh)}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px 24px 18px;margin-bottom:16px;overflow:hidden;box-shadow:var(--sh);transition:border-color .18s,transform .18s}
+.card:hover{border-color:var(--line-2)}
+.card::before{content:"";position:absolute;left:0;top:20px;bottom:20px;width:4px;border-radius:0 4px 4px 0}
+.card.gold::before{background:var(--green);box-shadow:0 0 16px rgba(166,232,77,.4)}
+.card.test::before{background:var(--text-2)}
+.card.archived{opacity:.5}
+.chead{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.titlecol{flex:1;min-width:210px}
+.reponame{font-weight:700;font-size:21px;margin:0;line-height:1.1;letter-spacing:-.025em;color:var(--text)}
+.kind{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:7px;white-space:nowrap;align-self:center;font-weight:700}
+.kind.gold{color:var(--bg);background:var(--green)}.kind.test{color:var(--bg);background:var(--text-2)}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 0}
+.chip{font-family:var(--mono);font-size:10.5px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;display:inline-flex;gap:5px;align-items:center;font-weight:500}
+.chip b{color:var(--text);font-weight:700}
+.chip.ver{color:var(--green);background:var(--ok-bg);border-color:transparent}.chip.unver{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.chip.path{font-weight:700;letter-spacing:.04em}
+.chip.path.A{color:var(--green);background:var(--green-tint);border-color:var(--green-deep)}
+.chip.path.B{color:var(--bg);background:var(--text-2);border-color:var(--text-2)}
+.chip.path.AB{color:var(--bg);background:var(--green);border-color:var(--green-deep)}
+.links{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
+.links a{font-family:var(--mono);font-size:10.5px;color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 12px;transition:.15s;background:var(--surface-2)}
+.links a:hover{border-color:var(--green);color:var(--green);background:var(--green-tint)}
+.why{font-size:13.5px;color:var(--muted);line-height:1.55;margin:15px 0 4px}.why .lead{color:var(--text);font-weight:600}
+.sec{margin-top:18px;border-top:1px solid var(--line);padding-top:17px}
+/* fit banner */
+.fit{display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--text-2);margin:16px 0;padding:14px 16px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--line);line-height:1.5}
+.fit .fitdot{width:10px;height:10px;border-radius:50%;flex:none}
+.fit.strong{border-color:rgba(166,232,77,.35)}.fit.strong .fitdot{background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.6)}
+.fit.possible{border-color:rgba(226,181,71,.4)}.fit.possible .fitdot{background:var(--warn)}
+.fit.weak .fitdot{background:var(--muted-2)}
+/* charts */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.charts{grid-template-columns:1fr}}
+.chartcard{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px}
+.chartcard.wide{grid-column:1 / -1}
+.chartttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin:0 0 4px;font-weight:500}
+.chartsub{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45}
+.chartsub b{color:var(--text);font-weight:600}
+.csvg{width:100%;height:auto;display:block;overflow:visible}
+.clegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.clegend span{font-family:var(--mono);font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.clegend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+/* constellation */
+.constellation{display:flex;gap:6px;justify-content:space-between;padding:6px 4px 4px}
+.cstar{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.cstardot{width:10px;height:10px;border-radius:50%;background:var(--line-2);transition:.2s}
+.cstar.strong .cstardot{background:var(--green);width:12px;height:12px;box-shadow:0 0 0 4px var(--green-tint),0 0 12px rgba(166,232,77,.6)}
+.cstar.possible .cstardot{background:var(--warn)}
+.cstar.weak .cstardot{background:var(--line-2)}
+.cstarlbl{font-family:var(--mono);font-size:9px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);text-align:center}
+.cstar.strong .cstarlbl{color:var(--text)}
+/* category rows */
+.cvrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+.cvrow:last-child{border-bottom:0}
+.cvtag{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;border:1px solid;border-radius:7px;padding:4px 8px;white-space:nowrap;flex:none;min-width:84px;text-align:center;margin-top:1px;font-weight:600}
+.cvbody{font-size:12.5px;color:var(--muted);line-height:1.55}
+.cvverdict{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.04em;margin-right:6px}
+/* areas */
+.area{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.area .ang{font-family:var(--mono);font-size:9px;letter-spacing:.02em;color:var(--green);background:var(--green-tint);border:1px solid var(--green-deep);border-radius:6px;padding:3px 7px;white-space:nowrap;flex:none;margin-top:1px;font-weight:600}
+.area b{color:var(--text);font-weight:600}
+.area.done{opacity:.45}.area.done b{text-decoration:line-through}.area.done .ang{color:var(--muted);background:var(--surface-2);border-color:var(--line)}
+.recang{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
+/* features */
+.slot{display:flex;align-items:center;gap:8px;padding:6px 0}
+.slotno{font-family:var(--mono);font-size:11px;color:var(--muted-2);width:16px;flex:none;text-align:right}
+.slot input[type=text]{flex:1;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0;transition:.15s}
+.slot input[type=text]::placeholder{color:var(--muted-2)}.slot input:focus{outline:none;border-color:var(--green-deep);box-shadow:0 0 0 3px var(--green-tint)}
+.lc{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;color:var(--muted);padding:8px 7px;cursor:pointer;flex:none;transition:.15s;font-weight:600}
+.lc[data-s=idea]{color:var(--muted-2)}.lc[data-s=building]{color:var(--green);border-color:var(--green-deep);background:var(--green-tint)}
+.lc[data-s=submitted]{color:var(--text-2);border-color:var(--line-2)}.lc[data-s=accepted]{color:var(--bg);background:var(--green);border-color:var(--green)}
+.catsel{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;color:var(--muted);padding:8px 5px;flex:none;cursor:pointer;max-width:112px;font-weight:600}
+.catsel:focus{outline:none;border-color:var(--green-deep)}
+/* mini bar */
+.chart{margin:14px 0 4px}
+.bartrack{position:relative;height:14px;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;overflow:visible}
+.barfill{position:absolute;left:0;top:0;bottom:0;background:var(--green);border-radius:8px}
+.thr{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--warn)}
+.chartlbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:7px}
+.chartlbl b{color:var(--text)}
+/* combos */
+.combo{border:1px solid var(--line);border-left:3px solid var(--green);border-radius:11px;padding:12px 14px;margin:10px 0;background:var(--surface-2)}
+.combo .cpair{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700;margin-bottom:6px;letter-spacing:-.01em}
+.combo .cwhy{font-size:12.5px;color:var(--muted);line-height:1.55}
+/* details */
+details.disc{border:1px solid var(--line);border-radius:var(--r);margin:13px 0;background:var(--surface-2);padding:0 16px}
+details.disc>summary{cursor:pointer;padding:14px 0;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--text-2);list-style:none;outline:none;transition:.15s;font-weight:500}
+details.disc>summary::-webkit-details-marker{display:none}
+details.disc>summary::before{content:'+  ';color:var(--green);font-weight:700}
+details.disc[open]>summary::before{content:'\2013  ';color:var(--green)}
+details.disc[open]>summary{color:var(--text)}
+details.disc>summary:hover{color:var(--text)}
+details.disc>*:last-child{padding-bottom:15px}
+.intelta{width:100%;min-height:140px;font-family:var(--mono);font-size:11.5px;color:var(--text);background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:11px;resize:vertical;line-height:1.55}
+.repointel{font-family:var(--mono);font-size:11px;white-space:pre-wrap;background:var(--bg-2);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:11px;padding:13px 15px;line-height:1.65;color:var(--text-2);max-height:230px;overflow:auto;margin:0 0 13px}
+/* tips */
+.tip{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.55}
+.tip:last-child{border-bottom:0}
+.tipn{font-family:var(--mono);font-size:10px;color:var(--green);flex:none;margin-top:2px;font-weight:700}
+.tip b{color:var(--text);font-weight:600}
+/* doctrine in analyze */
+.dlaw{border:1px solid var(--line);border-left:3px solid var(--text-2);border-radius:11px;padding:12px 15px;margin:9px 0;background:var(--surface-2)}
+.dlaw h5{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin:0 0 6px;font-weight:700}
+.dlaw p{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0}.dlaw p b{color:var(--text-2)}
+.dlaw.lime{border-left-color:var(--green)}.dlaw.lime h5{color:var(--green)}
+/* checkrow */
+.checkrow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.checkrow:last-child{border-bottom:0}
+.lamp{width:9px;height:9px;border-radius:50%;flex:none;margin-top:5px}
+.lamp.pass{background:var(--green)}.lamp.warn{background:var(--warn)}.lamp.fail{background:var(--bad)}.lamp.idle{background:var(--muted-2)}
+.checkbody{flex:1;min-width:0}
+.checkname{font-size:13px;color:var(--text);font-weight:600}.checkname .tag{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.06em;margin-left:8px;text-transform:uppercase}
+.checkdetail{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.checkfix{font-size:12px;color:var(--green);margin-top:4px;line-height:1.5}
+.checkfix::before{content:"FIX  ";font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--green-deep)}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.cfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
+.boardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+/* buttons */
+.btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s;font-weight:600}
+.btn:hover{border-color:var(--green);color:var(--green);background:var(--green-tint)}
+.btn.warn:hover{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.btn.primary{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700}
+.btn.primary:hover{filter:brightness(1.08);color:var(--bg);background:var(--green)}
+.btn.gold{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700}
+.btn.gold:hover{filter:brightness(1.08);color:var(--bg)}
+.btn:disabled{opacity:.5;cursor:wait}
+.stamp{position:absolute;top:16px;right:-2px;font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.1em;color:var(--green);border:1.5px solid var(--green);border-radius:7px;padding:4px 10px;transform:rotate(3deg)}
+/* forms */
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.field textarea,.field input,.field select{width:100%;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.field textarea{font-family:var(--mono);font-size:12px;min-height:120px;resize:vertical;line-height:1.55}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--green-deep);box-shadow:0 0 0 3px var(--green-tint)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+@media(max-width:560px){.row2,.grid3{grid-template-columns:1fr}}
+/* angles */
+.angles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.angle{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;transition:.14s;background:var(--surface-2)}
+.angle:hover{border-color:var(--green);color:var(--green)}
+.angle.sel{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:600}
+.recang .angle{background:var(--green);color:var(--bg);border-color:var(--green);cursor:default;font-weight:600}
+/* output */
+.outbox{font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;background:var(--bg-2);border:1px solid var(--line);border-radius:13px;padding:18px;line-height:1.6;color:var(--text);max-height:480px;overflow:auto}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(166,232,77,.25);border-top-color:var(--bg);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* drawer */
+.drawer{position:fixed;inset:0;z-index:60;background:rgba(5,6,8,.6);backdrop-filter:blur(4px);display:none;justify-content:flex-end}
+.drawer.open{display:flex}
+.drawer-inner{width:min(600px,96vw);height:100%;overflow:auto;background:var(--bg-2);border-left:1px solid var(--line);padding:28px}
+.drawer h3{font-weight:700;font-size:22px;margin:0 0 4px;letter-spacing:-.03em}
+.law{border-left:3px solid var(--line-2);padding:9px 0 9px 16px;margin:16px 0}
+.law h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin:0 0 7px;font-weight:700}
+.law p{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0}
+.law ol,.law ul{margin:7px 0;padding-left:18px}.law li{font-size:12.5px;color:var(--muted);line-height:1.55;margin:3px 0}.law b{color:var(--text)}
+.law.gold{border-left-color:var(--green)}.law.gold h4{color:var(--green)}
+.law.cyan{border-left-color:var(--text-2)}.law.cyan h4{color:var(--text-2)}
+.law.violet{border-left-color:var(--green-deep)}.law.violet h4{color:var(--green)}
+input[type=file]{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;color:var(--bg);background:var(--green);border:1px solid var(--green);border-radius:8px;padding:7px 12px;margin-right:12px;cursor:pointer}
+.foot{font-family:var(--mono);font-size:9.5px;color:var(--muted-2);text-align:center;margin:30px 0 40px;letter-spacing:.02em;line-height:1.8}
+/* mobile: rail to bottom bar */
+@media(max-width:760px){
+  #app{flex-direction:column}
+  .rail{flex-direction:row;top:auto;bottom:0;left:0;right:0;width:auto;height:64px;padding:0 6px;border-right:0;border-top:1px solid var(--line);gap:0;justify-content:space-between;align-items:stretch}
+  .rail-top{display:none}
+  .rail-nav{flex-direction:row;flex:1;justify-content:space-around;gap:0}
+  .rail-foot{flex-direction:row;margin:0;width:auto;gap:0}
+  .navbtn{width:auto;min-width:58px;padding:8px 8px;border-radius:10px}
+  .navbtn.active::before{left:14px;right:14px;top:auto;bottom:2px;width:auto;height:3px}
+  .main{margin-left:0;padding-bottom:74px}
+  .wrap{padding:0 18px}
+}
+/* ===== immersive (AI-BL) polish ===== */
+#app{background:
+  radial-gradient(720px 460px at 100% -4%, rgba(166,232,77,.11), transparent 62%),
+  radial-gradient(560px 520px at -4% 102%, rgba(166,232,77,.06), transparent 60%),
+  radial-gradient(1000px 680px at 50% 128%, rgba(130,198,54,.05), transparent 62%),
+  var(--bg);
+  background-attachment:fixed;}
+.wrap{max-width:1200px}
+/* circular rail buttons */
+.rail .glyph{box-shadow:0 0 26px rgba(166,232,77,.5)}
+.navbtn{gap:7px;background:transparent!important;padding:8px 0}
+.navbtn svg{width:20px;height:20px;background:var(--surface);border:1px solid var(--line);border-radius:50%;padding:11px;box-sizing:content-box;transition:.18s}
+.navbtn:hover svg{border-color:var(--line-2);background:var(--surface-2)}
+.navbtn.active{color:var(--green)}
+.navbtn.active svg{background:var(--green);border-color:var(--green);color:var(--bg);box-shadow:0 0 20px rgba(166,232,77,.6)}
+.navbtn.active::before{display:none}
+@media(max-width:760px){.navbtn svg{padding:8px}.navbtn.active::before{display:block}}
+/* mixed-colour titles */
+.mh em{color:var(--green);font-style:normal}
+/* topbar pills */
+.topstats .tchip{border-radius:20px;padding:6px 12px;background:var(--surface);position:relative}
+.topstats .tchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px;vertical-align:1px;box-shadow:0 0 7px rgba(166,232,77,.8)}
+/* glowing bento chart cards (AI-BL) */
+.chartcard{background:linear-gradient(180deg,var(--surface-2),var(--surface));border-radius:18px;position:relative;overflow:hidden;transition:border-color .18s,transform .18s}
+.chartcard:hover{border-color:var(--green-deep);transform:translateY(-2px)}
+.chartcard::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 100% 0%,rgba(166,232,77,.07),transparent 60%)}
+.chartttl{display:flex;align-items:center;gap:8px}
+.chartttl::before{content:"";width:13px;height:13px;border-radius:4px;background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.7);flex:none}
+/* glowing panels — green square on section + panel heads */
+.panel,.card{position:relative}
+.boardhead .mh3::before,.dhead .reponame::before{content:"";display:inline-block;width:11px;height:11px;border-radius:4px;background:var(--green);box-shadow:0 0 9px rgba(166,232,77,.7);margin-right:9px;vertical-align:1px}
+/* doctrine-in-play emphasis */
+.dlaw.lime{background:linear-gradient(180deg,rgba(166,232,77,.06),var(--surface-2))}
+/* live loading */
+.loadwrap{display:flex;align-items:center;gap:16px;padding:14px 0 4px}
+.loadring{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:sp .8s linear infinite;flex:none;box-shadow:0 0 20px rgba(166,232,77,.35)}
+.loadtxt{font-size:13.5px;color:var(--text-2);line-height:1.5}.loadtxt b{color:var(--green)}
+.skelrow{display:flex;gap:11px;margin-top:14px}
+.skel{height:58px;border-radius:13px;flex:1;background:linear-gradient(100deg,var(--surface) 28%,var(--surface-3) 50%,var(--surface) 72%);background-size:200% 100%;animation:shimmer 1.25s linear infinite}
+.skel.tall{height:120px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.chip.live{color:var(--bg);background:var(--green);border-color:var(--green);font-weight:700}.chip.live::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--bg);margin-right:5px;vertical-align:1px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.setrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.tokmask{font-family:var(--mono);font-size:11px;color:var(--green)}
+.cvsplit{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 4px}
+@media(max-width:680px){.cvsplit{grid-template-columns:1fr}}
+.cvcol{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:12px 13px}
+.cvcolhd{font-weight:800;font-size:12.5px;letter-spacing:.02em;padding-bottom:6px;border-bottom:2px solid;margin-bottom:8px}
+.cvcolsub{font-size:11px;color:var(--muted-2);margin:-4px 0 8px}
+.cvrow2{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.cvrow2:first-of-type{border-top:none}
+.cvrow2 .cvtag{font-size:11px;border:1px solid;border-radius:6px;padding:1px 7px;font-family:var(--mono)}
+.cvrow2 .cvverdict{font-size:11px;font-weight:800;font-family:var(--mono)}
+.cvlist-lbl{font-size:11px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px}
+.pa{--c:#5EC8E5}.pb{--c:#C9A6F2}
+.slicer{display:inline-flex;gap:3px;background:var(--surface-3);border:1px solid var(--line);border-radius:8px;padding:2px;margin-left:8px;vertical-align:middle}
+.slbtn{font:inherit;font-size:10.5px;font-weight:700;color:var(--muted-2);background:none;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:var(--mono)}
+.slbtn.on{background:var(--green);color:var(--bg)}
+.slbtn:hover:not(.on){color:var(--text)}
+.screenbox{display:flex;flex-direction:column;gap:10px}
+.scrow{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.scq{font-size:13px;margin-bottom:8px}.scq b{color:var(--text)}
+.scopts{display:flex;gap:8px;flex-wrap:wrap}
+.scbtn{font:inherit;font-size:12px;font-weight:600;color:var(--text-2);background:var(--surface-3);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.scbtn:hover{border-color:var(--green-deep);color:var(--text)}
+.scbtn.on{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700}
+.scbtn.rec{border-color:var(--green-deep)}
+.recbadge{font-size:9px;font-weight:700;margin-left:7px;color:var(--green);letter-spacing:.04em;vertical-align:middle}
+.scbtn.on .recbadge{color:var(--bg)}
+.scwhy{font-size:11.5px;color:var(--text-2);margin-top:7px;line-height:1.5}
+.scwhy b{color:var(--green)}
+.scwhy.thin b{color:var(--warn)}
+.screnbar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.chest{font-size:9px;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:5px;padding:1px 6px;margin-left:8px;letter-spacing:.04em;vertical-align:middle}
+.tierband{border-radius:13px;padding:13px 15px;margin:0 0 12px;border:1px solid var(--line)}
+.tierband.olympus{background:linear-gradient(180deg,rgba(166,232,77,.12),rgba(166,232,77,.04));border-color:rgba(166,232,77,.45)}
+.tierband.mars{background:linear-gradient(180deg,rgba(94,200,229,.10),rgba(94,200,229,.03));border-color:rgba(94,200,229,.42)}
+.tiertop{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.tierlabel{font-family:Inter,sans-serif;font-weight:800;font-size:16px;letter-spacing:.02em}
+.tierband.olympus .tierlabel{color:var(--green)}
+.tierband.mars .tierlabel{color:#5EC8E5}
+.tiertag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-2);border:1px solid var(--line2);border-radius:5px;padding:2px 7px}
+.tierwhy{font-size:12.5px;color:var(--text);line-height:1.5;margin-bottom:6px}
+.tierstd{font-size:11px;color:var(--text-2);font-family:JetBrains Mono,monospace}
+.tierstd b{color:var(--text)}
+.genbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:6px 0 14px}
+.genbar a{color:var(--green);font-size:12px;font-weight:600;white-space:nowrap}
+.genwait{background:var(--surface-2);border:1px dashed var(--line2);border-radius:12px;padding:18px 16px;margin:6px 0;display:flex;flex-direction:column;gap:6px}
+.genwait b{font-size:13.5px;color:var(--text)}
+.stdline{font-size:11.5px;color:var(--text-2);font-family:JetBrains Mono,monospace;margin-top:10px;padding:8px 11px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line)}
+.stdline b{color:var(--green)}
+.honest{font-size:11.5px;line-height:1.5;color:var(--text-2);background:rgba(201,138,30,.08);border:1px solid rgba(201,138,30,.32);border-radius:9px;padding:9px 12px;margin:0 0 12px}
+.honest b{color:var(--text)}
+.probe{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.probe input{flex:1;min-width:180px;background:var(--surface-3);border:1px solid var(--line);border-radius:7px;padding:6px 9px;color:var(--text);font:inherit;font-size:12px}
+.probe .btn{padding:5px 12px;font-size:12px}
+.honest.measured{background:rgba(166,232,77,.08);border-color:rgba(166,232,77,.36)}
+.honest.measured b{color:var(--text)}
+.fit.screen{background:rgba(94,200,229,.08);border-color:rgba(94,200,229,.4)}
+.fit.screen .fitdot{background:#5EC8E5}
+</style>
+
+<div id="app">
+  <aside class="rail">
+    <div class="rail-top"><span class="glyph"></span></div>
+    <nav class="rail-nav" id="nav">
+      <button class="navbtn" data-m="acquire"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-7M20 16v-3"/></svg><span class="nlabel">Analyze</span></button>
+      <button class="navbtn active" data-m="olympus"><svg viewBox="0 0 24 24"><path d="M3 20h18L14 6l-3.5 6.5L8 9l-5 11Z"/></svg><span class="nlabel">Olympus</span></button>
+      <button class="navbtn" data-m="mars"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c5 2 9 2 14 0M5 15c5-2 9-2 14 0"/></svg><span class="nlabel">Mars</span></button>
+      <button class="navbtn" data-m="launch"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 2 5.5 6 5.5 10l-2 3h-7l-2-3C4.5 9 8.5 5 12 3Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 19l-1.5 2.5M15 19l1.5 2.5"/></svg><span class="nlabel">Launch</span></button>
+    </nav>
+    <div class="rail-foot">
+      <button class="navbtn" id="doctrineBtn"><svg viewBox="0 0 24 24"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z"/><path d="M5 17h13M9 8h5"/></svg><span class="nlabel">Doctrine</span></button>
+      <button class="navbtn" id="resetBtn"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6M4 19v-4h4"/></svg><span class="nlabel">Reset</span></button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div class="wrap topbar-inner">
+      <div class="brand"><span class="word"><em>Olympus</em> Console</span><small>repo intelligence · challenge design</small></div>
+      <div class="topstats"><span class="tchip">pass <b>&le;30%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">desc <b>496-500</b></span><span class="tchip">plagiarism <b>&lt;0.5</b></span></div>
+    </div></div>
+    <div class="wrap">
+      <div id="view"></div>
+      <p class="foot">Olympus pass ≤30% of 10 · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 85+ — last-known guidance; the in-form criteria panel is authoritative.</p>
+    </div>
+  </main>
+</div>
+
+<div class="drawer" id="drawer"><div class="drawer-inner" id="drawerInner"></div></div>
+
+<script>
+const SEED_VERSION = 15;
+const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer'};
+const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
+const MAX_FEATURES = 3;
+
+/* ---------- 100 feature angles ---------- */
+const ANGLE_FAMILIES=[
+ {name:'Correctness & Invariants',cats:['bug-fix','refactor','enhancement'],angles:['Idempotency','Ordered Execution','Consistency','Referential Integrity','Determinism','Boundary Conditions','Null & Empty Semantics','Equality Semantics','Invariant Enforcement','Observable Async State']},
+ {name:'Failure & Recovery',cats:['bug-fix','feature','enhancement'],angles:['Error Recovery','Error Unification','Partial Failure','Rollback & Compensation','Retry','Circuit Breaking','Timeout','Failover','Graceful Degradation','Fault Isolation']},
+ {name:'Concurrency & Coordination',cats:['bug-fix','optimization','feature','refactor'],angles:['Thread Safety','Race Prevention','Deadlock Avoidance','Backpressure','Cancellation Propagation','Fan-out/Fan-in','Coordination','Two-phase Commit','Distributed Locking','Reentrancy']},
+ {name:'Data & Schema',cats:['feature','enhancement','bug-fix'],angles:['Schema Evolution','Schema Migration','Serialization','Diff/Merge/Patch','Aggregation','Conflict Resolution','Snapshot/Restore','Incremental Sync','Deduplication','Indexing']},
+ {name:'Performance & Resource',cats:['optimization','refactor'],angles:['Caching','Memoization','Lazy Evaluation','Batching','Streaming','Connection Pooling','Pre-computation','Hot-path Optimization','Memory Management','Allocation Reduction']},
+ {name:'Lifecycle & State',cats:['refactor','feature','bug-fix','enhancement'],angles:['Lifecycle Hooks Multi-Consumer','Cleanup','Graceful Shutdown','Warm-up & Cool-down','State Machines','Signal Handling','Resource Acquisition','Initialization Ordering','Reconfiguration','Health-aware LB']},
+ {name:'Composition & Architecture',cats:['refactor','enhancement','feature'],angles:['Composition','Pipeline Composition','Middleware Chains','Plugin Architecture','Decorator Systems','Dependency Resolution','Adapter Abstraction','Context Propagation','Layering Separation','Capability Negotiation']},
+ {name:'Types & API',cats:['feature','refactor','enhancement'],angles:['Type Safety','Type Widening','Type Narrowing','API Ergonomics','Contract Enforcement','Builder Inference','Overload Resolution','Generic Variance','Backward Compatibility','Convention Enforcement']},
+ {name:'Integration, Protocol & Security',cats:['feature','enhancement'],angles:['Protocol Support','Format Negotiation','Events','Webhooks','Import/Export','Service Discovery','Access Control','Token Lifecycle','Rate Limiting','Multi-tenant Isolation']},
+ {name:'Observability & DevX',cats:['feature','enhancement','optimization'],angles:['Diagnostics','Tracing Hooks','Structured Logging','Dry-run','Doc Gen','Test Utils','Config Validation','Error Messages','Introspection','Audit Trail']}
+];
+const ANGLES=ANGLE_FAMILIES.reduce((m,f)=>m.concat(f.angles),[]);
+const ANGLE_CAT={},ANGLE_FAM={};
+ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=f.name;}));
+function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
+// General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
+const TIPS=[
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to <=30%. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
+ {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
+ {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
+ {h:'Description 496-500 words',b:'Pure ASCII, zero backticks, behavioural verbs. Integrate the contract across sentences so no single line gives the invariant away. Every sentence must be load-bearing — the platform strips repo-findable, default and redundant lines. Cut a sentence only if you cut/keep/rewrite its test with it.'},
+ {h:'Never delete a success-path test',b:'The platform re-synthesizes deleted success tests and fails them. Replace with a fair fixture instead of removing.'},
+ {h:'Guard tests need a positive typeof',b:'Assert typeof x === "function" BEFORE .toThrow(). A bare toThrow() passes on a TypeError, so a missing export slips through F2P undetected.'},
+ {h:'Barrels must exist; SQL must port',b:'Every new file you import from has to be exported from its index or baseline imports break. Use portable SQL only — no IS NOT DISTINCT FROM.'},
+ {h:'Clean-room after every test edit',b:'Re-run F2P / P2P / base and re-count files after each patch regen — files silently drop. Confirm the count before submitting.'},
+ {h:'Prove discrimination per batch',b:'Neuter the solution to the naive version and confirm the new tests fail. If they still pass, the gap is not load-bearing yet.'},
+ {h:'Read the solver patches',b:'After each run, grep the non-guessable symbol across solver patches. 0/N used it = that is your next difficulty lever. High MSG counts alone do not mean the gap was found.'},
+ {h:'Overshoot vs undershoot are opposite fixes',b:'0/N solved -> pull up with a restored signature or a fairer fixture. 60-100% solved -> deepen the gap (a sibling path / invariant), never add edge cases.'},
+ {h:'Match the selected category',b:'The platform checks that the description fits the chosen category. A feature must read as a feature, a bug-fix as a bug-fix — the opener and verbs carry it. A category mismatch fails the precheck before anything runs.'},
+ {h:'Dockerfile + test.sh hygiene',b:'olympus-base image, WORKDIR /app, pinned deps, model:1000 user, interactive entrypoint. Never run tests or reinstall preinstalled tools in the image. test.sh ships in test.patch at 100755 with distinct base/new modes, no installs, no solution code. Hash-suffix test files; never use the markers shipd / datacurve.'}
+];
+/* ---------- analysis engine (local, no API needed) ---------- */
+const PATH_AFFINITY={
+ A:['Adapter Abstraction','Protocol Support','Middleware Chains','Format Negotiation','Conflict Resolution','Failover','Connection Pooling','Health-aware LB','Service Discovery'],
+ B:['Lifecycle Hooks Multi-Consumer','State Machines','Idempotency','Two-phase Commit','Observable Async State','Convention Enforcement','Error Unification','Ordered Execution','Context Propagation']
+};
+// The difficulty screen drives the angles. Each answer the operator gives makes a different
+// set of angles relevant — so the ranked list correlates with the screen, not a generic template.
+const SCREEN_ANGLES={
+ 'helpers:none':['Adapter Abstraction','Capability Negotiation','Layering Separation','Convention Enforcement','Invariant Enforcement','Consistency','Contract Enforcement','Dependency Resolution'],
+ 'approach:wrong':['Ordered Execution','Convention Enforcement','Boundary Conditions','Equality Semantics','Null & Empty Semantics','Determinism','Conflict Resolution','Precedence'],
+ 'invariant:fails':['Observable Async State','State Machines','Idempotency','Ordered Execution','Invariant Enforcement','Referential Integrity','Two-phase Commit','Reentrancy']
+};
+// Maps the ACTUAL divergent folder kinds found in a repo's tree to the angles they make most relevant.
+// This is what makes the ranked angles repo-specific instead of path-generic.
+const KIND_ANGLES={
+ dialect:['Adapter Abstraction','Schema Evolution','Serialization','Conflict Resolution','Indexing','Type Safety'],
+ dialects:['Adapter Abstraction','Schema Evolution','Serialization','Conflict Resolution','Indexing','Type Safety'],
+ driver:['Adapter Abstraction','Connection Pooling','Schema Migration','Serialization','Conflict Resolution'],
+ drivers:['Adapter Abstraction','Connection Pooling','Schema Migration','Serialization','Conflict Resolution'],
+ backend:['Adapter Abstraction','Serialization','Schema Evolution','Snapshot/Restore'],
+ backends:['Adapter Abstraction','Serialization','Schema Evolution','Snapshot/Restore'],
+ store:['Indexing','Snapshot/Restore','Incremental Sync','Caching','Deduplication'],
+ stores:['Indexing','Snapshot/Restore','Incremental Sync','Caching','Deduplication'],
+ engine:['Adapter Abstraction','Hot-path Optimization','Serialization'],
+ engines:['Adapter Abstraction','Hot-path Optimization','Serialization'],
+ adapter:['Adapter Abstraction','Capability Negotiation','Protocol Support','Plugin Architecture'],
+ adapters:['Adapter Abstraction','Capability Negotiation','Protocol Support','Plugin Architecture'],
+ provider:['Service Discovery','Capability Negotiation','Reconfiguration','Failover'],
+ providers:['Service Discovery','Capability Negotiation','Reconfiguration','Failover'],
+ connector:['Adapter Abstraction','Protocol Support','Import/Export','Format Negotiation'],
+ connectors:['Adapter Abstraction','Protocol Support','Import/Export','Format Negotiation'],
+ integration:['Plugin Architecture','Capability Negotiation','Import/Export'],
+ integrations:['Plugin Architecture','Capability Negotiation','Import/Export'],
+ balancer:['Health-aware LB','Failover','Circuit Breaking','Graceful Degradation','Fault Isolation'],
+ balancers:['Health-aware LB','Failover','Circuit Breaking','Graceful Degradation','Fault Isolation'],
+ resolver:['Service Discovery','Failover','Retry','Reconfiguration'],
+ resolvers:['Service Discovery','Failover','Retry','Reconfiguration'],
+ transport:['Protocol Support','Format Negotiation','Serialization','Backward Compatibility'],
+ transports:['Protocol Support','Format Negotiation','Serialization','Backward Compatibility'],
+ protocol:['Protocol Support','Format Negotiation','Serialization','Backward Compatibility'],
+ protocols:['Protocol Support','Format Negotiation','Serialization','Backward Compatibility'],
+ codec:['Serialization','Format Negotiation','Backward Compatibility'],
+ codecs:['Serialization','Format Negotiation','Backward Compatibility'],
+ exporter:['Tracing Hooks','Structured Logging','Serialization','Format Negotiation','Diagnostics'],
+ exporters:['Tracing Hooks','Structured Logging','Serialization','Format Negotiation','Diagnostics'],
+ credentials:['Access Control','Token Lifecycle','Multi-tenant Isolation'],
+ handler:['Middleware Chains','Pipeline Composition','Context Propagation','Ordered Execution'],
+ handlers:['Middleware Chains','Pipeline Composition','Context Propagation','Ordered Execution'],
+ plugin:['Plugin Architecture','Lifecycle Hooks Multi-Consumer','Dependency Resolution','Composition'],
+ plugins:['Plugin Architecture','Lifecycle Hooks Multi-Consumer','Dependency Resolution','Composition'],
+ module:['Plugin Architecture','Dependency Resolution','Lifecycle Hooks Multi-Consumer','Composition'],
+ modules:['Plugin Architecture','Dependency Resolution','Lifecycle Hooks Multi-Consumer','Composition'],
+ command:['State Machines','Dry-run','Convention Enforcement','Lifecycle Hooks Multi-Consumer'],
+ commands:['State Machines','Dry-run','Convention Enforcement','Lifecycle Hooks Multi-Consumer'],
+ agent:['State Machines','Convention Enforcement','Capability Negotiation'],
+ agents:['State Machines','Convention Enforcement','Capability Negotiation'],
+ strategy:['Retry','Circuit Breaking','Invariant Enforcement','Determinism'],
+ strategies:['Retry','Circuit Breaking','Invariant Enforcement','Determinism'],
+ policies:['Access Control','Invariant Enforcement','Rate Limiting'],
+ language:['Serialization','Type Safety','Contract Enforcement','Format Negotiation'],
+ languages:['Serialization','Type Safety','Contract Enforcement','Format Negotiation'],
+ parser:['Serialization','Boundary Conditions','Format Negotiation','Contract Enforcement'],
+ parsers:['Serialization','Boundary Conditions','Format Negotiation','Contract Enforcement'],
+ serializers:['Serialization','Format Negotiation','Backward Compatibility'],
+ validators:['Contract Enforcement','Config Validation','Invariant Enforcement'],
+ formatters:['Format Negotiation','Convention Enforcement'],
+ generators:['Builder Inference','Type Safety','Doc Gen'],
+ loaders:['Lazy Evaluation','Streaming','Caching'],
+ runtimes:['Adapter Abstraction','Capability Negotiation','Graceful Shutdown'],
+ frameworks:['Adapter Abstraction','Plugin Architecture','Capability Negotiation'],
+ targets:['Format Negotiation','Capability Negotiation','Backward Compatibility'],
+ kinds:['Type Safety','Convention Enforcement'],
+ presets:['Convention Enforcement','Config Validation']
+};
+const CATEGORIES=['feature','optimization','refactor','bug-fix','enhancement'];
+const GAP_TYPES=[
+ {k:'Structural multi-path',d:'5+ divergent paths + 2 silently-failing cross-cutting invariants — agents must read each path. (tRPC: 7 adapters.)'},
+ {k:'Unfamiliar sibling path',d:'A second builder/family agents must re-discover after learning the first. (drizzle: relational query builder vs select builders.)'},
+ {k:'Non-guessable invariant',d:'A data/algorithm assumption the naive form makes and gets wrong by default. (drizzle: a non-unique ordering column forcing PK auto-discovery.)'}
+];
+const DRIZZLE_INTEL=`RQB IS MANDATORY for Olympus difficulty. Select-builder-only never reached <=30%; span BOTH the 4 select builders AND the 3 RQB query.ts paths. RQB uses a different code path: callback where/orderBy resolved via getOperators/getOrderByOperators, SQL via buildRelationalQuery* with JSON aggregation, mapRelationalRow for nested results.
+PER-DIALECT DIVERGENCE is the LOC driver, not shared helpers: sqlite prepareOneTimeQuery.all() (sync); pg Neon auth token; mysql mode:'planetscale'; singlestore RQB stubbed (db.query={}). Do NOT collapse into shared helpers.
+config.where in RQB can be a function (table)=>SQL — cannot compose with and(); branch on typeof config.where==='function'.
+exports.test.ts auto-discovers every new src/ file -> new solution files show as unexpected extras. Skip via --testNamePattern in test.sh base mode.
+GUARD TESTS with bare .toThrow() pass without solution (TypeError satisfies it). Add expect(typeof method).toBe('function') first.
+TWO difficulty layers: single-column seek on a unique column is derivable; the compound PK-tiebreak via getTableColumns + .primary on a NON-unique ordering column is the discriminating layer.
+Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/SingleStore vs native NULLS LAST for PG/SQLite.
+ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
+Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
+ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
+const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'effect-ts/effect':14,'caddyserver/caddy':12,'apollographql/apollo-server':26,'kysely-org/kysely':7,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
+const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','sequelize/sequelize':'SQL dialects','effect-ts/effect':'platform/sql backends','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','kysely-org/kysely':'dialects','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
+function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
+function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
+function topAngles(r,n){
+  n=n||10;
+  const area=(r.areas||[]).map(a=>a.angle).filter(x=>x&&x!=='—'&&ANGLES.indexOf(x)>=0);
+  // Repo-specific layer: the real divergent folder kinds read from this repo's tree.
+  const kindBoost={};
+  (r.divKinds||[]).forEach(k=>{(KIND_ANGLES[(k||'').toLowerCase()]||[]).forEach((a,i)=>{kindBoost[a]=Math.max(kindBoost[a]||0,300-i*15);});});
+  // Difficulty-screen layer: the answers the operator gave drive which angles are relevant.
+  const screenBoost={},s=r.screen||{};
+  [['helpers',s.helpers],['approach',s.approach],['invariant',s.invariant]].forEach(([k,v])=>{
+    if(v)(SCREEN_ANGLES[k+':'+v]||[]).forEach((a,i)=>{screenBoost[a]=Math.max(screenBoost[a]||0,440-i*20);});});
+  const MULTIPATH=PATH_AFFINITY.A; // generic multi-path fallback
+  const score=a=>{let s2=0;const ai=area.indexOf(a);if(ai>=0)s2+=1000-ai;if(screenBoost[a])s2+=screenBoost[a];if(kindBoost[a])s2+=kindBoost[a];if(MULTIPATH.indexOf(a)>=0)s2+=120;return s2;};
+  return ANGLES.slice().map(a=>[a,score(a)]).sort((x,y)=>y[1]-x[1]).slice(0,n).map(x=>x[0]);
+}
+function screenAnswered(r){const s=r.screen||{};return s.helpers!=null||s.approach!=null||s.invariant!=null;}
+function anglesAreTemplate(r){return !((r.areas||[]).some(a=>a.angle&&a.angle!=='—'))&&!((r.divKinds||[]).length)&&!screenAnswered(r);}
+function comboFor(r){
+  const t=topAngles(r,10),div=repoDiv(r),unit=repoUnit(r),p=r.path||'';
+  const specs=[[0,1],[0,2,4],[1,3,5,7],[2,6],[0,4,8]];
+  const why=angs=>{const k=angs.length;
+    if(div&&div>=5)return `${angs[0]} is the visible behaviour across the ${div} ${unit}; the other ${k-1} become cross-cutting invariants that fail silently on one path. Fuse only when the single-angle feature is transcribable.`;
+    return `One feature spanning ${k} load-bearing concerns. Confirm each genuinely raises the discovery gap before building.`;};
+  return specs.map(ix=>{const angs=ix.map(i=>t[i]).filter(Boolean);return angs.length>=2?{angles:angs,why:why(angs)}:null;}).filter(Boolean);
+}
+const POOL=[
+ {fullName:'caddyserver/caddy',url:'https://github.com/caddyserver/caddy',lang:'Go',license:'Apache-2.0',stars:'~73k',div:12,unit:'modules',path:'A',why:'~12 divergent server modules (strict count), each its own subsystem. Pure Path A — just under the 15 floor, so needs a depth invariant on top.',gap:'module lifecycle + the caddyhttp middleware chain'},
+ {fullName:'honojs/hono','url':'https://github.com/honojs/hono',lang:'TypeScript',license:'MIT',stars:'~31k',div:9,unit:'runtime adapters',path:'A',why:'9 runtime adapters, each a different integration. Pure Path A — under the 15 floor.',gap:'cross-adapter streaming / cleanup invariants'},
+ {fullName:'ent/ent',url:'https://github.com/ent/ent',lang:'Go',license:'Apache-2.0',stars:'~17k',div:2,unit:'dialect backends',why:'Codegen + a layered hook/interceptor/privacy runtime — ordering invariants the naive impl violates.',gap:'hook/interceptor ordering contract'},
+ {fullName:'uptrace/bun',url:'https://github.com/uptrace/bun',lang:'Go',license:'BSD-2-Clause',stars:'~4k',div:7,unit:'SQL dialects',path:'A',why:'Five divergent SQL dialects plus a query builder. Pure Path A.',gap:'per-dialect SQL generation + relation eager-loading'},
+ {fullName:'mikro-orm/mikro-orm',url:'https://github.com/mikro-orm/mikro-orm',lang:'TypeScript',license:'MIT',stars:'~9k',div:5,unit:'DB platforms',path:'A',why:'Five divergent platforms with unit-of-work. Pure Path A (4th ORM — watch plagiarism).',gap:'identity-map / unit-of-work flush ordering'},
+ {fullName:'vitejs/vite',url:'https://github.com/vitejs/vite',lang:'TypeScript',license:'MIT',stars:'~81k',div:6,unit:'plugin hooks / modes',path:'A+B',why:'Plugin hook system + esbuild/rollup backends + dev/build/ssr modes. A+B — strong across categories.',gap:'dev-server vs build-time transform parity'},
+ {fullName:'apollographql/apollo-server',url:'https://github.com/apollographql/apollo-server',lang:'TypeScript',license:'MIT',stars:'~13k',div:9,unit:'plugins',why:'Request-lifecycle plugin system — lifecycle ordering invariants.',gap:'plugins share one interface — lifecycle ordering invariant'}
+];
+function poolPanel(){
+  const used=new Set(state.used.map(s=>s.toLowerCase()));
+  const items=POOL.map(p=>{const on=used.has(p.fullName.toLowerCase());
+    return `<div class="checkrow"><span class="lamp pass"></span><div class="checkbody">
+      <div class="checkname">${esc(p.fullName)} <span class="tag">${p.lang} · ${p.license} · ${p.stars} · divergence ${p.div} · Path ${p.path}</span></div>
+      <div class="checkdetail">${esc(p.why)}</div><div class="checkfix">${esc(p.gap)}</div>
+      <div style="margin-top:8px;display:flex;gap:8px"><button class="btn" data-an="${p.fullName}">Analyze</button>${on?'<span class="stat" style="align-self:center">on board ✓</span>':`<button class="btn" data-poolprom="${p.fullName}">Promote → Olympus</button>`}</div></div></div>`;}).join('');
+  return `<div class="panel"><div class="seclbl" style="margin-bottom:12px">Verified candidate pool <span class="mono">pre-checked, real divergence — analyze or promote</span></div>${items}</div>`;
+}
+
+/* ---------- doctrine ---------- */
+const DOCTRINE = [
+ {c:'gold',h:'Proven difficulty mechanism (30% TypeORM, supersedes Path A/B)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep.</p>
+   <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
+   <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
+ {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
+   <li>Pass rate ≤30% of 10 runs (sweet spot 20%); Mars ≤40%.</li>
+   <li>Solution LOC 700+ (600 floor). Files 6+ (5 ok).</li>
+   <li>Description up to 500 words; accepted cluster is 496-500. Plagiarism ALL below 0.5.</li>
+   <li>Solving-agent MSGs 85+. Mars: no MSG target.</li></ul>
+   <p><b>Authenticity law — never pad.</b> The feature must be genuine, actually work, and genuinely deserve its 700+ LOC. Comments, whitespace, duplication, reformatting and speculative defensive code are caught as padding. Raise the AGENT floor honestly (a feature above the helper layer so agents write per-variant code); never inflate the reference.</p>`},
+ {c:'violet',h:'Check-vs-difficulty cascade',body:`<p>Every Aligned/Fairness fix LOWERS difficulty. When you document an unstated detail to pass a check, you hand Nova the answer. <b>In the SAME edit, add a paired hard behavioral test</b> (an intermediate-state or surface-shape assertion) so the documentation does not soften the gap. Track it: each "document X" must have a "+ test Y" in the same diff.</p>`},
+ {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to ≤30% is forcing codebase discovery — a feature above the helper layer (agents write per-variant code) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
+ {c:'gold',h:'LOC-floor law',body:`<p>The platform measures AGENT median LOC, not your reference. The only floor-raiser is a feature whose target layer has no free helpers, forcing agents to hand-roll per-variant code. Never collapse divergent variants into a shared helper — that divergence is the LOC and the difficulty.</p>`},
+ {c:'violet',h:'Phase 1 — Rejection prevention (all 7 before any code)',body:`<ol>
+   <li>Plagiarism: grep the repo for your API symbols. 0 hits + platform &lt;0.5 = green. ≥0.5 same repo = PIVOT.</li>
+   <li>Closed issues: "not planned / wontfix / won't do" → DISCARD.</li>
+   <li>Docs: "external / plugin / out of scope" → DISCARD.</li>
+   <li>Merged PRs already implement it → DISCARD.</li>
+   <li>Philosophy: would the maintainer merge this? "maybe / no" → DISCARD.</li>
+   <li>CONTRIBUTING.md "minor only / wrapper" → feature must match that scale.</li>
+   <li>Closed concept rejection ("write your own") → DEAD.</li></ol>
+   <p><b>Final review can reject after first approval</b> — one project passed 21/21, was approved, then rejected on CONTRIBUTING "minor features only."</p>`},
+ {c:'gold',h:'Path A — multi-variant precondition (Nova 80-150+)',body:`<p>Repo has 5+ variant code paths the feature must write into. This is the structural <b>precondition</b>, not the difficulty — see the Proven difficulty mechanism. Each variant costs ~20 MSGs of reading; the gap only holds if the target layer has no free per-variant helpers. Proven: tRPC — 6 adapters, Nova 133 median, 20%.</p>`},
+ {c:'cyan',h:'How Nova & Orion solve',body:`<p><b>Nova</b> (cheap): reads 5-8 files, grabs the loudest keyword, commits to its first interpretation, never restructures — 30-50 MSGs (easy) or fails 50-80 (hard); local tests check end-states only. <b>Orion</b> (10× cost, 1 per batch): reads 12-15 files, integrates multiple sentences, restructures when the first approach fails, 100-130 MSGs, catches subtle invariants.</p>`},
+ {c:'cyan',h:'Phase 2 — Claim-to-test matrix (before writing anything)',body:`<p>Every description sentence → test(s); every test → a sentence. Signatures are permanent — never strip (arg1, arg2). This prevents ~50% of check iterations.</p>`},
+ {c:'violet',h:'Phase 3-7 — Build',body:`<p><b>Tests:</b> 100% behavioral through the public API. If a test needs an implementational detail — Option A: rewrite it as behavioral language; Option B (preferred): replace with a behavioral test that needs no internal detail. Hash-suffix files: &lt;feature&gt;.&lt;6hex&gt;.test.{ts,py,go}. Fairness mental test per assertion: "stated in the description OR repo-discoverable — and would it still pass if I changed the implementation?"</p>
+   <p><b>Description:</b> observable-output language never mechanism, inline signatures, no em-dash/URL/hard-wrap, category-correct opener (platform runs a category-match check), every sentence load-bearing (the "only necessary information" check strips repo-findable / default / over-specified / redundant lines), not prescriptive, self-contained (must be passable from the description alone).</p>
+   <p><b>Solution:</b> authentic, no comments, matches spec, correct public API surface.</p>
+   <p><b>Dockerfile:</b> base image public.ecr.aws/d3j8x8q7/olympus-base-&lt;python|typescript|go|rust|jvm|cpp&gt;:latest, WORKDIR /app, all deps installed at build time with PINNED versions, do NOT reinstall preinstalled tools, do NOT run tests in the image, model:1000 user, interactive shell entrypoint CMD ["/bin/bash"].</p>
+   <p><b>Patches:</b> split by git status, repo-relative paths, zero overlap, zero comments. test.sh lives in test.patch (mode 100755) with DISTINCT base and new modes, installs no packages, contains no solution code. Test files are hash-suffixed and must never collide with predictable defaults or contain the markers 'shipd' / 'datacurve'.</p>`},
+ {c:'gold',h:'Platform prechecks (what is auto-graded)',body:`<p><b>Before image build:</b> description length (passes at &le;500 words; their hint says 100-200), AI-style scan (hard-wrap 70-85 chars, em-dashes, wall-of-text, 4+ blank lines), category match, valid UTF-8 / ASCII, plagiarism (their fail is &ge;90% &mdash; OUR wall is &lt;0.5), test-patch sanity (valid diff, test.sh base+new distinct, exec bit, no solution code, no installs), URLs flagged, problem/test quality (no leaked internals, behavioral not implementational, coherent), only-necessary-information (strips repo-findable / default / over-specified / redundant), problem/tests aligned (passable from the description alone), test-filename collision + banned markers, Dockerfile guidelines, solution-patch valid.</p>
+   <p><b>After build:</b> Verify Tests (clean repo), Verify Solution (per-test), Test Fairness (each hidden test prompt-stated / repo-discoverable / unsupported), Environment Quality (Go only &mdash; offline build+test), Flakiness (3&times; clean + 3&times; patch), Task Quality (7-criterion rubric), Solution Quality (comprehensiveness + code quality), Description Quality (tone / redundancy / inferrable info).</p>`},
+ {c:'cyan',h:'Fairness laws',body:`<p>Assert behavior, never representation — no opaque tokens, encoded values, exact SQL literals, or exact error messages. Never delete a success-path test (the platform re-synthesizes it) — replace with a fair fixture. Never assert order of an unordered/nested collection unless the test declares ordering. Every shape assertion leaks the answer — minimize; prefer execution-enforced contracts.</p>`},
+ {c:'violet',h:'Process laws',body:`<p>Clean-room F2P/P2P/base after EVERY test edit. Read solver patches between batches — one grep is often the whole diagnosis. Prove discrimination before shipping a hard test (neuter to naive, confirm new tests fail). Guard tests need a positive type/identity assertion. Trust intelligence LESSONS over its ARTIFACTS (they go stale). Never trust a 'missing features' list — grep at the exact commit.</p>`},
+ {c:'violet',h:'Phase 8-9 — Validate & submit',body:`<p>Run prompt_validation → pre_submit_gate (all gates GREEN) → 5 Nova + 1 Orion → if pass rate is wrong, diagnose from the solver patches and fix.</p>`},
+ {c:'gold',h:'5 universal rules (130+ iterations)',body:`<ol>
+   <li>Every toBe(value) → the description states the exact value/type/contract.</li>
+   <li>After patch regeneration → verify file count; files silently drop.</li>
+   <li>Trimming a description word can make a fair test unfair → cross-check every trim.</li>
+   <li>Hard tests added for an unfair-fix can themselves be unfair → verify the new tests.</li>
+   <li>Never delete a success-path test → replace with a fair fixture (the platform synthesizes deleted ones).</li></ol>`},
+ {c:'cyan',h:'Mars routing (check after first batch)',body:`<p>If ANY: Nova &lt;50 MSGs, bimodal outcomes (0/N or N/N), 90%+ greenfield, or suggestive API names → STOP Olympus, submit Mars. A Mars accept beats an Olympus reject after 48 iterations.</p>`},
+ {c:'gold',h:'Three discovery-gap types (from accepted data)',body:`<ol>
+   <li><b>Structural multi-path</b> — 5+ divergent paths + 2 silently-failing cross-cutting invariants (tRPC: 7 adapters).</li>
+   <li><b>Unfamiliar sibling path</b> — a second builder family agents must re-discover (drizzle: the relational query builder vs the select builders).</li>
+   <li><b>Non-guessable invariant</b> — a data/algorithm assumption the naive form makes and gets wrong by default (drizzle: a non-unique ordering column forcing PK auto-discovery via getTableColumns + .primary).</li></ol>
+   <p>Name which type you're using before building. Edge-case volume on a known surface never moves pass rate — only a real gap does.</p>`},
+ {c:'gold',h:'Two difficulty layers (algorithm features)',body:`<p>Algorithm-based features usually need two layers. One seek pivot (offset → single-column) is insufficient when the test column happens to be unique. Layer two violates the naive assumption — a non-unique ordering column + compound PK-tiebreak. Prove discrimination before each batch: neuter the solution to naive, confirm the new tests fail.</p>`},
+ {c:'cyan',h:'Overshoot vs undershoot (diagnose before fixing)',body:`<p>Opposite failure modes, opposite fixes. <b>Overshoot</b> (0/N, too hard): pull UP surgically — re-add a stripped callable signature, name the behaviour the description only implies. Do NOT add scope. <b>Undershoot</b> (60-100%, too easy): pull DOWN by deepening the gap (sibling path / non-guessable invariant), never edge-case volume. Use the Calibrate tab to classify the trajectory first.</p>`},
+ {c:'violet',h:'Solution Quality = surface + portability',body:`<p>Graded on the public type surface and portability, not just passing tests. Portable SQL only (no IS NOT DISTINCT FROM — emulate per dialect). Every referenced new file (a barrel/index you export from src/index) must exist, or all baseline imports break. The description must match observable behaviour exactly — "present but throws" is not "absent."</p>`},
+ {c:'violet',h:'Category strictness (feature-class data only)',body:`<p>The five categories — feature, optimization, refactor, bug-fix, enhancement — stress different checks. From accepted data (all feature-class so far): a feature with a new public API makes Solution Quality (type surface), Aligned, and Test Fairness the strict checks. Optimization / refactor / bug-fix / enhancement calibration awaits their own debriefs — don't assume the feature profile transfers.</p>`},
+ {c:'violet',h:'Read solver patches every batch',body:`<p>After each batch, grep the solver patches for the key non-guessable symbol (the PK-discovery function, the sibling-path call). If 0/N solvers used it, that is your next lever. High MSGs alone do not mean the invariant was found — agents can grind the known part past 150 MSGs and still miss the gap.</p>`}
+];
+
+/* ---------- seed repos ---------- */
+function repo(fullName,url,lang,license,stars,verified,kind,why,path,areas){
+  return {fullName,displayName:fullName,url,commitsUrl:url+'/commits',lang,license,stars,verified:!!verified,kind,why,path:path||'',
+    areas:areas||[],slots:['','',''],slotState:['idea','idea','idea'],slotCat:['feature','feature','feature'],intelligence:'',archived:false,source:'seed'};
+}
+const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
+
+const SEED_OLYMPUS={batch:1,repos:[
+ repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','34k',true,'gold',
+  'High divergence: ~25 DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A+B',[
+   A('The driver layer — ~25 drivers each generating SQL differently','Adapter Abstraction','a feature wired across the drivers where one cross-driver invariant fails silently on a single driver = the discovery gap. Build across a representative subset, not all 25.'),
+   A('Query-builder / relation-loading semantics','Type Safety','how relations + the builder resolve is a non-obvious contract — the obvious approach is wrong'),
+   A('Schema-sync / migration diffing per driver','Ordered Execution','each driver diffs schema differently — a cross-driver invariant lives here')]),
+ repo('nestjs/nest','https://github.com/nestjs/nest','TypeScript','MIT','70k',true,'gold',
+  'HTTP platform adapters (express / fastify / ws) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A+B',[
+   A('Platform adapters + microservice transports','Adapter Abstraction','feature spanning the adapters with a contract that breaks on exactly one = Path A gap'),
+   A('DI / provider lifecycle + scope resolution','Lifecycle Hooks Multi-Consumer','the injector lifecycle is a cross-cutting invariant the naive impl violates'),
+   A('Interceptor / guard / pipe execution ordering','Ordered Execution','an ordering invariant across the request pipeline')]),
+ repo('traefik/traefik','https://github.com/traefik/traefik','Go','MIT','53k',true,'gold',
+  '~18 service-discovery providers feeding a dynamic-config + middleware-chain core. Go, offline-buildable, real provider heterogeneity.','A+B',[
+   A('The provider layer (~18 discovery providers)','Service Discovery','feature across providers where config reconciliation must hold on each = Path A'),
+   A('Middleware chain ordering + dynamic config reload','Ordered Execution','a cross-cutting ordering / reload invariant the naive impl fails'),
+   A('Load-balancer / health-check state','Health-aware LB','per-backend health-state contract')]),
+ repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30k',true,'gold',
+  '~8 SQL dialects, each its own SQL generation + query interface, over an association / eager-loading engine. Drizzle-like heterogeneity — the dialect SQL genuinely diverges.','A+B',[
+   A('The dialect layer (~8 dialects, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
+   A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
+   A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
+ repo('Effect-TS/effect','https://github.com/Effect-TS/effect','TypeScript','MIT','15k',true,'gold',
+  'Kept by request. ~4 platform variants + @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). Note: strict divergence ~14, just under the 15 floor — a deliberate A+B exception where the depth carries it.','A+B',[
+   A('@effect/sql feature across backends','Adapter Abstraction','each backend a different client wiring = Path A'),
+   A('Stream operator with back-pressure semantics','Backpressure','subtle async-orchestration invariant the naive impl fails'),
+   A('Schedule combinator (retry / backoff policy)','Retry','interpretation-depth contract')])
+]};
+const SEED_MARS={batch:1,repos:[
+ repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','3.9k',true,'gold',
+  'Providers + parsers + merge; clean API, multi-file, fully behavioural. Confirmed active.','',[
+   A('Change-diffing on reload','Diff/Merge/Patch','which keys added/changed/removed'),
+   A('Strict-mode Unmarshal (required keys, types)','Config Validation','clear behavioural contract')]),
+ repo('rs/zerolog','https://github.com/rs/zerolog','Go','MIT','12.4k',true,'gold',
+  'Formatters + hooks + sampling, composable and testable through public output.','',[
+   A('Hook ordering / sampling strategy','Tracing Hooks','composable, clear input→output')]),
+ repo('sindresorhus/ky','https://github.com/sindresorhus/ky','TypeScript','MIT','~13k',true,'gold',
+  'Fetch client with retry / hooks / timeout lifecycle — genuine TypeScript reliability contracts.','',[
+   A('Retry / backoff policy + hook ordering','Retry','clean behavioural surface across request stages')]),
+ repo('tidwall/gjson','https://github.com/tidwall/gjson','Go','MIT','13k',true,'gold',
+  'JSON path-query parser — input string in, value out. Clean, fully behavioural.','',[
+   A('Path-syntax extension / projection','Projections','string in → value out, easy to pin')]),
+ repo('casbin/casbin','https://github.com/casbin/casbin','Go','Apache-2.0','~20k',true,'test',
+  'Reclassified to Mars — config-driven enforce pipeline, not 5+ distinct paths. Solid Mars surface.','',[
+   A('Incremental role-manager consistency','Access Control','behavioural contract at Mars scale'),
+   A('Priority-based conflict resolution','Rule Engines','matcher + effector behaviour')]),
+ repo('gvergnaud/ts-pattern','https://github.com/gvergnaud/ts-pattern','TypeScript','MIT','~13k',true,'test',
+  'Exhaustive matching with deep type inference; runtime match() output is behavioural.','',[
+   A('New pattern combinator','Rule Engines','runtime output is pinnable')]),
+ repo('flightcontrolhq/superjson','https://github.com/flightcontrolhq/superjson','TypeScript','MIT','~3k',true,'test',
+  'Serialize/deserialize Dates, BigInts, Maps, Sets and custom types — clear round-trip contract.','',[
+   A('Custom-type registration / round-trip','Serialization','clear round-trip contract')])
+]};
+
+/* ---------- state + storage ---------- */
+let state={olympus:null,mars:null,used:[],gh:''};
+let activeModule='olympus', activeTier='olympus';
+let launchSel={repo:null,angles:[],category:'feature'};
+
+async function sget(k){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):null;}catch(e){return null;}}
+async function sset(k,v){try{await window.storage.set(k,JSON.stringify(v));}catch(e){console.error(e);}}
+async function sgetRaw(k){try{const r=await window.storage.get(k);return r?r.value:'';}catch(e){return '';}}
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function dedupe(a){const s=new Set(),o=[];a.forEach(n=>{const k=String(n).toLowerCase();if(!s.has(k)){s.add(k);o.push(n);}});return o;}
+
+function harvest(...batches){const m={};batches.forEach(b=>{if(!b||!b.repos)return;if(b.batch&&b.batch>1)return;b.repos.forEach(r=>m[String(r.fullName).toLowerCase()]=r);});return m;}
+function seedWithState(seed,prev){
+  const repos=seed.repos.map(s=>{
+    const p=prev[s.fullName.toLowerCase()];const f=clone(s);
+    if(p){
+      // migrate old slots[5]/slotsDone[5] OR new slots[3]/slotState[3]
+      const oldSlots=(p.slots||[]).filter(x=>x!==undefined);
+      for(let i=0;i<MAX_FEATURES;i++){ if(oldSlots[i]) f.slots[i]=oldSlots[i]; }
+      if(p.slotCat){ for(let i=0;i<MAX_FEATURES;i++) if(p.slotCat[i]) f.slotCat[i]=p.slotCat[i]; }
+      if(p.slotState){ for(let i=0;i<MAX_FEATURES;i++) if(p.slotState[i]) f.slotState[i]=p.slotState[i]; }
+      else if(p.slotsDone){ for(let i=0;i<MAX_FEATURES;i++) if(p.slotsDone[i]) f.slotState[i]='building'; }
+      if(p.intelligence) f.intelligence=p.intelligence;
+      if(typeof p.archived==='boolean') f.archived=p.archived; else if(p.cleared) f.archived=true;
+    }
+    return f;
+  });
+  return {batch:seed.batch,repos};
+}
+async function load(){
+  const ver=await sget(KEYS.version);let o=await sget(KEYS.olympus),m=await sget(KEYS.mars);
+  if(ver!==SEED_VERSION){
+    const prev=harvest(o,m);
+    o=(o&&o.batch>1)?o:seedWithState(SEED_OLYMPUS,prev);
+    m=(m&&m.batch>1)?m:seedWithState(SEED_MARS,prev);
+    await sset(KEYS.olympus,o);await sset(KEYS.mars,m);await sset(KEYS.version,SEED_VERSION);
+  }
+  state.olympus=o||clone(SEED_OLYMPUS);state.mars=m||clone(SEED_MARS);
+  let u=await sget(KEYS.used)||[];u=dedupe([...u,...state.olympus.repos.map(r=>r.fullName),...state.mars.repos.map(r=>r.fullName)]);
+  state.used=u;await sset(KEYS.used,u);
+  state.gh=await sget(KEYS.gh)||'';
+  state.analyzer=await sget(KEYS.analyzer)||'';
+}
+async function persistTier(t){await sset(t==='olympus'?KEYS.olympus:KEYS.mars,state[t]);}
+async function persistUsed(){await sset(KEYS.used,state.used);}
+
+/* ---------- router ---------- */
+const viewEl=document.getElementById('view');
+function render(){
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.m===activeModule));
+  if(activeModule==='olympus'){activeTier='olympus';renderBoard();}
+  else if(activeModule==='mars'){activeTier='mars';renderBoard();}
+  else if(activeModule==='launch'){renderLaunch();}
+  else if(activeModule==='acquire'){renderAcquire();}
+}
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('.navbtn');if(!b)return;activeModule=b.dataset.m;render();});
+
+/* ---------- BOARD (olympus/mars) ---------- */
+function renderBoard(){
+  const data=state[activeTier];const accent=activeTier==='olympus'?'gold':'cyan';
+  const total=data.repos.length, done=data.repos.filter(r=>r.archived).length;
+  let segs='';for(let i=0;i<total;i++)segs+=`<span class="seg ${i<done?'lit':''}"></span>`;
+  let html=`<h2 class="mh">${activeTier==='olympus'?'Olympus':'Mars'} <em>board</em></h2>
+    <p class="lede">${activeTier==='olympus'?'Lean tier — every repo has 5+ variant code-paths (the precondition). Difficulty is the feature you build on top (helper-layer / surface / instance-state). Three features max per repo.':'Deep tier — clean single-pattern repos where the work is feature density, not structural exploration.'}</p>
+    <div class="readout"><span class="batchtag">Batch ${String(data.batch).padStart(2,'0')}</span><div class="gauge ${accent}">${segs}</div><span class="stat"><b>${done}</b> of <b>${total}</b> repos closed</span></div>`;
+  if(activeTier==='olympus'){
+    html+=`<div class="panel" style="border-color:var(--green-deep);background:linear-gradient(180deg,var(--green-tint),transparent)">
+      <div class="seclbl" style="color:var(--green)">★ drizzle-team/drizzle-orm — retired, success story</div>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--text-2)">The repo that proved the system: <b>4 accepted submissions</b> (keyset/cursor pagination, chunked async-iterable iteration, and more). Retired from the active board so we stop overlapping our own accepted work — kept here as the baseline that earned the trust. New work runs on the repos below.</p></div>`;
+  }
+  html+=data.repos.map((r,i)=>repoCard(r,i)).join('');
+  if(total>0&&done===total){
+    html+=`<div class="panel" style="text-align:center"><h2 class="mh" style="margin-top:0">All ${activeTier} repos closed</h2>
+      <p class="lede" style="margin:0 auto 14px">Pull a fresh batch (${TIER_PLAN[activeTier].gold} gold + ${TIER_PLAN[activeTier].test} test), informed by what you closed, with zero repeats.</p>
+      <button class="btn ${accent==='gold'?'gold':'primary'}" id="genBtn">Generate next batch</button><div class="err" id="genErr" style="display:none"></div></div>`;
+  }
+  viewEl.innerHTML=html;
+  const gb=document.getElementById('genBtn');if(gb)gb.addEventListener('click',generateBatch);
+}
+function repoCard(r,idx){
+  const verChip=r.verified?`<span class="chip ver">✓</span>`:`<span class="chip unver">verify</span>`;
+  const pathChip=r.path?`<span class="chip path ${r.path.replace('+','')}">Path ${r.path}</span>`:'';
+  const accepted=r.slotState.some(s=>s==='accepted');
+  const hasIntel=accepted||(r.intelligence&&r.intelligence.trim());
+  const slots=r.slots.map((s,j)=>{
+    const st=r.slotState[j]||'idea';const nx={idea:'building',building:'submitted',submitted:'accepted',accepted:'idea'}[st];
+    const cat=(r.slotCat&&r.slotCat[j])||'feature';
+    return `<div class="slot"><span class="slotno">${j+1}</span>
+      <input type="text" placeholder="feature you're working on…" value="${esc(s)}" data-r="${idx}" data-j="${j}" ${r.archived?'disabled':''}>
+      <select class="catsel" data-rc="${idx}" data-jc="${j}">${CATEGORIES.map(c=>opt(c,c,cat)).join('')}</select>
+      <button class="lc" data-s="${st}" data-r="${idx}" data-j="${j}" data-nx="${nx}" title="click to advance">${st}</button></div>`;
+  }).join('');
+  const openA=(r.areas||[]).filter(a=>!a.avoid);
+  const doneA=(r.areas||[]).filter(a=>a.avoid);
+  const areasHtml=openA.map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('')
+    +(doneA.length?`<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>`+doneA.map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join(''):'');
+  const areasBlock=(openA.length||doneA.length)?`<details class="disc"${accepted?'':' open'}><summary>Strong areas — ${openA.length} open${doneA.length?', '+doneA.length+' closed':''}</summary>${areasHtml}<p class="hint" style="margin-top:8px">As you close features, completed concepts drop to "closed" and the open list is what to work next.</p></details>`:'';
+  const intelBlock=hasIntel?`<details class="disc"><summary>Repo intelligence</summary><textarea class="intelta" placeholder="Paste the Repo Intelligence doc Claude Code generated after acceptance…" data-intel="${idx}">${esc(r.intelligence)}</textarea></details>`:'';
+  return `<div class="card ${r.kind} ${r.archived?'archived':''}">
+    ${r.archived?'<span class="stamp">CLOSED</span>':''}
+    <div class="chead"><div class="titlecol"><h3 class="reponame">${r.displayName}</h3>
+      <div class="meta"><span class="chip"><b>${r.lang}</b></span><span class="chip">${r.license}</span><span class="chip">★ <b>${r.stars}</b></span>${pathChip}${verChip}</div></div>
+      <span class="kind ${r.kind}">${r.kind==='gold'?'Confirmed':'Candidate'}</span></div>
+    <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.commitsUrl}" target="_blank" rel="noopener">Commits ↗</a></div>
+    <p class="why">${r.why}</p>
+    <div class="sec"><div class="seclbl">Features <span class="hint">${r.slots.filter(Boolean).length}/${MAX_FEATURES} · set a category + advance the status per feature</span></div>${slots}</div>
+    ${areasBlock}
+    ${intelBlock}
+    <div class="cfoot"><span class="hint">${accepted?'★ has an accepted feature':'no accepted feature yet'}</span>
+      <button class="btn ${r.archived?'':'warn'}" data-arch="${idx}">${r.archived?'Re-open':'Close repo'}</button></div></div>`;
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+viewEl.addEventListener('click',async e=>{
+  const lc=e.target.closest('.lc');
+  if(lc){const i=+lc.dataset.r,j=+lc.dataset.j;state[activeTier].repos[i].slotState[j]=lc.dataset.nx;await persistTier(activeTier);renderBoard();return;}
+  const ar=e.target.closest('[data-arch]');
+  if(ar){const i=+ar.dataset.arch;const rp=state[activeTier].repos[i];rp.archived=!rp.archived;await persistTier(activeTier);renderBoard();return;}
+});
+viewEl.addEventListener('input',async e=>{
+  const t=e.target;
+  if(t.matches('input[data-r]')){const i=+t.dataset.r,j=+t.dataset.j;state[activeTier].repos[i].slots[j]=t.value;await persistTier(activeTier);return;}
+  if(t.matches('textarea[data-intel]')){const i=+t.dataset.intel;state[activeTier].repos[i].intelligence=t.value;await persistTier(activeTier);return;}
+});
+viewEl.addEventListener('change',async e=>{
+  const cs=e.target.closest('.catsel');
+  if(cs){const i=+cs.dataset.rc,j=+cs.dataset.jc;if(!state[activeTier].repos[i].slotCat)state[activeTier].repos[i].slotCat=['feature','feature','feature'];state[activeTier].repos[i].slotCat[j]=cs.value;await persistTier(activeTier);return;}
+});
+
+/* ---------- generate next batch (board) ---------- */
+async function generateBatch(){
+  const tier=activeTier,data=state[tier],plan=TIER_PLAN[tier],need=plan.gold+plan.test;
+  const btn=document.getElementById('genBtn'),errEl=document.getElementById('genErr');
+  errEl.style.display='none';btn.disabled=true;btn.innerHTML='<span class="spin"></span>Acquiring…';
+  const used=state.used.join(', ');
+  const guide=tier==='olympus'
+    ?"OLYMPUS: prefer repos with 5+ adapters/dialects/backends each a DIFFERENT pattern AND a discovery-gap sibling code path, OR deep concurrency/type systems. Must support 700+ agent LOC across 6+ existing files."
+    :"MARS: clean public API, 5-15 files, clear behavioural contracts. Challenging but more solvable.";
+  const sys=`You curate GitHub repos for the ${tier} tier of an AI coding-challenge pipeline. Return ONLY a raw JSON array, no prose/fences. Exactly ${need} objects: ${plan.gold} "kind":"gold" and ${plan.test} "kind":"test". Constraints: PRIMARY language Go or TypeScript only (never JS-primary); permissive licence (MIT/Apache-2.0/BSD); 500+ stars; commit within 12 months; production-grade. ${guide} NEVER include any repo in this exclusion list: ${used}. Keys per object: fullName, url, lang, license, stars (e.g. "~12k"), kind, why (<=22 words)${tier==='olympus'?', path ("A"/"B"/"A+B")':''}.`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:sys,messages:[{role:"user",content:`Generate the next ${tier} batch as a JSON array of ${need} repos.`}]})});
+    const j=await res.json();let txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').replace(/```json/gi,'').replace(/```/g,'').trim();
+    const arr=JSON.parse(txt);if(!Array.isArray(arr))throw new Error('bad shape');
+    const us=new Set(state.used.map(s=>s.toLowerCase()));
+    const fresh=arr.filter(r=>r&&r.fullName&&!us.has(String(r.fullName).toLowerCase()));
+    if(fresh.length<need)throw new Error('only '+fresh.length+' non-duplicate repos — retry');
+    const built=fresh.slice(0,need).map(r=>repo(r.fullName,r.url||('https://github.com/'+r.fullName),r.lang||'—',r.license||'—',r.stars||'—',false,r.kind==='gold'?'gold':'test',r.why||'',tier==='olympus'?(r.path||''):'',[]));
+    built.forEach(b=>b.source='ai');
+    const g=built.filter(r=>r.kind==='gold'),t=built.filter(r=>r.kind==='test');
+    while(g.length<plan.gold&&t.length){const x=t.shift();x.kind='gold';g.push(x);}
+    while(t.length<plan.test&&g.length>plan.gold){const x=g.pop();x.kind='test';t.push(x);}
+    const ordered=[...g.slice(0,plan.gold),...t.slice(0,plan.test)];
+    state[tier]={batch:data.batch+1,repos:ordered};state.used=dedupe([...state.used,...ordered.map(r=>r.fullName)]);
+    await persistTier(tier);await persistUsed();renderBoard();
+  }catch(err){btn.disabled=false;btn.textContent='Generate next batch';errEl.textContent='Could not pull a clean batch — '+(err.message||'failed')+'.';errEl.style.display='block';}
+}
+
+/* ---------- shared helpers ---------- */
+function detCheck(name,tag,status,detail,fix){return {name,tag,status,detail,fix:fix||''};}
+function lampClass(s){return s==='pass'?'pass':s==='warn'?'warn':s==='fail'?'fail':'idle';}
+function opt(v,l,cur){return `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`;}
+function gapTypeFor(r){const paths=repoDiv(r),s=r.screen||{};if(s.helpers==='none')return 'feature ABOVE the helper layer — agents write per-variant code from scratch (the proven gap)';if(paths!=null&&paths>=5)return 'structural multi-path — confirm the target layer has NO free per-variant helpers';return 'name the gap (need 5+ variant paths the feature builds from scratch)';}
+/* ---------- proven difficulty mechanism (30% TypeORM data, 130+ iterations) ----------
+   Divergence is ONLY the precondition (are there 5+ variant paths?). It does NOT predict
+   difficulty. The real screen is feature-level judgment: does the target layer already
+   hand agents free per-variant helpers, is the API surface rich, is there instance state. */
+// Difficulty is BEHAVIOURAL, not surface-size. Keep the public surface to 1-2 new symbols;
+// more symbols = more prescriptive = agents follow the recipe = easier. The levers are:
+// no free helpers, the obvious approach being wrong, and a naive impl failing an invariant.
+const SCREEN_Q=[
+ {k:'helpers',q:'Target-layer helpers',sub:'Does the layer your feature targets ALREADY expose per-variant helper methods?',opts:[['free','Free helpers (EASY)'],['none','No helpers — write per-variant (HARD)']]},
+ {k:'approach',q:'Obvious approach',sub:'Keep the surface to 1-2 new public symbols. Is the FIRST implementation an agent would reach for actually WRONG?',opts:[['wrong','Obvious approach is WRONG (HARD)'],['works','Obvious approach works (EASY)']]},
+ {k:'invariant',q:'Intermediate-state invariant',sub:'Does the naive implementation pass every value check but FAIL a count / ordering / intermediate-state invariant?',opts:[['fails','Naive impl FAILS an invariant (HARD)'],['passes','Naive impl passes everything']]}
+];
+// Tier determination — is THIS repo Olympus-worthy or Mars-worthy?
+// Board repos carry a curated, authoritative tier. External repos are judged structurally:
+// enough variant paths AND a behaviourally non-trivial surface => Olympus; otherwise Mars
+// (thin name-keyword repos can't host a no-free-helper feature where the obvious approach is wrong).
+function repoTier(r){
+  const paths=repoDiv(r);
+  const nm=(r.fullName||'').toLowerCase(), kinds=(r.divKinds||[]).map(k=>(k||'').toLowerCase());
+  const hay=nm+' '+kinds.join(' ');
+  const THIN=/config|conf|koanf|viper|pars(e|er)|format|codec|encod|decod|marshal|serializ|yaml|toml|\bhcl\b|dotenv|\benv\b|logg|validat|\blint|i18n|locale|color|ansi|\bflag|getopt|slug|uuid|\bhash|template|markdown/;
+  const RICH=/orm|sql|\bdb\b|database|dialect|quer|router|route|\bmux\b|server|http|client|\brpc|grpc|graphql|pool|session|transact|\btx\b|cache|queue|broker|stream|socket|\bws\b|connection|engine|schedul|worker|migrat|replicat|consensus|raft|module|provider|guard/;
+  const STATEFUL=/orm|sql|\bdb\b|database|dialect|router|server|client|pool|session|transact|cache|queue|stream|socket|connection|engine|schedul|driver|adapter|store|module/;
+  const richHit=RICH.test(hay), thinHit=THIN.test(hay);
+  // approachFeasible: can the repo host a feature whose OBVIOUS approach is wrong? (keyword proxy)
+  // invariantFeasible: does it carry order/lifecycle/intermediate state to violate? (keyword proxy)
+  let approachFeasible = richHit ? true : (thinHit ? false : (kinds.length>=4));
+  let invariantFeasible = STATEFUL.test(hay) && !thinHit;
+  const curated=(r.tier==='olympus'||r.tier==='mars')?r.tier:null;
+  let tier, why;
+  if(curated){tier=curated;
+    // A curated tier is authoritative: the feasibility flags MUST agree with it, or the
+    // recommendation would contradict the tier (e.g. recommend the easy answer on a curated Olympus repo).
+    if(curated==='olympus'){approachFeasible=true; invariantFeasible=true;}
+    else {approachFeasible=false; invariantFeasible=false;}
+    why=curated==='olympus'
+      ? (paths!=null?paths+' variant paths — ':'')+'curated Olympus-tier: verified multi-variant structure that can host a feature whose obvious approach is wrong.'
+      : (paths!=null?paths+' paths but ':'')+'curated Mars-tier: the per-variant work is thin (small adapters / parsers), so a hard-behaviour Olympus feature would be bolted-on. Medium-tier is the honest home.';}
+  else if(paths==null){tier='mars'; why='code paths not read yet — read live or set the count';}
+  else if(paths<5){tier='mars'; why='only '+paths+' variant paths — not enough breadth for Olympus. Mars-tier.';}
+  else if(approachFeasible&&invariantFeasible){tier='olympus'; why=paths+' variant paths over a behaviourally non-trivial surface ('+(kinds[0]||'variants')+') — can host a no-free-helper feature where the obvious approach fails.';}
+  else {tier='mars'; why=paths+' paths but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — a hard-behaviour feature would be bolted-on. Mars-tier is the honest home.';}
+  return {tier, why, approachFeasible, invariantFeasible, paths, curated:!!curated};
+}
+function standardsFor(tier){return tier==='olympus'
+  ? {loc:'700+ (600 floor)', files:'6+', desc:'≤500 words (cluster 496-500)', msg:'85+ solving-agent MSGs', pass:'≤30% of 10 runs (sweet 20%)'}
+  : {loc:'450-500', files:'5-15', desc:'200-250 words (target 200)', msg:'no MSG target', pass:'20-30% ideal, ≤40% ceiling'};}
+// Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
+// Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
+async function ghCodeSearch(name,term){
+  const key=name.toLowerCase();
+  if(!term||!term.trim()){return;}
+  extCache[key]={...(extCache[key]||{}),probe:{loading:true,term}};paintDash();
+  try{
+    const url='https://api.github.com/search/code?q='+encodeURIComponent('repo:'+name+' '+term)+'&per_page=1';
+    const headers={'Accept':'application/vnd.github+json'};
+    if(state.gh)headers['Authorization']='Bearer '+state.gh;
+    const res=await fetch(url,{headers});
+    if(res.status===401||res.status===403){extCache[key].probe={term,error:'code search needs a valid token AND only runs outside the sandbox (403)'};paintDash();return;}
+    if(!res.ok){extCache[key].probe={term,error:'search failed ('+res.status+')'};paintDash();return;}
+    const data=await res.json();
+    extCache[key].probe={term,count:data.total_count};paintDash();
+  }catch(e){extCache[key].probe={term,error:'blocked (sandbox CSP or network) — '+(e.message||'failed')};paintDash();}
+}
+// ===== RUNG 1 — read the actual source (browser-only; works in the downloaded copy, CSP-blocked in the sandbox) =====
+// Fetches a targeted slice of files at the pinned commit and counts REAL exported/public symbols,
+// converting the surface + helper screen inputs from name-keyword guesses into measurements.
+function langOf(path){if(/\.tsx?$/.test(path))return 'ts';if(/\.jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
+function scanSymbols(text,path){
+  const L=langOf(path),lines=text.split('\n'),sym=new Set();let methods=0,barrel=0,concreteMethods=0;
+  const add=n=>{if(n&&n.length>1&&n!=='from'&&n!=='type')sym.add(n);};
+  if(L==='ts'||L==='js'){let inAbstract=false;
+    lines.forEach(ln=>{let m;
+      if(m=ln.match(/^export\s+(?:async\s+)?function\s+([A-Za-z0-9_$]+)/))add(m[1]);
+      else if(m=ln.match(/^export\s+(abstract\s+)?class\s+([A-Za-z0-9_$]+)/)){add(m[2]);inAbstract=!!m[1];}
+      else if(m=ln.match(/^export\s+(?:declare\s+)?(?:const|let|var)\s+([A-Za-z0-9_$]+)/))add(m[1]);
+      else if(m=ln.match(/^export\s+interface\s+([A-Za-z0-9_$]+)/))add(m[1]);
+      else if(m=ln.match(/^export\s+(?:default\s+)?enum\s+([A-Za-z0-9_$]+)/))add(m[1]);
+      else if(m=ln.match(/^export\s+(?:type\s+)?\{([^}]*)\}/))m[1].split(',').forEach(p=>{const nm=p.trim().split(/\s+as\s+/).pop().trim();if(nm&&nm!=='type')add(nm);});
+      else if(/^export\s+(?:type\s+)?\*\s+from/.test(ln))barrel++;
+      if(/^\s{2,}(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concreteMethods++;}
+    });
+  } else if(L==='go'){
+    lines.forEach(ln=>{let m;
+      if(m=ln.match(/^func\s+(?:\([^)]*\)\s+)?([A-Z][A-Za-z0-9_]*)\s*\(/)){add(m[1]);if(/^func\s+\(/.test(ln)){methods++;concreteMethods++;}}
+      else if(m=ln.match(/^type\s+([A-Z][A-Za-z0-9_]*)\s+(?:struct|interface)/))add(m[1]);});
+  } else if(L==='rust'){lines.forEach(ln=>{let m;if(m=ln.match(/^\s*pub\s+(?:async\s+)?fn\s+([A-Za-z0-9_]+)/)){add(m[1]);methods++;concreteMethods++;}else if(m=ln.match(/^\s*pub\s+(?:struct|trait|enum)\s+([A-Za-z0-9_]+)/))add(m[1]);});}
+  else if(L==='py'){lines.forEach(ln=>{let m;if(m=ln.match(/^def\s+([A-Za-z0-9_]+)/))add(m[1]);else if(m=ln.match(/^class\s+([A-Za-z0-9_]+)/))add(m[1]);else if(m=ln.match(/^\s{4}def\s+([A-Za-z0-9_]+)/)){methods++;concreteMethods++;}});}
+  return {lang:L,symbols:[...sym],count:sym.size,methods,barrel,concreteMethods};
+}
+function pickTargetFiles(paths,kinds){
+  if(!paths||!paths.length)return [];
+  const ENTRY=/(^|\/)(index|mod|lib|main|__init__)\.(ts|tsx|js|jsx|go|rs|py)$|(^|\/)src\/index\./;
+  const contRe=new RegExp('(^|/)('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9]/gi,'')).join('|'):'adapters|drivers|dialects|providers|backends|handlers|plugins|modules|stores|engines')+')(/|$)','i');
+  const entries=paths.filter(p=>ENTRY.test(p)&&p.split('/').length<=3);
+  const variantFiles=paths.filter(p=>contRe.test(p));
+  // the layer ABOVE the variant dirs: files that sit one level up from a container dir
+  const parentDirs=new Set(variantFiles.map(p=>p.replace(new RegExp('(.*?)/?('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9]/gi,'')).join('|'):'adapters|drivers')+')\\b.*','i'),'$1')).filter(Boolean));
+  const parentLayer=paths.filter(p=>{const dir=p.split('/').slice(0,-1).join('/');return parentDirs.has(dir);});
+  // sample: all entries, up to 8 parent-layer files, up to 2 files from each of the first ~6 variants
+  const byVariant={};variantFiles.forEach(p=>{const seg=(p.match(contRe)?p.split('/').slice(0, p.split('/').findIndex(s=>contRe.test('/'+s+'/'))+2 ).join('/'):p);byVariant[seg]=byVariant[seg]||[];if(byVariant[seg].length<2)byVariant[seg].push(p);});
+  const variantSample=Object.values(byVariant).slice(0,6).flat();
+  const picked=[...new Set([...entries.slice(0,4),...parentLayer.slice(0,8),...variantSample])];
+  return picked.slice(0,25);
+}
+async function analyzeSource(name){
+  const key=name.toLowerCase(),c=extCache[key]||{};
+  const branch=c.commit||c.defaultBranch;
+  // Rung 4 — if a backend is configured, use it (full-repo scan, per-variant, cached).
+  if(state.analyzer){
+    extCache[key]={...c,source:{loading:true,backend:true}};paintDash();
+    try{
+      const res=await fetch(state.analyzer.replace(/\/$/,'')+'/analyze?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(branch||'HEAD'));
+      const d=await res.json();
+      if(d.error){extCache[key]={...extCache[key],source:{error:'backend: '+d.error}};paintDash();return;}
+      extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,freeHelperSignal:d.freeHelperSignal,at:Date.now()}};paintDash();return;
+    }catch(e){extCache[key]={...extCache[key],source:{error:'backend unreachable ('+(e.message||'failed')+') — check the URL / CORS / that it runs outside the sandbox'}};paintDash();return;}
+  }
+  if(!c.treePaths||!c.treePaths.length){extCache[key]={...c,source:{error:'no tree available — read the repo live first (and run outside the sandbox)'}};paintDash();return;}
+  if(!branch){extCache[key]={...c,source:{error:'no commit/branch pinned — read live first'}};paintDash();return;}
+  const files=pickTargetFiles(c.treePaths,c.divKinds);
+  if(!files.length){extCache[key]={...c,source:{error:'could not select target files from the tree'}};paintDash();return;}
+  extCache[key]={...c,source:{loading:true,planned:files.length}};paintDash();
+  let surface=new Set(),methods=0,barrel=0,concrete=0,read=0,failed=0;const perVariant=[];
+  for(const path of files){
+    try{
+      const res=await fetch('https://raw.githubusercontent.com/'+name+'/'+branch+'/'+path);
+      if(!res.ok){failed++;continue;}
+      const txt=await res.text();const r=scanSymbols(txt,path);
+      r.symbols.forEach(s=>surface.add(s));methods+=r.methods;barrel+=r.barrel;concrete+=r.concreteMethods;read++;
+      perVariant.push({path,count:r.count,methods:r.methods});
+    }catch(e){failed++; if(read===0&&failed===1){extCache[key]={...extCache[key],source:{error:'blocked — raw.githubusercontent.com is unreachable here (sandbox CSP). Run the downloaded copy in your browser.'}};paintDash();return;}}
+  }
+  extCache[key]={...extCache[key],source:{surface:surface.size,methods,barrel,concrete,filesRead:read,filesFailed:failed,commit:branch,at:Date.now()}};
+  paintDash();
+}
+function recommendScreen(r){
+  const t=repoTier(r), kinds=(r.divKinds||[]), k0=(kinds[0]||'variant');
+  return {
+    helpers:{rec:'none',feasible:true,why:'aim a layer ABOVE the '+k0+' helpers — if the feature can call per-'+k0+' helpers for free it solves at ~80% (the TreeRepository trap)'},
+    approach:{rec:t.approachFeasible?'wrong':'works',feasible:t.approachFeasible,why:t.approachFeasible
+      ?'keep it to 1-2 new public symbols and design the behaviour so the first approach an agent reaches for is wrong (more symbols = more prescriptive = easier)'
+      :'this surface is too thin to make the obvious approach wrong without it feeling contrived — the smaller Mars scale fits'},
+    invariant:{rec:t.invariantFeasible?'fails':'passes',feasible:t.invariantFeasible,why:t.invariantFeasible
+      ?'pin an intermediate-state invariant (count / ordering / lifecycle) the naive implementation violates while still passing value checks'
+      :'little order/lifecycle state to violate here — a count/state invariant would be forced; Mars scale'}
+  };
+}
+function estPass(r){
+  const s=r.screen||{},t=repoTier(r),paths=repoDiv(r);
+  if(paths==null&&!t.curated) return {lo:null,hi:null,label:'Count the code paths first (read live or set the count)',cls:'screen',tier:t.tier};
+  if(s.helpers==null||s.approach==null||s.invariant==null) return {lo:null,hi:null,label:'Answer the three questions to estimate',cls:'screen',tier:t.tier};
+  if(s.helpers==='free') return {lo:70,hi:95,label:'Free helpers — agents solve it cheaply (too easy for either tier)',cls:'bad',tier:t.tier};
+  const hard=(s.approach==='wrong'?1:0)+(s.invariant==='fails'?1:0);
+  // A Mars-tier repo can't sustain the Olympus band even if the operator picks hard answers.
+  if(t.tier==='mars'){
+    const over=(hard>=1);
+    return {lo:22,hi:35,label:over?'Mars-scale gap — picks exceed what this repo sustains; the hard-behaviour parts read as bolted-on':'Solid Mars structure',cls:'warn',tier:'mars',overreach:over};
+  }
+  if(hard===2) return {lo:18,hi:30,label:'Proven Olympus structure (~20-30%)',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:28,hi:42,label:'Olympus-viable — add the missing factor',cls:'warn',tier:'olympus'};
+  return {lo:40,hi:60,label:'Obvious approach works + no invariant — too easy; drop to Mars scale',cls:'warn',tier:'olympus',demote:true};
+}
+function chartGauge(r){
+  const e=estPass(r),W=460,H=66,padL=8,padR=8,innerW=W-padL-padR,y=26,bh=16;
+  const x=v=>padL+(v/100)*innerW;
+  let body=`<rect x="${padL}" y="${y}" width="${innerW}" height="${bh}" rx="8" fill="${CHC.line}"/>`;
+  // zones: <=30 Olympus (green), 30-40 Mars (amber), >40 too easy (grey)
+  body+=`<rect x="${padL}" y="${y}" width="${(30/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
+  body+=`<rect x="${x(30)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
+  // markers at 20 (sweet) and 30 (ceiling)
+  [[20,'sweet 20%',CHC.green],[30,'ceiling 30%',CHC.warn],[40,'Mars 40%',CHC.muted]].forEach(([v,lbl,col])=>{
+    body+=`<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+bh+4}" stroke="${col}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+    body+=`<text x="${x(v)}" y="${y+bh+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${col}">${lbl}</text>`;});
+  if(e.lo!=null){const bx=x(e.lo),bw=Math.max(6,x(e.hi)-x(e.lo)),col=e.cls==='ok'?CHC.green:e.cls==='warn'?CHC.warn:CHC.grey;
+    body+=`<rect x="${bx.toFixed(1)}" y="${y-2}" width="${bw.toFixed(1)}" height="${bh+4}" rx="6" fill="${col}" filter="url(#gg)"/>`;
+    body+=`<text x="${(bx+bw/2).toFixed(1)}" y="${y-7}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="${CHC.light}">${e.lo}-${e.hi}%</text>`;
+  }else{body+=`<text x="${padL+innerW/2}" y="${y-7}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="${CHC.muted}">${esc(e.label)}</text>`;}
+  return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gg" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${body}</svg>`;
+}
+function chartFactors(r){
+  const s=r.screen||{},paths=repoDiv(r),t=repoTier(r),mars=t.tier==='mars';
+  const pathsOk=(paths!=null&&paths>=5)||(paths==null&&t.curated);
+  const rows=[
+    ['5+ code paths', pathsOk, paths==null?(t.curated?'curated':'?'):paths+' paths', false],
+    ['No free helpers', s.helpers==='none', s.helpers==null?'unanswered':s.helpers==='none'?'no helpers':'FREE helpers', false],
+    ['Obvious approach wrong', s.approach==='wrong', s.approach==null?'unanswered':s.approach==='wrong'?'wrong':'works', mars],
+    ['Naive fails invariant', s.invariant==='fails', s.invariant==null?'unanswered':s.invariant==='fails'?'fails':'passes', mars]
+  ];
+  const W=460,rowH=26,padL=130,top=4,H=top+rows.length*rowH+2,innerW=W-padL-50;
+  let b='';
+  rows.forEach((rw,i)=>{const y=top+i*rowH,ok=rw[1],neutral=rw[3]&&!ok,unans=rw[2]==='unanswered';
+    const col=ok?CHC.green:(neutral?CHC.line2:(unans?CHC.line2:CHC.warn));
+    b+=`<text x="${padL-8}" y="${y+15}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9.5" fill="${neutral?CHC.muted:CHC.light}">${rw[0]}</text>`;
+    b+=`<rect x="${padL}" y="${y+5}" width="${innerW}" height="12" rx="6" fill="${CHC.line}"/>`;
+    b+=`<rect x="${padL}" y="${y+5}" width="${(ok?innerW:innerW*0.18).toFixed(1)}" height="12" rx="6" fill="${col}"${ok?' filter="url(#gf)"':''}/>`;
+    b+=`<text x="${padL+innerW+6}" y="${y+15}" font-family="JetBrains Mono, monospace" font-size="8" fill="${CHC.muted}">${esc(rw[2])}${neutral?' · n/a Mars':''}</text>`;});
+  return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gf" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
+}
+function olympusFit(r){
+  const t=repoTier(r),paths=repoDiv(r), s=r.screen||{};
+  if(paths==null&&!t.curated) return {v:'screen',t:'Count the code paths first (read live, or set divergence).'};
+  if(s.helpers==null||s.approach==null||s.invariant==null) return {v:'screen',t:(paths!=null?paths+' code paths. ':'')+'Assessed '+t.tier.toUpperCase()+'-worthy — '+t.why+' Screen the feature below to confirm.'};
+  if(s.helpers==='free') return {v:'weak',t:'EASY — the target layer already exposes per-variant helpers, so agents call them for free (TypeORM TreeRepository = 100% pass). Move the feature ONE LAYER ABOVE the helpers, or route to Mars.'};
+  if(t.tier==='mars'){
+    const over=(s.approach==='wrong'||s.invariant==='fails');
+    return {v:over?'possible':'strong',t:over
+      ? 'MARS-worthy repo, Olympus-grade picks. '+t.why+' Forcing a wrong-obvious-approach + invariant here will read as bolted-on — submit as Mars (smaller scope) or pick an Olympus-capable repo.'
+      : 'MARS-worthy — '+t.why+' No free helpers + Mars scope = a clean medium-tier challenge. Submit under Mars standards.'};
+  }
+  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'OLYMPUS-worthy — '+paths+' paths, NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. The proven ~20-30% structure (small surface, hard behaviour).'};
+  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'OLYMPUS-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward 20-30%.'};
+  return {v:'possible',t:'OLYMPUS-capable repo but easy picks — the obvious approach works and nothing violates an invariant, so it lands at Mars scale. Make the obvious approach wrong or add an intermediate-state invariant, or submit as Mars.'};
+}
+function tierBanner(r){
+  const t=repoTier(r),std=standardsFor(t.tier),paths=repoDiv(r);
+  if(paths==null&&!t.curated) return '';
+  const label=t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY';
+  const pathNote=(paths==null&&t.curated)?' <span class="hint">(path count reads live on select)</span>':'';
+  return `<div class="tierband ${t.tier}"><div class="tiertop"><span class="tierlabel">${label}</span><span class="tiertag">${t.curated?'curated':'assessed live'}</span></div><div class="tierwhy">${esc(t.why)}${pathNote}</div><div class="tierstd">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards — LOC <b>${std.loc}</b> · files ${std.files} · description ${std.desc} · pass ${std.pass}.</div></div>`;
+}
+function difficultyScreen(r){
+  const s=r.screen||{},paths=repoDiv(r),rec=recommendScreen(r),t=repoTier(r),pr=(extCache[(r.fullName||'').toLowerCase()]||{}).probe;
+  const pre=`<div class="hint" style="margin:0 0 10px">Code paths: <b>${paths==null?'?':paths}</b> ${paths!=null&&paths>=5?'(precondition met — 5+)':'(need 5+ variant paths the feature writes from scratch)'}. These three answers describe the <b>feature you will build</b> — the console recommends the realistic answer for this <b>${t.tier}-tier</b> repo (✦); confirm or override.</div>`;
+  const src=(extCache[(r.fullName||'').toLowerCase()]||{}).source;
+  let honest;
+  if(src&&!src.error&&!src.loading){
+    const helperSignal=(src.freeHelperSignal!=null?src.freeHelperSignal:(src.concrete>=8))?'free per-variant helpers LIKELY present — target a layer ABOVE them':'no obvious free helpers in the layer above variants';
+    const prov=src.backend?'backend, full repo':'browser, ~'+src.filesRead+'-file sample';
+    honest=`<div class="honest measured">✓ <b>Source read</b> (${prov}) — ${src.filesRead} files at <span class="mono">${esc(String(src.commit).slice(0,10))}</span>. Measured: surface <b>${src.surface}${src.barrel?' (+'+src.barrel+' barrel)':''}</b> symbols, <b>${src.concrete}</b> concrete methods → <b>${helperSignal}</b>. <a href="#" id="srcRead" style="color:var(--green)">re-read</a><div class="hint" style="margin-top:6px">Measures the <b>helpers</b> lever + surface size from real code. It does <b>not</b> judge "obvious approach wrong" or "naive fails an invariant" — behavioural reasoning, still your call (or a Claude pass).</div></div>`;
+  } else if(src&&src.loading){
+    honest=`<div class="honest"><span class="hint">Reading source — ${src.planned} files at the pinned commit…</span></div>`;
+  } else {
+    honest=`<div class="honest">⚠ The console reads repo <b>metadata + folder names only</b> — it does <b>not</b> read source. Tier and recommendations are name-keyword heuristics; these answers are <b>your</b> judgment. ${src&&src.error?'<span style="color:var(--warn)">Source read failed: '+esc(src.error)+'</span> ':''}<a href="#" id="srcRead" style="color:var(--green);font-weight:600">▸ Read source (measured, browser-only)</a> to turn the helpers lever + surface size into real numbers.</div>`;
+  }
+  const anyOff=SCREEN_Q.some(Q=>s[Q.k]&&s[Q.k]!==rec[Q.k].rec);
+  const allRec=SCREEN_Q.every(Q=>s[Q.k]===rec[Q.k].rec);
+  const bar=`<div class="screnbar"><button class="btn ${allRec?'':'primary'}" id="scTakeRec">Use recommended ✦</button><button class="btn" id="scClear">Clear</button>${anyOff?'<span class="hint" style="align-self:center">you\'ve overridden a recommendation — the read-out reflects your choice</span>':''}</div>`;
+  const rows=SCREEN_Q.map(Q=>{const cur=s[Q.k],rc=rec[Q.k];
+    return `<div class="scrow"><div class="scq"><b>${Q.q}</b><span class="hint"> — ${Q.sub}</span></div><div class="scopts">`+
+      Q.opts.map(o=>{const isRec=o[0]===rc.rec;return `<button class="scbtn ${cur===o[0]?'on':''} ${isRec?'rec':''}" data-sc="${Q.k}" data-scv="${o[0]}">${esc(o[1])}${isRec?'<span class="recbadge">✦ rec</span>':''}</button>`;}).join('')+
+      `</div><div class="scwhy ${rc.feasible===false?'thin':''}">✦ recommended: <b>${esc(Q.opts.find(o=>o[0]===rc.rec)[1])}</b> — ${esc(rc.why)}</div>`+
+      (Q.k==='helpers'?`<div class="probe"><span class="hint">Verify live (code search):</span><input id="probeTerm" placeholder="a helper symbol, e.g. createQueryBuilder" value="${pr&&pr.term?esc(pr.term):''}"><button class="btn" id="probeBtn">Probe</button>${pr?(pr.loading?'<span class="hint">searching…</span>':pr.error?'<span class="hint" style="color:var(--warn)">'+esc(pr.error)+'</span>':'<span class="hint"><b style="color:var(--green)">'+pr.count+'</b> match'+(pr.count===1?'':'es')+' for <span class="mono">'+esc(pr.term)+'</span> — a signal, not proof (code search is fuzzy)</span>'):''}</div>`:'')+
+      `</div>`;}).join('');
+  return pre+honest+`<div class="screenbox">${rows}</div>${bar}`;
+}
+function difficultyReadout(r){
+  const e=estPass(r),t=repoTier(r),std=standardsFor(t.tier);
+  const warn=e.overreach?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Over-reach:</b> these picks exceed what a Mars-tier repo sustains — the rich/stateful parts will read as bolted-on. Submit as Mars (smaller scope), or pick an Olympus-capable repo.</div>`
+    :e.demote?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Demote:</b> Olympus-capable repo, but the obvious approach works and nothing fails an invariant — these picks land at Mars scale. Make the obvious approach wrong / add an invariant for Olympus, or submit as Mars.</div>`:'';
+  const stdline=`<div class="stdline">Read-out scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
+  return `<div class="charts">
+    <div class="chartcard wide"><p class="chartttl">Estimated pass-rate band <span class="chest">estimate, not measured</span></p><p class="chartsub">${esc(e.label)}. Heuristic from the screen — only a real agent batch gives the true number. Lime zone ≤30%, amber 30-40%.</p>${chartGauge(r)}</div>
+    <div class="chartcard wide"><p class="chartttl">Difficulty factors</p><p class="chartsub">Which proven levers are satisfied for a <b>${t.tier}</b> submission.</p>${chartFactors(r)}</div>
+  </div>${warn}${stdline}`;
+}
+function wireScreen(r){
+  const key=(r.fullName||'').toLowerCase(),rec=recommendScreen(r);
+  document.querySelectorAll('[data-sc]').forEach(b=>b.addEventListener('click',()=>{
+    extCache[key]={...(extCache[key]||{}),screen:{...((extCache[key]||{}).screen||{}),[b.dataset.sc]:b.dataset.scv}};paintDash();}));
+  const tk=document.getElementById('scTakeRec');if(tk)tk.addEventListener('click',()=>{
+    const sc={};SCREEN_Q.forEach(Q=>sc[Q.k]=rec[Q.k].rec);
+    extCache[key]={...(extCache[key]||{}),screen:sc};paintDash();});
+  const cl=document.getElementById('scClear');if(cl)cl.addEventListener('click',()=>{
+    extCache[key]={...(extCache[key]||{}),screen:{}};paintDash();});
+  const pb=document.getElementById('probeBtn');if(pb)pb.addEventListener('click',()=>{const t=document.getElementById('probeTerm');ghCodeSearch(r.fullName,t?t.value:'');});
+  const sr=document.getElementById('srcRead');if(sr)sr.addEventListener('click',ev=>{ev.preventDefault();analyzeSource(r.fullName);});
+}
+function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':'var(--muted-2)';}
+function deriveAreas(r){
+  if((r.areas||[]).length) return r.areas;
+  const kinds=r.divKinds||[]; if(!kinds.length) return [];
+  const k0=(kinds[0]||'variant'), sing=k0.replace(/s$/,''), best=topAngles(r,3);
+  return [
+    {area:'A unified '+best[0]+' operation across all '+k0, angle:best[0], why:'every '+sing+' must implement it identically; one silent gap on a single path is the failing test — agents must read all '+(repoDiv(r)||'the')+' paths'},
+    {area:'Cross-'+sing+' invariant — '+best[1], angle:best[1], why:'holds across every path; fails silently if one '+sing+' diverges. This is the discovery gap, not a transcribable line'},
+    {area:best[2]+' on the shared surface', angle:best[2], why:'layer this onto the same API so the feature carries '+(repoDiv(r)||'multiple')+' paths of weight, not one'}
+  ];
+}
+function analysisResults(r,div){
+  const t=repoTier(r),best=topAngles(r,10),tmpl=anglesAreTemplate(r),std=standardsFor(t.tier);
+  const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
+  const angWarn=tmpl?`<div class="fit weak" style="margin:0 0 10px"><span class="fitdot"></span><b>These angles are TEMPLATE-derived, not repo-specific.</b> No variant folders were detected and the screen is unanswered, so the ranking is a generic list. Answer the screen or set the path count to make it repo-specific.</div>`:'';
+  const angChips=best.map((a,i)=>`<span class="angle sel" style="cursor:default"><b style="color:var(--bg);margin-right:5px">${i+1}</b>${esc(a)}</span>`).join('');
+  const comboHtml=comboFor(r).map((c,i)=>`<div class="combo"><div class="cpair">${i+1}. ${c.angles.map(esc).join('  +  ')} &rarr; 1</div><div class="cwhy">${esc(c.why)}</div></div>`).join('');
+  const areas=deriveAreas(r),derived=!((r.areas||[]).length);
+  const openA=areas.filter(a=>!a.avoid).map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('');
+  const doneA=areas.filter(a=>a.avoid).map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join('');
+  const doctrineHtml=relevantDoctrine(r).map(d=>`<div class="dlaw ${d.c==='gold'?'lime':''}"><h5>${d.h}</h5>${d.body}</div>`).join('');
+  const stdCard=`<div class="dlaw lime"><h5>Standards for THIS submission — ${t.tier.toUpperCase()}</h5><p>LOC <b>${std.loc}</b> &middot; files ${std.files} &middot; description ${std.desc} &middot; ${std.msg} &middot; pass ${std.pass}. ${t.tier==='olympus'?'The feature must sit above the helper layer with only 1-2 new public symbols, an obvious approach that is WRONG, and an intermediate-state invariant the naive impl fails — hard behaviour, not surface size, earns the 700+ LOC.':'Medium scope — a focused feature with real cross-file coupling. Do NOT pad to Olympus scale; that is what gets Mars work bounced.'}</p></div>`;
+  const repoIntelTxt=(r.intelligence&&r.intelligence.trim())?r.intelligence.trim():'';
+  const repoProfile=`${div!=null?div+' '+repoUnit(r):'paths ?'}  &middot;  tier: ${t.tier}  &middot;  gap: ${gapTypeFor(r)}`;
+  const repoIntelHtml=repoIntelTxt
+    ? `<div class="hint" style="margin:0 0 6px">What ${esc(r.fullName)} has taught us (from accepted work — reuse, re-grep at the pinned commit):</div><div class="repointel">${esc(repoIntelTxt)}</div>`
+    : `<div class="hint" style="margin:0 0 6px">No accepted submissions logged on ${esc(r.fullName)} yet. Structural profile read live:</div><div class="repointel">${repoProfile}</div>`;
+  const tipsHtml=`<details class="disc"><summary>General field notes &mdash; for a clean 1&ndash;2 iteration pass</summary>`+TIPS.map((t,i)=>`<div class="tip"><span class="tipn">${String(i+1).padStart(2,'0')}</span><div><b>${esc(t.h)}.</b> ${esc(t.b)}</div></div>`).join('')+`</details>`;
+  return `
+    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">top 10 from this repo's ${esc(kindsLabel)} surface + your screen answers</span></div>${angWarn}<div class="recang">${angChips}</div></div>
+    <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">fuse angles into one feature so the extras become cross-cutting invariants over the ${div!=null?div+' ':''}paths</span></div>${comboHtml}</div>
+    ${(openA||doneA)?`<div class="sec"><div class="seclbl">Strong areas <span class="hint">${derived?'derived from the live '+esc(kindsLabel)+' surface':'curated for this repo'}</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
+    <div class="sec"><div class="seclbl">Repo insights <span class="hint">what this repo has taught us &mdash; plus general field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
+    <div class="sec"><div class="seclbl">Doctrine + standards <span class="hint">proven laws + the standard THIS tier is scored against</span></div>${stdCard}${doctrineHtml}</div>`;
+}
+
+/* ---------- LAUNCH (concise repo insert) ---------- */
+function allRepos(){return [...state.olympus.repos.map(r=>({...r,tier:'olympus'})),...state.mars.repos.map(r=>({...r,tier:'mars'}))];}
+let lastLaunchRepo=null;
+function renderLaunch(){
+  const repos=allRepos();
+  if(!launchSel.repo&&repos.length)launchSel.repo=repos[0].fullName;
+  const r=resolveRepo(launchSel.repo);
+  const key=(launchSel.repo||'').toLowerCase(),c=extCache[key];
+  // Live refresh on open: board repos re-read when a token is present and we haven't yet.
+  if(r&&state.gh&&!isExternal(r)&&!(c&&(c.live||c.liveError))&&!(c&&c.loading)){fetchRepoLive(launchSel.repo,{board:true});}
+  if(r&&lastLaunchRepo!==launchSel.repo&&!(c&&c.loading)){launchSel.angles=topAngles(r);lastLaunchRepo=launchSel.repo;}
+  let opts=repos.map(x=>`<option value="${x.fullName}" ${launchSel.repo===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
+  if(launchSel.repo&&!repos.some(x=>x.fullName.toLowerCase()===key)){
+    opts=`<option value="${esc(launchSel.repo)}" selected>${esc(launchSel.repo)} · external${repoDiv(r)!=null?' · '+repoDiv(r)+'p':''}</option>`+opts;
+  }
+  const loadingNote=(c&&c.loading)?`<p class="hint" style="margin-top:6px"><span class="spin"></span>Reading ${esc(launchSel.repo)} live from GitHub…</p>`:'';
+  const liveNote=(c&&c.live)?`<p class="hint" style="margin-top:6px;color:var(--green)">✓ Read live — divergence ${repoDiv(r)}${c.commit?', commit '+String(c.commit).slice(0,10):''}.</p>`:'';
+  const angSel=ANGLES.map(a=>`<span class="angle ${launchSel.angles.includes(a)?'sel':''}" data-ang="${a}">${a}</span>`).join('');
+  viewEl.innerHTML=`<h2 class="mh">Launch <em>briefing</em></h2>
+    <p class="lede">Pick a repo. The console assembles the briefing — repo, commit, code-path count, the proven difficulty mechanism (helper-layer / surface / instance-state), the difficulty screen, the cascade warning, the repo-derived angles, combos, strong areas and insights. It does <b>not</b> pick a category. Drop it into your main startup prompt.</p>
+    <div class="panel">
+      <div class="field"><label>Repo</label><select id="lRepo">${opts}</select>${loadingNote}${liveNote}</div>
+      <div class="field"><label>Angles <span class="hint">(top 10 ranked, pre-selected — tap to adjust)</span></label><div class="angles" id="lAngles">${angSel}</div></div>
+      <button class="btn primary" id="lGen">Assemble briefing</button>
+    </div>
+    <div id="lOut"></div>`;
+  document.getElementById('lRepo').addEventListener('change',e=>{launchSel.repo=e.target.value;lastLaunchRepo=null;if(state.gh)selectLaunchLive(e.target.value);renderLaunch();});
+  document.getElementById('lAngles').addEventListener('click',e=>{const a=e.target.closest('.angle');if(!a)return;const v=a.dataset.ang;launchSel.angles.includes(v)?launchSel.angles=launchSel.angles.filter(x=>x!==v):launchSel.angles.push(v);renderLaunch();});
+  document.getElementById('lGen').addEventListener('click',genLaunch);
+}
+function selectLaunchLive(name){const k=name.toLowerCase();if(extCache[k]){delete extCache[k].live;delete extCache[k].liveError;}}
+function genLaunch(){
+  const r=resolveRepo(launchSel.repo);if(!r)return;
+  const commit=r.commit||'<pin an immutable commit from Commits>';
+  const div=repoDiv(r),unit=repoUnit(r),fit=olympusFit(r),s=r.screen||{},t=repoTier(r),std=standardsFor(t.tier);
+  const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'none at directory level — verify whether variants branch in-code';
+  const _areas=deriveAreas(r);
+  const open=_areas.filter(a=>!a.avoid).map(a=>'  - '+a.area+'  ['+(a.angle||'—')+'] -- '+a.why).join('\n')||'  (run a structural pass first)';
+  const avoid=_areas.filter(a=>a.avoid).map(a=>a.area).join('; ');
+  const ranked=topAngles(r,10);
+  const tmpl=anglesAreTemplate(r);
+  const angList=ranked.map((a,i)=>'  '+(i+1)+'. '+a+'   ['+(ANGLE_FAM[a]||'—')+']').join('\n');
+  const comboTxt=comboFor(r).map((c,i)=>'  '+(i+1)+'. '+c.angles.join(' + ')).join('\n');
+  const doctrineNames=relevantDoctrine(r).map(d=>d.h).join('; ');
+  const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0) — likely DISQUALIFIED. Confirm before any work.\n`:'';
+  const divNote=(div!=null&&div<=2)?`\n**PATH-COUNT CHECK:** only ${div} variant paths at directory level. If variants branch in-code (a switch/registry), the true count is higher — verify and re-set. If genuinely flat, route to Mars.\n`:'';
+  const screenLine=(s.helpers||s.approach||s.invariant)
+    ? `  - target-layer helpers: ${s.helpers==='free'?'FREE (easy — move the feature one layer above them)':s.helpers==='none'?'NONE (hard — agents write per-variant)':'not screened'}\n  - obvious approach: ${s.approach==='wrong'?'WRONG (1-2 symbols, hard behaviour)':s.approach==='works'?'works (too easy)':'not screened'}\n  - intermediate-state invariant: ${s.invariant==='fails'?'naive impl FAILS it':s.invariant==='passes'?'naive impl passes':'not screened'}`
+    : '  - NOT SCREENED — answer the three questions in Analyze before building (divergence alone does not predict difficulty).';
+  const profile=`${div!=null?div+' '+unit:'paths ?'}  -  gap: ${gapTypeFor(r)}${avoid?'  -  closed: '+avoid:''}`;
+  const insightTxt=(r.intelligence&&r.intelligence.trim())
+    ? r.intelligence.trim().split('\n').map(l=>'  '+l).join('\n')
+    : '  '+profile+'\n  (No accepted submissions logged here yet — captured after the first acceptance.)';
+  const tips=TIPS.slice(0,5).map((t,i)=>'  '+(i+1)+'. '+t.h+' -- '+t.b).join('\n');
+  const txt=
+`**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
+
+---
+
+## REPO BRIEFING — ${r.fullName}
+
+> Pre-filled live from the repo tree by Olympus Console. Treat structural claims as leads to verify in-editor — do NOT assume LOC or pass-rate.
+
+**TIER VERDICT: ${t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY'}** ${t.curated?'(curated)':'(assessed live)'} — ${t.why}
+**Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.**
+
+**Phase 0 screening:** ${fit.v==='strong'?'VIABLE':fit.v==='weak'?'NOT VIABLE as-is':fit.v==='screen'?'NEEDS SCREENING':'BORDERLINE'}  |  **Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty)
+${fit.t}
+${licLine}**Variant surface (read from the tree):** ${kindsTxt}.
+${divNote}
+**THE DIFFICULTY MECHANISM (proven across builds):** difficulty is NOT divergence and NOT surface size. It is whether Nova can transcribe the spec without reading deep. Build a feature that: (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers (TreeRepository had them = 100% pass; DataSource/EntityManager did not = 30%); (2) adds only 1-2 new public symbols but makes the behaviour hard — design it so the obvious first approach is WRONG (more symbols = more prescriptive = easier); (3) makes the obvious implementation wrong in a way not visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) the naive impl violates while passing every value check.
+
+**Difficulty screen for this repo:**
+${screenLine}
+
+**Discovery gap to engineer:** ${gapTypeFor(r)}.
+
+**CASCADE WARNING:** every time you document an unstated detail to pass Aligned/Fairness, you LOWER difficulty. In the SAME edit, add a paired hard behavioral test (an intermediate-state / surface-shape assertion) so the fix does not soften the gap.
+
+**Best-fit angles — top 10${tmpl?' (TEMPLATE-derived — no variant folders detected; brainstorm only)':' (from this repo\'s variant surface)'}:**
+${angList}
+
+**Escalation combinations — use ONLY if the feature looks transcribable; fuse angles so the extras become cross-cutting invariants:**
+${comboTxt}
+
+**Strong areas to analyse:**
+${open}${avoid?'\n**Avoid (accepted / overlapping):** '+avoid:''}
+
+**Doctrine in play:** ${doctrineNames}.
+
+**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'} tier):** pass ${std.pass}. Solution LOC ${std.loc}. Files ${std.files}. Description ${std.desc}. ${std.msg}. Plagiarism all <0.5.${t.tier==='mars'?' Do NOT pad to Olympus scale — keep the feature focused with real cross-file coupling.':' The feature must sit above the helper layer with only 1-2 new public symbols, a wrong obvious approach, and an intermediate-state invariant — hard behaviour earns the LOC, not surface size.'}
+
+**Repo insights** (reuse working Dockerfile + test.sh; re-grep at the pinned commit):
+${insightTxt}
+
+**Field notes:**
+${tips}
+
+**VERIFY MANUALLY (the console pattern-matches folder names — it does NOT read code, so confirm each in-editor before building):**
+  1. Target layer truly has NO free per-variant helper for your feature (grep the layer above the ${kindsTxt.split(',')[0]||'variant'} dir).
+  2. Your planned 1-2 symbols really do make the obvious approach wrong — write the naive impl first and confirm it fails.
+  3. The intermediate-state invariant (count / ordering / lifecycle) actually exists to violate, and a fair test can assert it.
+  4. Run Phase 1's 7 rejection checks yourself: plagiarism grep of your symbols, closed issues, docs scope, merged PRs, maintainer philosophy, CONTRIBUTING scale, closed-concept. (The console does none of these.)
+
+-> Next: confirm the four points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
+--- END BRIEFING ---`;
+  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Drop this in right after your STANDARDS block, above PHASE 0. It carries the proven difficulty mechanism + the screen + the cascade warning. It does NOT pick a category: the AI chooses, checking your REPEAT REPO section for overlap.</p></div>`;
+  document.getElementById('lCopy').addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(txt);const b=document.getElementById('lCopy');b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1400);});
+}
+
+/* ---------- ANALYZE ---------- */
+let analyzeSel=null, extCache={}, reachView='overall';
+function resolveRepo(name){
+  if(!name)return null;
+  const b=allRepos().find(x=>x.fullName.toLowerCase()===name.toLowerCase());
+  if(b){const e=extCache[name.toLowerCase()];return e?{...b,...e}:b;}
+  const p=POOL.find(x=>x.fullName.toLowerCase()===name.toLowerCase());
+  if(p){const base={fullName:p.fullName,url:p.url,lang:p.lang,license:p.license,stars:p.stars,path:p.path,divergence:p.div,areas:[{area:p.gap,angle:p.path.indexOf('A')>=0?'Adapter Abstraction':'Lifecycle Hooks Multi-Consumer',why:p.why}],why:p.why,tier:'candidate'};const e=extCache[name.toLowerCase()];return e?{...base,...e}:base;}
+  const base={fullName:name,url:'https://github.com/'+name,lang:'?',license:'?',stars:'?',path:'',divergence:null,areas:[],why:'',tier:'external'};
+  const e=extCache[name.toLowerCase()];return e?{...base,...e}:base;
+}
+function divChart(div){
+  const v=div||0,max=Math.max(40,v);const bar=Math.round((v/max)*100),thr=Math.round((15/max)*100);
+  return `<div class="chart"><div class="bartrack"><div class="barfill" style="width:${bar}%"></div><div class="thr" style="left:${thr}%"></div></div>
+    <div class="chartlbl"><span>divergence <b>${div!=null?div:'?'}</b></span><span>Olympus floor = 15</span></div></div>`;
+}
+function permissive(lic){return /MIT|Apache|BSD|ISC|MPL-2/i.test(lic||'');}
+function renderAcquire(){
+  const repos=allRepos();
+  if(!analyzeSel&&repos.length)analyzeSel=repos[0].fullName;
+  const boardOpts=repos.map(x=>`<option value="${x.fullName}" ${analyzeSel===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
+  viewEl.innerHTML=`<h2 class="mh">Repo <em>analysis</em></h2>
+   <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live from GitHub (metadata, latest commit, variant code-paths from the tree). <b>Code-path count is only the precondition</b> — the proven difficulty lever is the 3-question screen: does the target layer already give agents free per-variant helpers, is the API surface rich, is there instance-state. Divergence does not predict difficulty.</p>
+   <div class="panel">
+     <div class="row2"><div class="field"><label>Analyze a known repo</label><select id="anRepo">${boardOpts}</select></div>
+       <div class="field"><label>…or paste any owner/name</label><input id="anPaste" placeholder="owner/name then Enter" autocomplete="off" spellcheck="false"></div></div>
+     <p class="hint" id="anPasteHint" style="margin-top:4px"></p>
+   </div>
+   <div id="anDash"></div>
+   ${poolPanel()}`;
+  document.getElementById('anRepo').addEventListener('change',e=>{selectRepo(e.target.value);});
+  const pi=document.getElementById('anPaste');
+  pi.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    const v=parseRepoInput(e.target.value);
+    const h=document.getElementById('anPasteHint');
+    if(!v){h.textContent='Need a valid owner/name (e.g. vercel/next.js) — that was not one.';h.style.color='var(--bad)';return;}
+    h.textContent='';analyzeSel=v;renderAcquire();fetchRepoLive(v);
+  });
+  paintDash();wirePool();
+}
+function parseRepoInput(s){
+  s=(s||'').trim().replace(/^https?:\/\/(www\.)?github\.com\//i,'').replace(/\.git$/i,'').replace(/\/+$/,'').replace(/^\/+/,'');
+  const m=s.match(/^([A-Za-z0-9][\w.-]*)\/([A-Za-z0-9][\w.-]*)$/);
+  return m?(m[1]+'/'+m[2]):null;
+}
+function formatStars(n){n=n||0;return n>=1000?('~'+(n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,'')+'k'):String(n);}
+function isExternal(r){return r&&r.tier==='external';}
+function isNetBlocked(msg){return /failed to fetch|networkerror|load failed|fetch resource|cors|blocked by|content security/i.test(msg||'');}
+const CHC={green:'#A6E84D',greend:'#82C636',light:'#EAEDE6',grey:'#4E554A',line:'#262B32',line2:'#343A43',muted:'#838B7C',warn:'#E2B547'};
+function _pt(cx,cy,r,a){return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+function chartRadar(cvData){
+  const cats=cvData.map(c=>c.cat),val=cvData.map(c=>c.v==='strong'?1:c.v==='possible'?.6:.28);
+  const cx=130,cy=118,R=72,n=cats.length,ang=i=>(-Math.PI/2)+i*2*Math.PI/n;
+  let rings='';[.34,.67,1].forEach(t=>{const pts=cats.map((_,i)=>_pt(cx,cy,R*t,ang(i)).map(v=>v.toFixed(1)).join(',')).join(' ');rings+=`<polygon points="${pts}" fill="none" stroke="${CHC.line}" stroke-width="1"/>`;});
+  let axes='',labels='';
+  cats.forEach((c,i)=>{const[x,y]=_pt(cx,cy,R,ang(i));axes+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${CHC.line}" stroke-width="1"/>`;
+    const[lx,ly]=_pt(cx,cy,R+16,ang(i));const anc=Math.abs(lx-cx)<6?'middle':(lx>cx?'start':'end');
+    labels+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anc}" font-family="JetBrains Mono, monospace" font-size="8.5" fill="${CHC.muted}">${c}</text>`;});
+  const dp=cats.map((_,i)=>_pt(cx,cy,R*val[i],ang(i)).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const dots=cats.map((_,i)=>{const[x,y]=_pt(cx,cy,R*val[i],ang(i));return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${CHC.green}"/>`;}).join('');
+  return `<svg class="csvg" viewBox="0 0 260 220"><defs><filter id="gr" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${rings}${axes}<polygon points="${dp}" fill="${CHC.green}" fill-opacity="0.3" stroke="${CHC.green}" stroke-width="1.8" filter="url(#gr)"/><g filter="url(#gr)">${dots}</g>${labels}</svg>`;
+}
+function chartDonut(cvData){
+  const s=cvData.filter(c=>c.v==='strong').length,p=cvData.filter(c=>c.v==='possible').length,w=cvData.filter(c=>c.v==='weak').length;
+  const total=s+p+w||1,segs=[[s,CHC.green],[p,CHC.warn],[w,CHC.line2]];
+  const cx=70,cy=70,r=50,sw=18,C=2*Math.PI*r;let off=0,arcs='';
+  segs.forEach(([v,col])=>{if(v<=0)return;const len=(v/total)*C;arcs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"${col===CHC.green?' filter="url(#gd)"':''}/>`;off+=len;});
+  return `<svg class="csvg" viewBox="0 0 140 148"><defs><filter id="gd" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${arcs}<text x="${cx}" y="${cy-1}" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="30" fill="${CHC.light}">${s}</text><text x="${cx}" y="${cy+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="${CHC.muted}">of 5 strong</text></svg>`;
+}
+function chartDivBar(r){
+  const repos=allRepos().map(x=>({n:(x.fullName.split('/')[1]||x.fullName),d:repoDiv(x)||0,me:x.fullName===r.fullName})).filter(x=>x.d>0).sort((a,b)=>b.d-a.d);
+  if(repos.length&&!repos.some(x=>x.me)&&repoDiv(r))repos.push({n:(r.fullName.split('/')[1]||r.fullName),d:repoDiv(r),me:true});
+  const max=Math.max(40,...repos.map(x=>x.d)),W=460,rowH=24,padL=130,padR=34,top=6,innerW=W-padL-padR;
+  const H=top+repos.length*rowH+14,thrX=padL+(5/max)*innerW;let b='';
+  repos.forEach((x,i)=>{const y=top+i*rowH,bw=Math.max(2,(x.d/max)*innerW),col=x.me?CHC.green:CHC.grey;
+    b+=`<text x="${padL-8}" y="${y+13}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9.5" fill="${x.me?CHC.light:CHC.muted}" font-weight="${x.me?'700':'400'}">${x.n}</text>`;
+    b+=`<rect x="${padL}" y="${y+3}" width="${bw.toFixed(1)}" height="14" rx="4" fill="${col}"${x.me?' filter="url(#gb)"':''}/>`;
+    b+=`<text x="${(padL+bw+6).toFixed(1)}" y="${y+13}" font-family="JetBrains Mono, monospace" font-size="9" fill="${CHC.muted}">${x.d}</text>`;});
+  b+=`<line x1="${thrX.toFixed(1)}" y1="${top-2}" x2="${thrX.toFixed(1)}" y2="${H-12}" stroke="${CHC.warn}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  b+=`<text x="${thrX.toFixed(1)}" y="${H-2}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${CHC.warn}">5-path minimum</text>`;
+  return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gb" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
+}
+function relevantDoctrine(r){
+  const want=['Proven difficulty mechanism','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade','Platform prechecks'];
+  const seen=new Set(),out=[];
+  want.forEach(k=>{const law=DOCTRINE.find(d=>d.h&&d.h.indexOf(k)>=0);if(law&&!seen.has(law.h)){seen.add(law.h);out.push(law);}});
+  return out.slice(0,5);
+}
+function loadingPanel(name){
+  return `<div class="panel">
+    <div class="dhead"><div><h3 class="reponame">${esc(name)}</h3>
+      <div class="meta"><span class="chip live">live</span></div></div></div>
+    <div class="loadwrap"><div class="loadring"></div>
+      <div class="loadtxt">Reading <b>${esc(name)}</b> live from GitHub…<br><span class="hint">pulling metadata, latest commit, and counting divergent paths in the tree</span></div></div>
+    <div class="skelrow"><span class="skel tall"></span><span class="skel tall"></span><span class="skel tall"></span></div>
+    <div class="skelrow"><span class="skel"></span><span class="skel"></span></div>
+  </div>`;
+}
+function paintDash(){
+  const dash=document.getElementById('anDash');if(!dash)return;
+  const r=resolveRepo(analyzeSel);if(!r){dash.innerHTML='';return;}
+  const key=(r.fullName||'').toLowerCase(),c=extCache[key];
+  if(c&&c.loading){dash.innerHTML=loadingPanel(r.fullName);return;}
+  if(c&&c.editingDiv){dash.innerHTML=verifyShell(r,divEditBlock(r,c));wireDivEdit(r);return;}
+  if(isExternal(r)){
+    if(!c){dash.innerHTML=loadingPanel(r.fullName);fetchRepoLive(r.fullName);return;}
+    if(c.notRepo){dash.innerHTML=verifyShell(r,notRepoBlock(r));return;}
+    if(c.fetchError){dash.innerHTML=verifyShell(r,manualBlock(r,c));wireManual(r);return;}
+    if(c.divergence==null){dash.innerHTML=verifyShell(r,manualBlock(r,{...c,fetchError:c.fetchError||'metadata loaded, but the code-path count could not be read from the tree automatically'}));wireManual(r);return;}
+  }
+  const div=repoDiv(r),fit=olympusFit(r);
+  const extBanner=(isExternal(r)&&c)?`<div class="fit possible" style="margin:0 0 12px"><span class="fitdot"></span>${c.manual?'Code paths <b>you entered</b>':'Read <b>live from GitHub</b>'} — <b>${div}</b> ${repoUnit(r)}. ${c.commit?'Latest commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span> — pin this in Launch. ':''}<a href="#" id="anEditDiv" style="color:var(--green)">set count</a></div>`:'';
+  const liveBanner=(c&&c.live&&!isExternal(r))?`<div class="fit strong" style="margin:0 0 12px"><span class="fitdot"></span>Read <b>live from GitHub</b> just now — <b>${div}</b> ${repoUnit(r)} counted from the current tree${c.commit?', commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span>':''}.</div>`:'';
+  const liveErr=(c&&c.liveError)?`<div class="hint" style="margin:0 0 10px;color:var(--warn)">Live refresh didn't complete (${esc(c.liveError)}) — showing pre-verified stored numbers.</div>`:'';
+  const licWarn=(r.license&&r.license!=='?'&&!permissive(r.license))?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>License check:</b> ${esc(r.license)} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0). Likely <b>disqualified</b> — verify before investing.</div>`:'';
+  const lowDivWarn=(div!=null&&div<=2)?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>Low path count (${div}).</b> The counter only sees paths expressed as sibling <i>folders</i>. If this repo branches <i>in code</i> (a switch / registry over variants — like ni over package managers) the true count is higher; <a href="#" id="anEditDiv2" style="color:var(--green)">set count</a>. If it is genuinely flat, route to Mars.</div>`:'';
+  const srcBanner=licWarn+extBanner+liveBanner+liveErr+lowDivWarn;
+  const chartsHtml=`<div class="charts"><div class="chartcard wide"><p class="chartttl">Code paths vs the field</p><p class="chartsub">5+ variant paths is the <b>precondition</b> (not the difficulty). This repo (lime) against the board; the marker is the 5-path minimum.</p>${chartDivBar(r)}</div></div>`;
+  const unknown=r.lang==='?'&&div==null;
+  const s=r.screen||{},scDone=!!(s.helpers&&s.approach&&s.invariant);
+  const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
+  const gated=scDone
+    ? `<div class="genbar"><span class="hint">↓ Results below are generated from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers.</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div)
+    : `<div class="genwait"><b>Answer the difficulty screen above to generate the results.</b><span class="hint">The best-fit angles, escalation combinations, strong areas and the tier standards are all built from this repo's live paths / kinds + your three answers — nothing is pre-filled.</span></div>`;
+  document.getElementById('anDash').innerHTML=`<div class="panel">
+    <div class="dhead"><div><h3 class="reponame">${esc(r.fullName)}</h3>
+      <div class="meta">${(c&&c.live)?'<span class="chip live">live</span>':''}<span class="chip"><b>${esc(r.lang)}</b></span><span class="chip">${esc(r.license)}</span><span class="chip">★ <b>${esc(r.stars)}</b></span><span class="chip">${div!=null?div+' paths':'paths ?'}</span></div></div></div>
+    <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a>${unknown?'<a href="#" id="anVerify">Verify tree ↻</a>':''}<a href="#" id="anLiveAgain">↻ Read live again</a></div>
+    ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
+    <div class="sec"><div class="seclbl">Difficulty screen <span class="hint">the proven 30% mechanism &mdash; recommended answers tagged ✦, you confirm or override</span></div>${difficultyScreen(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">recomputes live as you answer &mdash; estimate, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
+    <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
+    ${gated}
+    <div class="cfoot"><span class="hint">tier: ${repoTier(r).tier} &middot; gap: ${gapTypeFor(r)}</span><button class="btn primary" id="anToLaunch">Open in Launch →</button></div>
+  </div>`;
+  wireScreen(r);
+  const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName,{board:!isExternal(r)});});
+  const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
+  const ed=document.getElementById('anEditDiv');if(ed)ed.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
+  const ed2=document.getElementById('anEditDiv2');if(ed2)ed2.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
+  const vb=document.getElementById('anVerify');if(vb)vb.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName);});
+  const lr=document.getElementById('anLiveAgain');if(lr)lr.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName,{board:!isExternal(r)});});
+}
+function verifyShell(r,inner){
+  return `<div class="panel">
+    <div class="dhead"><div><h3 class="reponame">${esc(r.fullName)}</h3>
+      <div class="meta"><span class="chip unver">unverified</span></div></div></div>
+    <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a></div>
+    <div style="margin-top:14px">${inner}</div>
+  </div>`;
+}
+function notRepoBlock(r){
+  return `<div class="err">"${esc(r.fullName)}" isn't a repository GitHub can find — that's not a real owner/name, or the repo is private/renamed/deleted. Re-check it and paste an existing <b>public</b> repo (for example, typeorm/typeorm).</div>
+  <p class="hint" style="margin-top:10px">Tip: copy the owner/name straight from the GitHub URL — github.com/<b>owner</b>/<b>name</b>.</p>`;
+}
+function divEditBlock(r,c){
+  return `<div class="fit possible" style="margin:0 0 12px"><span class="fitdot"></span>Set the code-path count you counted by eye — sibling implementation directories <i>plus</i> any in-code branching (a switch or registry over backends / package managers / variants).</div>
+  <div class="row2"><div class="field"><label>Divergence (count of divergent code paths)</label><input id="edDiv" type="number" min="0" value="${(c&&c.divergence!=null)?c.divergence:''}" placeholder="e.g. 8"></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="edGo">Save &amp; recompute</button><button class="btn" id="edCancel">Cancel</button></div>`;
+}
+function wireDivEdit(r){
+  const key=(r.fullName||'').toLowerCase();
+  const go=document.getElementById('edGo');
+  if(go)go.addEventListener('click',()=>{const v=parseInt(document.getElementById('edDiv').value,10);if(isNaN(v)||v<0)return;extCache[key]={...(extCache[key]||{}),divergence:v,manual:true,editingDiv:false};paintDash();});
+  const cn=document.getElementById('edCancel');
+  if(cn)cn.addEventListener('click',()=>{if(extCache[key])extCache[key].editingDiv=false;paintDash();});
+}
+function manualBlock(r,c){
+  const blocked=isNetBlocked(c.fetchError);
+  const head=blocked
+    ? `Live read blocked by the <b>preview</b>, not by ${esc(r.fullName)} — this claude.ai sandbox refuses outbound calls (the request never reached GitHub). To read live, download this file and open it in your browser. For now, enter the code-path count and the analysis is real:`
+    : `Couldn't read ${esc(r.fullName)} live — ${esc(c.fetchError)}. Could be a wrong owner/name, an expired token, or GitHub's rate limit. Enter the code-path count and the analysis computes from your number:`;
+  return `<div class="err">${head}</div>
+    <div class="row2" style="margin-top:12px">
+      <div class="field"><label>Code paths — count of variant implementations (adapters / dialects / drivers / backends, incl. in-code branches)</label><input id="mDiv" type="number" min="0" placeholder="e.g. 8"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="mGo">Compute analysis</button><button class="btn" id="mRetry">Retry live fetch</button></div>`;
+}
+function wireManual(r){
+  const key=(r.fullName||'').toLowerCase();
+  const go=document.getElementById('mGo');
+  if(go)go.addEventListener('click',()=>{
+    const d=parseInt(document.getElementById('mDiv').value,10);
+    if(isNaN(d)||d<0){const h=document.getElementById('anPasteHint');if(h){h.textContent='Enter a code-path count.';h.style.color='var(--bad)';}return;}
+    extCache[key]={lang:'?',license:'?',stars:'?',...extCache[key],fetchError:null,divergence:d,manual:true};
+    paintDash();
+  });
+  const rt=document.getElementById('mRetry');if(rt)rt.addEventListener('click',()=>fetchRepoLive(r.fullName));
+}
+function repaintLive(){if(activeModule==='launch'){renderLaunch();}else{paintDash();}}
+async function fetchRepoLive(name,opts){
+  opts=opts||{};const key=name.toLowerCase();
+  const prevScreen=(extCache[key]||{}).screen;
+  const prevSource=(extCache[key]||{}).source;
+  const board=!!opts.board,keepPath=opts.keepPath||(extCache[key]&&extCache[key].path)||'';
+  extCache[key]={loading:true,screen:prevScreen};repaintLive();
+  const hdr={'Accept':'application/vnd.github+json'};if(state.gh)hdr['Authorization']='Bearer '+state.gh;
+  try{
+    const mr=await fetch('https://api.github.com/repos/'+name,{headers:hdr});
+    const meta=await mr.json();
+    if(mr.status===404||(meta&&/not found/i.test(meta.message||''))){extCache[key]={notRepo:true,loading:false};repaintLive();return;}
+    if(!mr.ok||!meta.full_name)throw new Error(meta.message?meta.message:('HTTP '+mr.status));
+    const branch=meta.default_branch||'main';
+    let div=null,kinds=[],treePaths=[];
+    try{const tr=await fetch('https://api.github.com/repos/'+name+'/git/trees/'+branch+'?recursive=1',{headers:hdr});const tree=await tr.json();if(tree&&tree.tree){div=countDivergence(tree);kinds=divergenceKinds(tree);treePaths=tree.tree.filter(t=>t.type==='blob'&&/\.(ts|tsx|js|jsx|go|rs|py)$/.test(t.path)&&!/\.(test|spec|d)\.|__tests__|\/test\//.test(t.path)).map(t=>t.path);}}catch(_){}
+    let commit='';
+    try{const cr=await fetch('https://api.github.com/repos/'+name+'/commits?per_page=1&sha='+branch,{headers:hdr});const cm=await cr.json();if(Array.isArray(cm)&&cm[0])commit=cm[0].sha;}catch(_){}
+    const out={lang:meta.language||'?',license:(meta.license&&meta.license.spdx_id&&meta.license.spdx_id!=='NOASSERTION')?meta.license.spdx_id:(meta.license&&meta.license.key?meta.license.key:'?'),stars:formatStars(meta.stargazers_count),commit:commit,defaultBranch:branch,divKinds:kinds,treePaths:treePaths,verified:true,live:true,loading:false};
+    // Board/pool repos keep their curated divergence only if the live tree count came back empty; otherwise live wins.
+    if(div!=null)out.divergence=div; else if(board){/* keep stored: leave divergence unset so base value shows */} else out.divergence=null;
+    if(keepPath)out.path=keepPath;
+    if(prevScreen)out.screen=prevScreen;
+    if(prevSource)out.source=prevSource;
+    extCache[key]=out;
+    repaintLive();
+  }catch(e){
+    const msg=(e&&e.message)?e.message:'request blocked';
+    // Board repos fall back softly to stored numbers; external repos go to manual entry.
+    extCache[key]=board?{liveError:msg,live:false,loading:false,screen:prevScreen}:{fetchError:msg,loading:false,screen:prevScreen};
+    repaintLive();
+  }
+}
+function selectRepo(name){
+  analyzeSel=name;reachView='overall';
+  if(state.gh){const r=resolveRepo(name);const board=r&&!isExternal(r);fetchRepoLive(name,{board:board});}
+  renderAcquire();
+}
+function countDivergence(tree){
+  // Honest "implementation divergence": count directories that sit directly inside a
+  // container-named folder (adapters/, drivers/, dialects/, providers/, platform-*/ ...).
+  // Each such directory is one genuine sibling implementation. We deliberately do NOT
+  // count files under those folders — that inflates the number with non-divergent noise.
+  const containers=/^(adapters?|drivers?|backends?|handlers?|transports?|protocols?|providers?|dialect|dialects|balancer|balancers|resolver|resolvers|credentials|plugins?|integrations?|modules?|exporters?|connectors?|codecs?|stores?|engines?|commands?|agents?|languages?|rules?|strategies|strategy|policies|generators?|parsers?|loaders?|formats?|targets?|kinds?|presets?|runtimes?|frameworks?|serializers?|validators?|formatters?)$/i;
+  const platform=/^platform[-a-z0-9]*$/i;const dirs=new Set();const nodes=tree.tree||[];
+  const haveTypes=nodes.some(n=>n.type);
+  if(haveTypes){
+    nodes.forEach(n=>{if(n.type!=='tree')return;const seg=n.path.split('/');const parent=seg[seg.length-2];
+      if(parent&&(containers.test(parent)||platform.test(parent)))dirs.add(n.path);});
+  }else{
+    // Fallback when type info is absent: a child is a directory iff a deeper segment exists.
+    nodes.forEach(n=>{const seg=n.path.split('/');for(let i=0;i<seg.length-2;i++){if((containers.test(seg[i])||platform.test(seg[i]))&&seg[i+1]&&seg[i+2])dirs.add(seg.slice(0,i+2).join('/'));}});
+  }
+  return dirs.size;
+}
+function divergenceKinds(tree){
+  const containers=/^(adapters?|drivers?|backends?|handlers?|transports?|protocols?|providers?|dialect|dialects|balancer|balancers|resolver|resolvers|credentials|plugins?|integrations?|modules?|exporters?|connectors?|codecs?|stores?|engines?|commands?|agents?|languages?|rules?|strategies|strategy|policies|generators?|parsers?|loaders?|formats?|targets?|kinds?|presets?|runtimes?|frameworks?|serializers?|validators?|formatters?)$/i;
+  const platform=/^platform[-a-z0-9]*$/i;const counts={};const nodes=tree.tree||[];const haveTypes=nodes.some(n=>n.type);
+  nodes.forEach(n=>{if(haveTypes&&n.type!=='tree')return;const seg=n.path.split('/');const idx=haveTypes?seg.length-2:-1;
+    if(haveTypes){const parent=seg[idx];if(parent&&(containers.test(parent)||platform.test(parent)))counts[parent.toLowerCase()]=(counts[parent.toLowerCase()]||0)+1;}
+    else{for(let i=0;i<seg.length-2;i++){if((containers.test(seg[i])||platform.test(seg[i]))&&seg[i+1]&&seg[i+2])counts[seg[i].toLowerCase()]=(counts[seg[i].toLowerCase()]||0)+1;}}});
+  // keep kinds with at least 2 members (a real divergent surface), most-divergent first
+  return Object.keys(counts).filter(k=>counts[k]>=2).sort((a,b)=>counts[b]-counts[a]);
+}
+function wirePool(){
+  viewEl.querySelectorAll('[data-an]').forEach(b=>b.addEventListener('click',()=>{selectRepo(b.dataset.an);window.scrollTo({top:0,behavior:'smooth'});}));
+  viewEl.querySelectorAll('[data-poolprom]').forEach(b=>b.addEventListener('click',async()=>{
+    const p=POOL.find(x=>x.fullName===b.dataset.poolprom);if(!p)return;
+    if(state.used.map(s=>s.toLowerCase()).includes(p.fullName.toLowerCase()))return;
+    const nr=repo(p.fullName,p.url,p.lang,p.license,p.stars,true,'gold',p.why,p.path,[{area:p.gap,angle:p.path.indexOf('A')>=0?'Adapter Abstraction':'Lifecycle Hooks Multi-Consumer',why:p.why}]);
+    nr.divergence=p.div;nr.source='pool';state.olympus.repos.push(nr);state.used=dedupe([...state.used,p.fullName]);
+    await persistTier('olympus');await persistUsed();renderAcquire();
+  }));
+}
+/* ---------- doctrine drawer ---------- */
+const drawer=document.getElementById('drawer');
+document.getElementById('doctrineBtn').addEventListener('click',()=>{
+  document.getElementById('drawerInner').innerHTML=`<h3>Doctrine</h3>
+   <p class="lede" style="margin-bottom:8px">Repo-agnostic laws from 130+ iterations. They drive the auditor and the launch prompt. Tap outside to close.</p>
+   ${DOCTRINE.map(d=>`<div class="law ${d.c}"><h4>${d.h}</h4>${d.body}</div>`).join('')}
+   <div class="law"><h4>100 feature angles</h4><div class="angles">${ANGLES.map(a=>`<span class="angle" style="cursor:default">${a}</span>`).join('')}</div></div>`;
+  drawer.classList.add('open');
+});
+drawer.addEventListener('click',e=>{if(e.target===drawer)drawer.classList.remove('open');});
+
+/* ---------- settings (token + reset) ---------- */
+function openSettings(){
+  const tok=state.gh||'';
+  const mask=tok?('••••••••'+tok.slice(-4)):'none stored';
+  document.getElementById('drawerInner').innerHTML=`<h3>Settings</h3>
+   <p class="lede" style="margin-bottom:14px">GitHub access and board controls. Tap outside to close.</p>
+   <div class="law gold"><h4>GitHub access token</h4>
+     <p>A fine-grained, <b>read-only</b> token (public repositories, Contents: read) lets the console read any repo live at 5000 requests/hour and recount divergence from the live tree. Stored only in this browser.</p>
+     <p class="hint" style="margin:8px 0 0"><b>Important:</b> this claude.ai preview blocks outbound network calls (browser CSP), so live reads will say "Failed to fetch" <i>here regardless of the token</i> — the request never reaches GitHub. Live reads work when this file runs <b>outside</b> the preview: download it (••• menu → download) and open it in your browser, or host it. Inside the preview, manual structure entry on each repo still gives fully real analysis.</p>
+     <div class="field" style="margin-top:12px"><label>Token <span class="tokmask" id="tokStatus">(current: ${mask})</span></label>
+       <input id="ghTokenInput" type="password" placeholder="github_pat_… or ghp_…" autocomplete="off" spellcheck="false"></div>
+     <div class="setrow">
+       <button class="btn primary" id="ghSave">Save token</button>
+       <button class="btn" id="ghTest">Test connection</button>
+       <button class="btn warn" id="ghClear">Clear</button>
+     </div>
+     <p class="hint" id="ghMsg" style="margin-top:10px"></p>
+   </div>
+   <div class="law"><h4>Analyzer backend (Rung 4 — optional)</h4>
+     <p>If you've deployed <span class="mono">olympus-analyzer</span>, paste its URL. When set, <b>Read source</b> calls the backend (full-repo scan at the pinned commit, per-variant breakdown, cached) instead of the in-browser 25-file scan. Leave blank to use the browser scan.</p>
+     <div class="field" style="margin-top:10px"><label>Backend URL <span class="tokmask" id="anlStatus">(current: ${state.analyzer?esc(state.analyzer):'none'})</span></label>
+       <input id="anlInput" type="text" placeholder="http://localhost:8787" autocomplete="off" spellcheck="false" value="${state.analyzer?esc(state.analyzer):''}"></div>
+     <div class="setrow"><button class="btn primary" id="anlSave">Save</button><button class="btn warn" id="anlClear">Clear</button></div>
+     <p class="hint" id="anlMsg" style="margin-top:8px"></p>
+   </div>
+   <div class="law"><h4>Live mode</h4><p>${tok?'<b>On.</b> Every repo you analyse is read live each time — fresh metadata and divergence from the tree, with a loading state — <i>when this file runs outside the claude.ai preview</i>. Inside the preview, outbound calls are blocked, so analyses fall back to pre-verified stored numbers (board) or manual entry (pasted repos).':'<b>Off.</b> Save a token to switch on live mode. Note it only takes effect outside this preview (see above).'}</p></div>
+   <div class="law"><h4>Reset boards</h4><p>Restore the Olympus and Mars boards to their seed batches. Logged features, lifecycle states and imported intelligence are erased. Your token stays.</p>
+     <div class="setrow"><button class="btn warn" id="resetConfirm">Reset boards</button></div>
+     <p class="hint" id="resetMsg" style="margin-top:8px"></p></div>`;
+  drawer.classList.add('open');
+  const inp=document.getElementById('ghTokenInput');
+  document.getElementById('ghSave').addEventListener('click',async()=>{
+    const v=(inp.value||'').trim();
+    if(!v){document.getElementById('ghMsg').innerHTML='<span style="color:var(--bad)">Paste a token first.</span>';return;}
+    state.gh=v;await sset(KEYS.gh,v);
+    document.getElementById('tokStatus').textContent='(current: ••••••••'+v.slice(-4)+')';
+    document.getElementById('ghMsg').innerHTML='<span style="color:var(--green)">Saved.</span> Run <b>Test connection</b> to see whether this environment can reach GitHub — if it says blocked, that\'s the preview\'s CSP, not your token.';
+    inp.value='';
+  });
+  document.getElementById('ghClear').addEventListener('click',async()=>{
+    state.gh='';await sset(KEYS.gh,'');
+    document.getElementById('tokStatus').textContent='(current: none stored)';
+    document.getElementById('ghMsg').innerHTML='Token cleared.';
+  });
+  const anlSave=document.getElementById('anlSave');if(anlSave)anlSave.addEventListener('click',async()=>{
+    const v=(document.getElementById('anlInput').value||'').trim().replace(/\/$/,'');
+    state.analyzer=v;await sset(KEYS.analyzer,v);
+    document.getElementById('anlStatus').textContent='(current: '+(v||'none')+')';
+    document.getElementById('anlMsg').innerHTML=v?'<span style="color:var(--green)">Saved.</span> Read source will use the backend.':'Cleared — using the browser scan.';
+  });
+  const anlClear=document.getElementById('anlClear');if(anlClear)anlClear.addEventListener('click',async()=>{
+    state.analyzer='';await sset(KEYS.analyzer,'');document.getElementById('anlInput').value='';
+    document.getElementById('anlStatus').textContent='(current: none)';document.getElementById('anlMsg').innerHTML='Cleared — using the browser scan.';
+  });
+  document.getElementById('ghTest').addEventListener('click',async()=>{
+    const v=(inp.value||'').trim()||state.gh;const msg=document.getElementById('ghMsg');
+    if(!v){msg.innerHTML='<span style="color:var(--bad)">No token to test.</span>';return;}
+    msg.innerHTML='<span class="spin"></span>Testing…';
+    try{
+      const r=await fetch('https://api.github.com/rate_limit',{headers:{'Authorization':'Bearer '+v,'Accept':'application/vnd.github+json'}});
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.message||('HTTP '+r.status));
+      const rem=d.rate?d.rate.remaining:'?';
+      msg.innerHTML='<span style="color:var(--green)">Connected ✓ — '+rem+' requests left this hour. Live reads will work.</span>';
+    }catch(e){
+      const m=(e&&e.message)||'';
+      if(isNetBlocked(m)){
+        msg.innerHTML='<span style="color:var(--warn)">Blocked by the preview, not by your token.</span> This claude.ai preview refuses outbound network calls (browser CSP), so the request never reached GitHub — your token was never even checked. <b>It is almost certainly valid.</b> To use live reads: download this file (••• menu → download) and open it in your browser, or host it anywhere — then live works. Inside this preview, use the manual structure entry on each repo (real analysis from real numbers).';
+      }else if(/bad credentials|401/i.test(m)){
+        msg.innerHTML='<span style="color:var(--bad)">GitHub rejected the token — '+esc(m)+'.</span> Re-check it copied fully and hasn\'t expired.';
+      }else{
+        msg.innerHTML='<span style="color:var(--bad)">Reached GitHub but it returned: '+esc(m)+'.</span>';
+      }
+    }
+  });
+  let armed=false;
+  document.getElementById('resetConfirm').addEventListener('click',async()=>{
+    const m=document.getElementById('resetMsg');
+    if(!armed){armed=true;document.getElementById('resetConfirm').textContent='Click again to confirm';m.innerHTML='<span style="color:var(--warn)">This erases logged features and intelligence.</span>';return;}
+    state.olympus=clone(SEED_OLYMPUS);state.mars=clone(SEED_MARS);state.used=dedupe([...SEED_OLYMPUS.repos,...SEED_MARS.repos].map(r=>r.fullName));
+    await sset(KEYS.olympus,state.olympus);await sset(KEYS.mars,state.mars);await sset(KEYS.version,SEED_VERSION);await persistUsed();
+    drawer.classList.remove('open');render();
+  });
+}
+document.getElementById('resetBtn').addEventListener('click',openSettings);
+
+/* ---------- boot ---------- */
+(async function(){await load();render();})();
+</script>

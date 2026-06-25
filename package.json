@@ -1,0 +1,9 @@
+{
+  "name": "olympus-analyzer",
+  "version": "1.0.0",
+  "description": "Rung-4 backend for Olympus Console: full-repo static scan at a pinned commit.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
