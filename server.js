@@ -69,7 +69,18 @@ const JUDGE_SCHEMA = {
   },
 };
 
-async function judge(repo, ref, layer){
+function judgeKey(repo, ref, layer){ return 'judge_' + (repo+'@'+ref+'__'+layer).replace(/[^a-z0-9]/gi,'_') + '.json'; }
+
+// The exact instruction a Claude judgment must follow — shared by the API path and the manual paste path.
+const JUDGE_TASK =
+`Answer two BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
+1. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
+2. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
+Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
+{"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
+
+// Download the repo, isolate the variant layer + the layer above, and assemble the paste-ready prompt.
+async function buildJudgeContext(repo, ref, layer){
   const files = await loadRepoFiles(repo, ref, TOKEN);
   const variant = files.filter(f => inLayer(f.path, layer));
   if(!variant.length) throw new Error('no files matched layer "'+layer+'" (try a path fragment or container kind like "adapters")');
@@ -77,7 +88,6 @@ async function judge(repo, ref, layer){
   const variantPaths = new Set(variant.map(f => f.path));
   const aboveDirs = new Set([...variantDirs].map(d => dirOf(d)));
   const above = files.filter(f => !variantPaths.has(f.path) && aboveDirs.has(dirOf(f.path)));
-
   const prompt =
 `You are reviewing the "${layer}" layer of ${repo}@${ref} to assess how hard a NEW feature built on this layer would be.
 
@@ -87,29 +97,47 @@ ${blob(variant, 12, 12000)}
 THE LAYER DIRECTLY ABOVE (${above.length} files):
 ${blob(above, 8, 8000)}
 
-Answer two BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
-1. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
-2. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
-For each, give a short verdict (e.g. "likely yes"/"unclear"/"no"), a reason with concrete code citations, and a citations array of "path:symbol" or "path" strings.`;
+${JUDGE_TASK}`;
+  return { prompt, variantFiles:variant.length, aboveFiles:above.length };
+}
 
+// Normalize any judgment object (from the API or pasted by a human) into the response shape.
+function shapeJudgment(repo, ref, layer, ctx, raw, source){
+  const out = { repo, ref, layer, variantFiles:ctx&&ctx.variantFiles, aboveFiles:ctx&&ctx.aboveFiles, source,
+    approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
+    disclaimer: raw.disclaimer || 'Model judgment, not proof. No call-graph or runtime analysis was performed.' };
+  return out;
+}
+
+async function judgeViaApi(repo, ref, layer){
+  const ctx = await buildJudgeContext(repo, ref, layer);
   const resp = await anthropicMessages({
     model:'claude-opus-4-8',
     max_tokens:4000,
     thinking:{type:'adaptive'},
     output_config:{ format:{ type:'json_schema', schema:JUDGE_SCHEMA } },
-    messages:[{ role:'user', content:prompt }],
+    messages:[{ role:'user', content:ctx.prompt }],
   });
   const textBlock = (resp.content||[]).find(b => b.type==='text');
   if(!textBlock) throw new Error('no text block in Anthropic response (stop_reason='+resp.stop_reason+')');
-  const out = JSON.parse(textBlock.text);
-  if(!out.disclaimer) out.disclaimer = 'Model judgment, not proof. No call-graph or runtime analysis was performed.';
-  return { repo, ref, layer, variantFiles:variant.length, aboveFiles:above.length, ...out };
+  return shapeJudgment(repo, ref, layer, ctx, JSON.parse(textBlock.text), 'api');
+}
+
+// Read and JSON-parse a request body (bounded to 1 MB).
+function readJsonBody(req){
+  return new Promise((resolve, reject)=>{
+    const chunks=[]; let size=0;
+    req.on('data', c=>{ size+=c.length; if(size>1e6){ reject(new Error('body too large')); req.destroy(); } else chunks.push(c); });
+    req.on('end', ()=>{ try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')); } catch(e){ reject(new Error('body is not valid JSON')); } });
+    req.on('error', reject);
+  });
 }
 
 http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN || '*');
   if (ALLOWED_ORIGIN) res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type');
   res.setHeader('Content-Type', 'application/json');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
@@ -122,9 +150,37 @@ http.createServer(async (req, res) => {
     const layer = u.searchParams.get('layer');
     if (!repo || !/^[\w.-]+\/[\w.-]+$/.test(repo)) { res.writeHead(400); return res.end(JSON.stringify({ error: 'bad repo (want owner/name)' })); }
     if (!layer) { res.writeHead(400); return res.end(JSON.stringify({ error: 'missing layer (path fragment or container kind, e.g. adapters)' })); }
-    if (!ANTHROPIC_KEY) { res.writeHead(501); return res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set on the server' })); }
+    const jf = path.join(CACHE, judgeKey(repo, ref, layer));
+
+    // POST: accept a human-pasted judgment (from a Claude chat) and cache it for the console to read.
+    if (req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req);
+        if (!body || (!body.approachWrong && !body.invariant)) {
+          res.writeHead(400); return res.end(JSON.stringify({ error: 'expected JSON with approachWrong and/or invariant keys' }));
+        }
+        const result = shapeJudgment(repo, ref, layer, null, body, 'manual');
+        result.savedAt = new Date().toISOString();
+        fs.writeFileSync(jf, JSON.stringify(result));
+        res.writeHead(200); return res.end(JSON.stringify({ ok: true, saved: result }));
+      } catch (e) {
+        res.writeHead(400); return res.end(JSON.stringify({ error: String(e.message || e) }));
+      }
+    }
+
+    // GET: cached judgment wins; else use the API if a key is set; else hand back a paste-ready prompt.
     try {
-      const result = await judge(repo, ref, layer);
+      if (fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
+      if (u.searchParams.get('mode') === 'prompt' || !ANTHROPIC_KEY) {
+        const ctx = await buildJudgeContext(repo, ref, layer);
+        res.writeHead(200); return res.end(JSON.stringify({
+          needsJudgment: true, repo, ref, layer, variantFiles: ctx.variantFiles, aboveFiles: ctx.aboveFiles,
+          prompt: ctx.prompt,
+          howto: 'No API key on the server. Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
+        }));
+      }
+      const result = await judgeViaApi(repo, ref, layer);
+      fs.writeFileSync(jf, JSON.stringify(result));
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
       res.writeHead(502); return res.end(JSON.stringify({ error: String(e.message || e) }));
