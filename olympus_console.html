@@ -443,6 +443,8 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .verdictchip{box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
 .verdictchip.go{box-shadow:0 8px 22px -10px rgba(166,232,77,.5)}
 .bento .bcard{display:flex;flex-direction:column}
+.charttip{position:fixed;z-index:90;display:none;background:var(--surface-3);border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text);pointer-events:none;box-shadow:var(--sh-sm);white-space:nowrap}
+.divdot:hover circle:last-child{stroke:var(--text);stroke-width:1.5}
 </style>
 
 <div id="app">
@@ -467,12 +469,13 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
     </div></div>
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass ≤20% of 10 · Mars ≤30% · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 85+ — last-known guidance; the in-form criteria panel is authoritative.</p>
+      <p class="foot">Olympus pass ≤20% of 10 · Mars ≤30% · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
 
 <div class="drawer" id="drawer"><div class="drawer-inner" id="drawerInner"></div></div>
+<div id="chartTip" class="charttip"></div>
 
 <script>
 const SEED_VERSION = 15;
@@ -618,7 +621,7 @@ function topAngles(r,n){
   const screenBoost={},s=r.screen||{};
   [['helpers',s.helpers],['approach',s.approach],['invariant',s.invariant]].forEach(([k,v])=>{
     if(v)(SCREEN_ANGLES[k+':'+v]||[]).forEach((a,i)=>{screenBoost[a]=Math.max(screenBoost[a]||0,440-i*20);});});
-  const MULTIPATH=(r.path==='B'||s.invariant==='fails')?PATH_AFFINITY.B:PATH_AFFINITY.A; // path-aware tie-breaker
+  const MULTIPATH=PATH_AFFINITY.A; // Path A only (the platform no longer uses Path B)
   // Area bonus is capped to ~300 (was 1000-i, which buried every other signal) so a strong
   // screen (440..300) or kind (300..225) answer can actually reorder the curated seed angles.
   const score=a=>{let s2=0;const ai=area.indexOf(a);if(ai>=0)s2+=300-ai*8;if(screenBoost[a])s2+=screenBoost[a];if(kindBoost[a])s2+=kindBoost[a];if(MULTIPATH.indexOf(a)>=0)s2+=20;return s2;};
@@ -640,7 +643,7 @@ const POOL=[
  {fullName:'ent/ent',url:'https://github.com/ent/ent',lang:'Go',license:'Apache-2.0',stars:'~17k',div:2,unit:'dialect backends',why:'Codegen + a layered hook/interceptor/privacy runtime — ordering invariants the naive impl violates.',gap:'hook/interceptor ordering contract'},
  {fullName:'uptrace/bun',url:'https://github.com/uptrace/bun',lang:'Go',license:'BSD-2-Clause',stars:'~4k',div:7,unit:'SQL dialects',path:'A',why:'Five divergent SQL dialects plus a query builder. Pure Path A.',gap:'per-dialect SQL generation + relation eager-loading'},
  {fullName:'mikro-orm/mikro-orm',url:'https://github.com/mikro-orm/mikro-orm',lang:'TypeScript',license:'MIT',stars:'~9k',div:5,unit:'DB platforms',path:'A',why:'Five divergent platforms with unit-of-work. Pure Path A (4th ORM — watch plagiarism).',gap:'identity-map / unit-of-work flush ordering'},
- {fullName:'vitejs/vite',url:'https://github.com/vitejs/vite',lang:'TypeScript',license:'MIT',stars:'~81k',div:6,unit:'plugin hooks / modes',path:'A+B',why:'Plugin hook system + esbuild/rollup backends + dev/build/ssr modes. A+B — strong across categories.',gap:'dev-server vs build-time transform parity'},
+ {fullName:'vitejs/vite',url:'https://github.com/vitejs/vite',lang:'TypeScript',license:'MIT',stars:'~81k',div:6,unit:'plugin hooks / modes',path:'A',why:'Plugin hook system + esbuild/rollup backends + dev/build/ssr modes. Strong cross-category divergence.',gap:'dev-server vs build-time transform parity'},
  {fullName:'apollographql/apollo-server',url:'https://github.com/apollographql/apollo-server',lang:'TypeScript',license:'MIT',stars:'~13k',div:9,unit:'plugins',why:'Request-lifecycle plugin system — lifecycle ordering invariants.',gap:'plugins share one interface — lifecycle ordering invariant'}
 ];
 function poolPanel(){
@@ -655,7 +658,7 @@ function poolPanel(){
 
 /* ---------- doctrine ---------- */
 const DOCTRINE = [
- {c:'gold',h:'Proven difficulty mechanism (30% TypeORM, supersedes Path A/B)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep.</p>
+ {c:'gold',h:'Proven difficulty mechanism (30% TypeORM)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep.</p>
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
@@ -721,27 +724,27 @@ const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
 
 const SEED_OLYMPUS={batch:1,repos:[
  repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','34k',true,'gold',
-  'High divergence: ~17 concrete DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A+B',[
+  'High divergence: ~17 concrete DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A',[
    A('The driver layer — ~17 concrete drivers each generating SQL differently','Adapter Abstraction','a feature wired across the drivers where one cross-driver invariant fails silently on a single driver = the discovery gap. Build across a representative subset, not all 17.'),
    A('Query-builder / relation-loading semantics','Type Safety','how relations + the builder resolve is a non-obvious contract — the obvious approach is wrong'),
    A('Schema-sync / migration diffing per driver','Ordered Execution','each driver diffs schema differently — a cross-driver invariant lives here')]),
  repo('nestjs/nest','https://github.com/nestjs/nest','TypeScript','MIT','70k',true,'gold',
-  'HTTP platform adapters (express / fastify / ws / socket.io) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A+B',[
+  'HTTP platform adapters (express / fastify / ws / socket.io) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A',[
    A('Platform adapters + microservice transports','Adapter Abstraction','feature spanning the adapters with a contract that breaks on exactly one = Path A gap'),
    A('DI / provider lifecycle + scope resolution','Lifecycle Hooks Multi-Consumer','the injector lifecycle is a cross-cutting invariant the naive impl violates'),
    A('Interceptor / guard / pipe execution ordering','Ordered Execution','an ordering invariant across the request pipeline')]),
  repo('traefik/traefik','https://github.com/traefik/traefik','Go','MIT','53k',true,'gold',
-  '~18 service-discovery providers feeding a dynamic-config + middleware-chain core. Go, offline-buildable, real provider heterogeneity.','A+B',[
+  '~18 service-discovery providers feeding a dynamic-config + middleware-chain core. Go, offline-buildable, real provider heterogeneity.','A',[
    A('The provider layer (~18 discovery providers)','Service Discovery','feature across providers where config reconciliation must hold on each = Path A'),
    A('Middleware chain ordering + dynamic config reload','Ordered Execution','a cross-cutting ordering / reload invariant the naive impl fails'),
    A('Load-balancer / health-check state','Health-aware LB','per-backend health-state contract')]),
  repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30k',true,'gold',
-  '9 dialect packages (db2, ibmi, mariadb, mssql, mysql, oracle, postgres, snowflake, sqlite3), each its own SQL generation + query interface, over an association / eager-loading engine. The dialect SQL genuinely diverges; the live container-scan sees only the shared parsers (monorepo), so the path count is a manual one.','A+B',[
+  '9 dialect packages (db2, ibmi, mariadb, mssql, mysql, oracle, postgres, snowflake, sqlite3), each its own SQL generation + query interface, over an association / eager-loading engine. The dialect SQL genuinely diverges; the live container-scan sees only the shared parsers (monorepo), so the path count is a manual one.','A',[
    A('The dialect layer (9 dialect packages, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
    A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
    A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
  repo('Effect-TS/effect','https://github.com/Effect-TS/effect','TypeScript','MIT','15k',true,'gold',
-  '~4 platform variants + ~14 @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). The backend scan measures freeHelperSignal=false (no free per-variant helpers) -- the real reason it earns Olympus, not the path count. Variants are top-level packages, so the live container-scan reads 0; the count is manual.','A+B',[
+  '~4 platform variants + ~14 @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). The backend scan measures freeHelperSignal=false (no free per-variant helpers) -- the real reason it earns Olympus, not the path count. Variants are top-level packages, so the live container-scan reads 0; the count is manual.','A',[
    A('@effect/sql feature across backends','Adapter Abstraction','each backend a different client wiring = Path A'),
    A('Stream operator with back-pressure semantics','Backpressure','subtle async-orchestration invariant the naive impl fails'),
    A('Schedule combinator (retry / backoff policy)','Retry','interpretation-depth contract')])
@@ -869,7 +872,7 @@ function renderBoard(){
 }
 function repoCard(r,idx){
   const verChip=r.verified?`<span class="chip ver">✓</span>`:`<span class="chip unver">verify</span>`;
-  const _pp={'A':'A','B':'B','A+B':'AB'}[r.path];const pathChip=_pp?`<span class="chip path ${_pp}">Path ${esc(r.path)}</span>`:'';
+  const pathChip='';
   const accepted=r.slotState.some(s=>s==='accepted');
   const hasIntel=accepted||(r.intelligence&&r.intelligence.trim());
   const slots=r.slots.map((s,j)=>{
@@ -1238,9 +1241,7 @@ function difficultyReadout(r){
   const verdictTxt=!pathsOk?'Precondition unmet — needs 5+ variant paths the feature writes from scratch.':got===3?'Matches the proven structure that lands AT or under the tier ceiling. Build it — only a real agent batch measures the actual pass rate.':got===2?'One hard lever short of the proven shape — add the missing lever (below) before building.':got===1?'Reads as too easy for this tier — add the missing hard levers, or route to Mars.':'No hard levers yet — a Mars-scale pick as it stands.';
   const leverRows=levers.map(l=>`<div class="checkrow"><span class="lamp ${l[1]?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l[1]?'✓':'—'} ${esc(l[0])}${evTag(l[2])}</div></div></div>`).join('');
   const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">no % — only an agent batch measures real pass rate</span></p><p class="chartsub"><b>${got}/3 hard levers</b> ${jd?'— answers evidenced by the model judgment':'— self-reported; run the judgment to evidence them'}. ${esc(verdictTxt)}</p>${leverRows}</div>`;
-  return `<div class="charts">${readinessCard}
-    <div class="chartcard wide"><p class="chartttl">Structural levers</p><p class="chartsub">The 3 levers the verdict checks &mdash; a full triangle is Olympus-shaped (<b>${t.tier}</b>).</p><div style="display:flex;justify-content:center">${chartLeverRadar(r)}</div></div>
-  </div>${warn}${stdline}`;
+  return `${readinessCard}${warn}${stdline}`;
 }
 function wireScreen(r){
   const key=(r.fullName||'').toLowerCase(),rec=recommendScreen(r);
@@ -1261,7 +1262,12 @@ function wireScreen(r){
 // utility folder. These point the judge at the layer that actually carries the divergence.
 const CURATED_JUDGE_LAYERS={'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'effect-ts/effect':['sql','platform'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider']};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
-function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];return (r.divKinds&&r.divKinds[0])||'';}
+function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
+  // auto-pick the HEAVIEST divergent layer (most per-variant code) — the one most likely to host
+  // an Olympus-hard feature. The operator never chooses it.
+  const c=extCache[(r.fullName||'').toLowerCase()]||{};
+  if(c.source&&c.source.variants){const v=c.source.variants;const best=Object.keys(v).filter(k=>v[k]&&((v[k].symbols||0)+(v[k].files||0))>0).sort((a,b)=>((v[b].symbols||0)+(v[b].files||0))-((v[a].symbols||0)+(v[a].files||0)))[0];if(best)return best;}
+  return (r.divKinds&&r.divKinds[0])||'';}
 // The layer the judge actually analyzes: the operator's override (needed for monorepos where the
 // real variant layer is not a folder the tree-walk detects) else the auto-detected top divergent kind.
 function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};return (c.judgeLayerOverride&&String(c.judgeLayerOverride).trim())||judgeLayer(r);}
@@ -1269,10 +1275,7 @@ function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
   if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
-  const _srcV=(c.source&&!c.source.error&&c.source.variants)?Object.keys(c.source.variants):[];
-  const _layers=[...new Set([...curatedLayers(r),..._srcV,...(r.divKinds||[]),layer].filter(Boolean))];
-  const _opts=_layers.map(L=>`<option value="${esc(L)}" ${L===layer?'selected':''}>${esc(L)}</option>`).join('')||`<option>${esc(layer||'(none detected)')}</option>`;
-  const head=`<div class="hint" style="margin:0 0 8px">Judge layer <select id="judgeLayerSel" class="judgesel">${_opts}</select> &mdash; <b>free</b> (2-3 model consensus when the backend has provider keys, else a rubric scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">Pick which <b>divergent layer</b> the consensus reads &mdash; these are the variant paths the feature would span, auto-detected from the repo. It is not free text: this is about whether THIS repo's divergent layers can host an Olympus-hard feature.</div></div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Reading the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> layer &mdash; the heaviest divergent layer, auto-picked by the console. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">The model reads that layer's real code and decides the three levers (helpers / approach / invariant) with citations. You don't choose the layer or set the answers — the console narrows to the layer most likely to host an Olympus-hard feature.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1362,8 +1365,8 @@ function finalVerdict(r){
   const highPass=high.filter(x=>x.ok).length;
   const layerName = (c.judge&&c.judge.layer)||'this';
   const altitudeNote = !jd ? '' : altitudeFree
-    ? 'Altitude guidance: the judged "'+layerName+'" layer exposes free per-variant helpers — target a feature a layer ABOVE them (or judge a deeper layer); a feature built AT this layer would be a thin transcribe (~80% pass).'
-    : 'Altitude: no free per-variant helpers at the judged "'+layerName+'" layer — a feature here forces hand-rolled per-variant code (the LOC + the difficulty).';
+    ? 'Altitude, how to act on it: the model found free per-variant helpers INSIDE the "'+layerName+'" layer. To stay hard, design a feature that ORCHESTRATES across all '+layerName+' variants from the layer ABOVE them (the DataSource / manager / registry that owns them, where there are no per-variant helpers) — not a feature that plugs into one '+layerName+'. The verdict already accounts for this; this is just where to aim the feature.'
+    : 'Altitude, good: no free per-variant helpers at the "'+layerName+'" layer, so a feature here already forces hand-rolled per-variant code (that IS the LOC and the difficulty).';
   let verdict,vclass,line;
   if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model assessment + the accepted-project rubric. Run the assessment first (the model reads the layer).'; }
   else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
@@ -1443,8 +1446,13 @@ function analysisResults(r,div){
     ? `<div class="hint" style="margin:0 0 6px">What ${esc(r.fullName)} has taught us (from accepted work — reuse, re-grep at the pinned commit):</div><div class="repointel">${esc(repoIntelTxt)}</div>`
     : `<div class="hint" style="margin:0 0 6px">No accepted submissions logged on ${esc(r.fullName)} yet. Structural profile read live:</div><div class="repointel">${repoProfile}</div>`;
   const tipsHtml=`<details class="disc"><summary>General field notes &mdash; for a clean 1&ndash;2 iteration pass</summary>`+TIPS.map((t,i)=>`<div class="tip"><span class="tipn">${String(i+1).padStart(2,'0')}</span><div><b>${esc(t.h)}.</b> ${esc(t.b)}</div></div>`).join('')+`</details>`;
-  return `
-    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">ranked from ${esc(kindsLabel)} folder kinds + your screen answers — a heuristic ranking, not a code read</span></div>${angWarn}<div class="recang">${angChips}</div></div>
+  // PROOF the analysis is data-driven: the model's real verdicts + reasons + FILE citations that
+  // everything below is built from. Citations are real files in the repo.
+  const _jd=(extCache[(r.fullName||'').toLowerCase()]||{}).judge,_jdata=_jd&&_jd.data;
+  const _fr=(lbl,o)=>o&&o.verdict?`<div class="vcrit"><span class="vlamp ${/yes|present|wrong|fails/i.test(o.verdict)&&!/unclear/i.test(o.verdict)?'pass':/unclear/i.test(o.verdict)?'warn':'fail'}"></span><div><div class="vk">${esc(lbl)}: <b>${esc(o.verdict)}</b></div><div class="vd">${esc((o.reason||'').slice(0,240))}</div>${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:3px">reads: '+o.citations.slice(0,4).map(esc).join(', ')+'</div>':''}</div></div>`:'';
+  const findingsBlock=_jdata?`<div class="sec"><div class="seclbl">What the model actually read <span class="hint">the ${esc((_jd.layer)||'')} layer's real code &mdash; THIS drives the verdict, angles and areas below, not folder names</span></div><div class="bcard">${_fr('Free helpers',_jdata.freeHelpers)}${_fr('Obvious approach wrong',_jdata.approachWrong)}${_fr('Naive fails an invariant',_jdata.invariant)}<div class="hint" style="margin-top:8px">Source: ${esc(_jdata.source||'model')}${_jdata.synthesized?', synthesis-reconciled':''}. Each citation is a real file in the repo; the accepted-project rubric (Jun 2026) then maps these findings to the verdict.</div></div></div>`:'';
+  return findingsBlock+`
+    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">ranked from the model's assessment + the ${esc(kindsLabel)} divergent layers &mdash; a brainstorm to confirm, not a measurement</span></div>${angWarn}<div class="recang">${angChips}</div></div>
     <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">heuristic angle pairings — each is a CANDIDATE; confirm the angles share a code path (backend /judge) before building</span></div>${comboHtml}</div>
     ${(openA||doneA)?`<div class="sec"><div class="seclbl">Strong areas <span class="hint">${derived?'derived from the live '+esc(kindsLabel)+' surface':'curated for this repo'}</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
     <div class="sec"><div class="seclbl">Repo insights <span class="hint">what this repo has taught us &mdash; plus general field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
@@ -1587,7 +1595,7 @@ function renderAcquire(){
   if(!analyzeSel&&repos.length)analyzeSel=repos[0].fullName;
   const boardOpts=repos.map(x=>`<option value="${x.fullName}" ${analyzeSel===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
   viewEl.innerHTML=`<h2 class="mh">Repo <em>analysis</em></h2>
-   <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live from GitHub (metadata, latest commit, variant code-paths from the tree). <b>Code-path count is only the precondition</b> — the proven difficulty lever is the 3-question screen: does the target layer already give agents free per-variant helpers, is the API surface rich, is there instance-state. Divergence does not predict difficulty.</p>
+   <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live (metadata, commit, variant code-paths), measures the source, then the model assesses it. <b>Code-path count is only the precondition</b> — then the model reads the heaviest divergent layer and assesses the difficulty for you (no toggles to set). Divergence does not predict difficulty; whether the obvious approach is wrong and a naive impl fails an invariant does.</p>
    <div class="panel">
      <div class="row2"><div class="field"><label>Analyze a known repo</label><select id="anRepo">${boardOpts}</select></div>
        <div class="field"><label>…or paste any owner/name</label><input id="anPaste" placeholder="owner/name then Enter" autocomplete="off" spellcheck="false"></div></div>
@@ -1680,11 +1688,14 @@ function chartDivLine(r){
   const max=Math.max(40,...repos.map(x=>x.d)),W=460,H=96,padL=16,padR=16,innerW=W-padL-padR,axisY=52,x=v=>padL+(v/max)*innerW;
   let b=`<line x1="${padL}" y1="${axisY}" x2="${padL+innerW}" y2="${axisY}" stroke="${CHC.line2}" stroke-width="2" stroke-linecap="round"/>`;
   b+=`<line x1="${x(5)}" y1="${axisY-15}" x2="${x(5)}" y2="${axisY+15}" stroke="${CHC.warn}" stroke-width="1.4" stroke-dasharray="3 3"/><text x="${x(5)}" y="${axisY+30}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.warn}">5-path floor</text>`;
-  repos.filter(z=>!z.me).forEach(p=>{b+=`<circle cx="${x(p.d).toFixed(1)}" cy="${axisY}" r="3.5" fill="${CHC.grey}"><title>${esc(p.n)}: ${p.d}</title></circle>`;});
+  // every point is interactive: a generous invisible hit-circle + a visible dot, both carry the data
+  const dot=(p,r2,fill)=>`<g class="divdot" data-n="${esc(p.n)}" data-d="${p.d}" style="cursor:pointer"><circle cx="${x(p.d).toFixed(1)}" cy="${axisY}" r="12" fill="transparent"/><circle cx="${x(p.d).toFixed(1)}" cy="${axisY}" r="${r2}" fill="${fill}"/></g>`;
+  repos.filter(z=>!z.me).forEach(p=>{b+=dot(p,4.5,CHC.grey);});
   const me=repos.find(z=>z.me);
-  if(me){const mx=x(me.d);b+=`<circle cx="${mx.toFixed(1)}" cy="${axisY}" r="7.5" fill="${CHC.green}" filter="url(#gln)"/><text x="${mx.toFixed(1)}" y="${axisY-14}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" font-weight="700" fill="${CHC.light}">${esc(me.n.slice(0,14))} · ${me.d}</text>`;}
+  if(me){const mx=x(me.d);b+=`<circle cx="${mx.toFixed(1)}" cy="${axisY}" r="11" fill="${CHC.green}" opacity="0.16"/>`+dot(me,7,CHC.green)+`<text x="${mx.toFixed(1)}" y="${axisY-15}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" font-weight="700" fill="${CHC.light}">${esc(me.n.slice(0,14))} · ${me.d}</text>`;}
   b+=`<text x="${padL}" y="${axisY+30}" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.muted}">0</text><text x="${padL+innerW}" y="${axisY+30}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.muted}">${max}</text>`;
-  return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gln" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="x"/><feMerge><feMergeNode in="x"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
+  b+=`<text x="${padL+innerW/2}" y="${axisY+30}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.muted}" opacity="0.7">hover any point</text>`;
+  return `<svg class="csvg" viewBox="0 0 ${W} ${H}">${b}</svg>`;
 }
 // Variant-weight DONUT: per-variant symbol share (where the per-variant code weight sits).
 function chartVariantDonut(src){
@@ -1823,9 +1834,9 @@ function paintDash(){
   const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_vp=(c&&c.judge&&c.judge.data&&c.analysisRun)?finalVerdict(r):null;
   const _vchip=_vp?`<span class="verdictchip ${_vp.vclass}" style="font-size:13px;padding:6px 13px">${esc(_vp.verdict)}</span>`:`<span class="verdictchip pending" style="font-size:11.5px;padding:6px 12px">verdict pending</span>`;
   const _hero=`<div class="ahero"><div><h2>Analyzing <em>${esc(r.fullName)}</em></h2><div class="asub">${(c&&c.live)?'<span class="livedot on" style="width:7px;height:7px"></span> live · ':''}${esc(r.lang)} · ${esc(r.license)} · ★ ${esc(r.stars)}${c&&c.commit?' · '+esc(String(c.commit).slice(0,10)):''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${_vchip}<span class="chip">${_t2.tier==='olympus'?'Olympus':'Mars'} · target ${esc(_std2.pass)}</span></div></div>
-  <div class="bento"><div class="bcard bcol-5"><div class="blabel">Tier${_t2.curated?' · curated':' · assessed'}</div><div class="bignum">${_t2.tier==='olympus'?'OLYMPUS':'MARS'}</div><div style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.5">${esc((_t2.why||'').slice(0,118))}</div></div>
+  <div class="bento"><div class="bcard bcol-4"><div class="blabel">Tier${_t2.curated?' · curated':' · assessed'}</div><div class="bignum">${_t2.tier==='olympus'?'OLYMPUS':'MARS'}</div><div style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.5">${esc((_t2.why||'').slice(0,118))}</div></div>
   <div class="bcard bcol-4"><div class="blabel">Divergent paths</div><div class="bignum">${div!=null?div:'?'}<span class="unit">${div!=null?esc(repoUnit(r)):'read live'}</span></div><div style="margin-top:8px;font-size:11px;color:var(--muted)">5+ is the precondition, not the difficulty</div></div>
-  <div class="bcard bcol-3"><div class="blabel">Surface</div><div class="bignum">${srcObj?srcObj.surface:'—'}</div><div style="margin-top:8px;font-size:11px;color:var(--muted)">${srcObj?(srcObj.filesRead+' files scanned'):'read source to measure'}</div></div></div>`;
+  <div class="bcard bcol-4"><div class="blabel">Surface symbols</div><div class="bignum">${srcObj?srcObj.surface:'—'}</div><div style="margin-top:8px;font-size:11px;color:var(--muted)">${srcObj?(srcObj.filesRead+' source files scanned'):'read source to measure'}</div></div></div>`;
   document.getElementById('anDash').innerHTML=_hero+`<div class="panel">
     <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a>${unknown?'<a href="#" id="anVerify">Verify tree ↻</a>':''}<a href="#" id="anLiveAgain">↻ Read live again</a></div>
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
@@ -1839,7 +1850,6 @@ function paintDash(){
   wireScreen(r);
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
   const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
-  const jli=document.getElementById('judgeLayerSel');if(jli)jli.addEventListener('change',()=>{const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),judgeLayerOverride:jli.value};});
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
   const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
   const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),calibrating:true};paintDash();setTimeout(()=>{const c2=extCache[k]||{};extCache[k]={...c2,calibrating:false,analysisRun:true};if(activeModule==='acquire'&&analyzeSel&&analyzeSel.toLowerCase()===k)paintDash();},1600);});
@@ -1851,6 +1861,11 @@ function paintDash(){
   const arf=document.getElementById('actRefresh');if(arf)arf.addEventListener('click',ev=>{ev.preventDefault();fetchRepoActivity(r.fullName);});
   const arr=document.getElementById('actRerun');if(arr)arr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
   const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
+  // interactive divergence points: floating tooltip on hover
+  const tip=document.getElementById('chartTip');
+  if(tip)document.querySelectorAll('.divdot').forEach(d=>{
+    d.addEventListener('mousemove',e=>{tip.textContent=(d.getAttribute('data-n')||'')+' · '+(d.getAttribute('data-d')||'')+' divergent paths';tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-12)+'px';});
+    d.addEventListener('mouseleave',()=>{tip.style.display='none';});});
   const ed=document.getElementById('anEditDiv');if(ed)ed.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
   const ed2=document.getElementById('anEditDiv2');if(ed2)ed2.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
   const vb=document.getElementById('anVerify');if(vb)vb.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName);});
