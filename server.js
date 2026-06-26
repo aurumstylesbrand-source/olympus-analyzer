@@ -11,6 +11,12 @@ const PORT = process.env.PORT || 8787;
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
+// Optional FREE model path: any OpenAI-compatible endpoint (Google AI Studio / Gemini, Groq,
+// NVIDIA NIM, OpenRouter, ...). Set JUDGE_API_KEY (+ JUDGE_BASE_URL, JUDGE_MODEL) to get
+// automated model judgments at zero cost. Used only when ANTHROPIC_API_KEY is not set.
+const JUDGE_API_KEY = process.env.JUDGE_API_KEY || '';
+const JUDGE_BASE_URL = (process.env.JUDGE_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '');
+const JUDGE_MODEL = process.env.JUDGE_MODEL || 'gemini-2.0-flash';
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
 
@@ -128,6 +134,40 @@ async function judgeViaApi(repo, ref, layer){
   const textBlock = (resp.content||[]).find(b => b.type==='text');
   if(!textBlock) throw new Error('no text block in Anthropic response (stop_reason='+resp.stop_reason+')');
   return shapeJudgment(repo, ref, layer, ctx, JSON.parse(textBlock.text), 'api');
+}
+
+// POST to any OpenAI-compatible /chat/completions endpoint (Gemini / Groq / NVIDIA / OpenRouter).
+function openaiChat(payload){
+  return new Promise((resolve, reject)=>{
+    const body = JSON.stringify(payload);
+    const req = https.request(JUDGE_BASE_URL + '/chat/completions', {
+      method:'POST',
+      headers:{ 'content-type':'application/json', 'authorization':'Bearer '+JUDGE_API_KEY, 'content-length':Buffer.byteLength(body) },
+    }, res=>{
+      const chunks=[]; res.on('data',c=>chunks.push(c));
+      res.on('end',()=>{
+        const txt=Buffer.concat(chunks).toString('utf8');
+        if(res.statusCode!==200) return reject(new Error('judge LLM HTTP '+res.statusCode+': '+txt.slice(0,300)));
+        try { resolve(JSON.parse(txt)); } catch(e){ reject(new Error('bad JSON from judge LLM: '+txt.slice(0,200))); }
+      });
+    });
+    req.on('error', reject); req.write(body); req.end();
+  });
+}
+// Free automated judgment via the configured OpenAI-compatible model. Parses JSON defensively
+// (strips code fences / prose) so it works across providers without a strict-schema dependency.
+async function judgeViaOpenAI(repo, ref, layer){
+  const ctx = await buildJudgeContext(repo, ref, layer);
+  const resp = await openaiChat({
+    model: JUDGE_MODEL,
+    messages:[{ role:'user', content: ctx.prompt }],
+    max_tokens: 1500,
+  });
+  let content = resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content;
+  if(!content) throw new Error('no content from judge LLM');
+  content = String(content).replace(/```json/gi,'').replace(/```/g,'').trim();
+  const m = content.match(/\{[\s\S]*\}/); if(m) content = m[0];
+  return shapeJudgment(repo, ref, layer, ctx, JSON.parse(content), 'llm:'+JUDGE_MODEL);
 }
 
 // FREE, model-free judge: scan the variant + above layers for the rubric's signals and emit
@@ -260,7 +300,9 @@ http.createServer(async (req, res) => {
           howto: 'Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
         }));
       }
-      const result = ANTHROPIC_KEY ? await judgeViaApi(repo, ref, layer) : await judgeHeuristic(repo, ref, layer);
+      const result = ANTHROPIC_KEY ? await judgeViaApi(repo, ref, layer)
+        : JUDGE_API_KEY ? await judgeViaOpenAI(repo, ref, layer)
+        : await judgeHeuristic(repo, ref, layer);
       fs.writeFileSync(jf, JSON.stringify(result));
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
