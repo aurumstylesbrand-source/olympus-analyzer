@@ -1108,7 +1108,7 @@ function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayer(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
   if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
-  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer via your backend (model judgment, not proof). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run model judgment'}</button></div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer &mdash; <b>free, no API key</b> (rubric-signal scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1135,6 +1135,19 @@ async function runJudge(name){
     if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
     if(d.needsJudgment){extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();return;}
     extCache[key]={...extCache[key],judge:{data:d,layer}};paintDash();
+  }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
+}
+// Deeper (optional, still free): fetch the paste-ready prompt for a Claude chat instead of the heuristic.
+async function runJudgePrompt(name){
+  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayer(r);
+  if(!state.analyzer||!layer)return;
+  const ref=c.commit||c.defaultBranch||'HEAD';
+  extCache[key]={...c,judge:{loading:true,layer}};paintDash();
+  try{
+    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?mode=prompt&repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
+    const d=await res.json();
+    if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
+    extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();
   }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
 }
 async function saveJudge(name,txt){
@@ -1442,6 +1455,7 @@ function paintDash(){
   </div>`;
   wireScreen(r);
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
+  const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
   const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
   const jap=document.getElementById('judgeApply');if(jap)jap.addEventListener('click',()=>applyJudge(r.fullName));

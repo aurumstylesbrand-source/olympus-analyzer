@@ -130,6 +130,55 @@ async function judgeViaApi(repo, ref, layer){
   return shapeJudgment(repo, ref, layer, ctx, JSON.parse(textBlock.text), 'api');
 }
 
+// FREE, model-free judge: scan the variant + above layers for the rubric's signals and emit
+// approach/invariant verdicts with citations. Honest: a heuristic regex scan, NOT a model judgment.
+const APPROACH_SIGNALS = [
+  ['shared base class with concrete helpers', /\b(abstract\s+class|class\s+\w*Base\w*|extends\s+\w*Base|super\.\w+\()/i],
+  ['hidden dispatch / registry', /\b(registry|factory|dispatch|handlers?\s*[:=]|switch\s*\(|new\s+Map\(|Record<\s*string)/i],
+  ['lazy / deferred initialization', /\b(\.connect\(|setup\(|initialize\(|\.acquire\(|lazy|bootstrap\()/i],
+  ['internal caching / memoization', /\b(cache|memo|lru|WeakMap|WeakRef|useMemo)/i],
+  ['implicit ordering contract', /\b(middleware|\.use\(|pipeline|priority|ordered|chain)/i],
+  ['interface with non-obvious required methods', /\b(interface\s+\w|implements\s+\w|abstract\s+\w+\s*\()/i],
+  ['builder / fluent order-dependent state', /\b(Builder\b|\.build\(|\.where\(|\.select\(|\.from\()/i],
+];
+const INVARIANT_SIGNALS = [
+  ['paired lifecycle hooks', /\b(open\(|close\(|begin\(|commit\(|acquire\(|release\(|subscribe\(|unsubscribe\(|disconnect\()/i],
+  ['query / operation count', /\b(queries|batch|N\+1|EXPLAIN|\.stats\(|queryCount)/i],
+  ['insertion ordering', /\b(ORDER\s+BY|\.sort\(|ordered|LinkedHashMap|insertionOrder)/i],
+  ['reference counting / pooling', /\b(Rc<|Arc<|refcount|\bpool\b|checkout|checkin|semaphore)/i],
+  ['derived values after filtering', /\b(\.count\b|\bsum\b|aggregate|subtree|reduce\()/i],
+  ['transactional visibility', /\b(transaction|BEGIN\b|COMMIT\b|@Transactional|rollback)/i],
+  ['idempotency under retry', /\b(IF\s+NOT\s+EXISTS|ON\s+CONFLICT|idempoten|dedup|upsert)/i],
+  ['concurrency ordering', /\b(Mutex|\bLock\b|sync\.|tokio::|goroutine|select\s*\{)/i],
+  ['cleanup-on-error path', /\b(defer\s|finally\b|impl\s+Drop|dispose\()/i],
+];
+function scanSignals(files, signals){
+  const hits = [];
+  for(const [name, re] of signals){ const f = files.find(f => re.test(f.text)); if(f) hits.push({ name, file:f.path }); }
+  return hits;
+}
+async function judgeHeuristic(repo, ref, layer){
+  const files = await loadRepoFiles(repo, ref, TOKEN);
+  const variant = files.filter(f => inLayer(f.path, layer));
+  if(!variant.length) throw new Error('no files matched layer "'+layer+'" (try a path fragment or container kind like "adapters")');
+  const variantDirs = new Set(variant.map(f => dirOf(f.path)));
+  const variantPaths = new Set(variant.map(f => f.path));
+  const aboveDirs = new Set([...variantDirs].map(d => dirOf(d)));
+  const above = files.filter(f => !variantPaths.has(f.path) && aboveDirs.has(dirOf(f.path)));
+  const scope = variant.concat(above);
+  const aHits = scanSignals(scope, APPROACH_SIGNALS);
+  const iHits = scanSignals(scope, INVARIANT_SIGNALS);
+  if(new Set(variant.map(f => f.path.split('/')[0])).size >= 3) aHits.push({ name:'cross-package / cross-module wiring', file:'(3+ top-level dirs)' });
+  const cite = h => h.map(x => x.file + ' [' + x.name + ']');
+  const reason = (h, kind) => h.length ? ('matched ' + h.length + ' ' + kind + ' signals from the rubric: ' + h.map(x => x.name).join('; ')) : 'no ' + kind + ' signals detected by the rubric scan';
+  return {
+    repo, ref, layer, source:'heuristic', variantFiles:variant.length, aboveFiles:above.length,
+    approachWrong:{ verdict: aHits.length>=3 ? 'likely yes' : aHits.length>=1 ? 'unclear' : 'no', reason: reason(aHits,'approach-wrong'), citations: cite(aHits) },
+    invariant:{ verdict: iHits.length>=2 ? 'likely yes' : iHits.length>=1 ? 'unclear' : 'no', reason: reason(iHits,'invariant'), citations: cite(iHits) },
+    disclaimer: 'Heuristic rubric-signal scan (regex over the layer) — NOT a model judgment and NOT proof. For a deeper read, use the paste-a-Claude-chat mode (mode=prompt). Always confirm in-editor.',
+  };
+}
+
 // Read and JSON-parse a request body (bounded to 1 MB).
 function readJsonBody(req){
   return new Promise((resolve, reject)=>{
@@ -198,11 +247,12 @@ http.createServer(async (req, res) => {
       }
     }
 
-    // GET: an explicit ?mode=prompt always rebuilds the prompt; else cached wins; else API (if key) or prompt fallback.
+    // GET precedence: ?mode=prompt always rebuilds the paste prompt; else a cached judgment
+    // wins; else a model API call when a key is set; else a FREE heuristic rubric-signal scan.
     try {
       const wantPrompt = u.searchParams.get('mode') === 'prompt';
       if (!wantPrompt && fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
-      if (wantPrompt || !ANTHROPIC_KEY) {
+      if (wantPrompt) {
         const ctx = await buildJudgeContext(repo, ref, layer);
         res.writeHead(200); return res.end(JSON.stringify({
           needsJudgment: true, repo, ref, layer, variantFiles: ctx.variantFiles, aboveFiles: ctx.aboveFiles,
@@ -210,7 +260,7 @@ http.createServer(async (req, res) => {
           howto: 'Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
         }));
       }
-      const result = await judgeViaApi(repo, ref, layer);
+      const result = ANTHROPIC_KEY ? await judgeViaApi(repo, ref, layer) : await judgeHeuristic(repo, ref, layer);
       fs.writeFileSync(jf, JSON.stringify(result));
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
