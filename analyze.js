@@ -35,7 +35,7 @@ function* untar(buf){
   }
 }
 
-function langOf(path){if(/\.tsx?$/.test(path))return 'ts';if(/\.jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
+function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
 function scanSymbols(text,path){
   const L=langOf(path),lines=text.split('\n'),sym=new Set();let methods=0,barrel=0,concrete=0;
   const add=n=>{if(n&&n.length>1&&n!=='from'&&n!=='type')sym.add(n);};
@@ -48,7 +48,8 @@ function scanSymbols(text,path){
       else if(m=ln.match(/^export\s+(?:default\s+)?enum\s+([A-Za-z0-9_$]+)/))add(m[1]);
       else if(m=ln.match(/^export\s+(?:type\s+)?\{([^}]*)\}/))m[1].split(',').forEach(p=>{const nm=p.trim().split(/\s+as\s+/).pop().trim();if(nm&&nm!=='type')add(nm);});
       else if(/^export\s+(?:type\s+)?\*\s+from/.test(ln))barrel++;
-      if(/^\s{2,}(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concrete++;}
+      else if(m=ln.match(/^(?:module\.)?exports\.([A-Za-z0-9_$]+)\s*=/))add(m[1]); // CommonJS named export
+      if(/^(?:\t+| {2,})(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concrete++;}
     });
   } else if(L==='go'){
     lines.forEach(ln=>{let m;
@@ -69,7 +70,7 @@ async function analyzeRepo(repo, ref, token){
   const variants={}; const baseHelpers={}; // dir -> concrete methods (free-helper signal)
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,''); // strip the top tarball dir
-    if(!/\.(ts|tsx|js|jsx|go|rs|py)$/.test(rel)) continue;
+    if(!/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/.test(rel)) continue;
     if(/\.(test|spec|d)\.|__tests__|\/test\/|\/tests\//.test(rel)) continue;
     if(f.data.length>400000) continue; // skip huge generated files
     const txt=f.data.toString('utf8'); const r=scanSymbols(txt, rel);
@@ -103,7 +104,7 @@ async function loadRepoFiles(repo, ref, token){
   const out=[];
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,'');
-    if(!/\.(ts|tsx|js|jsx|go|rs|py)$/.test(rel)) continue;
+    if(!/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/.test(rel)) continue;
     if(/\.(test|spec|d)\.|__tests__|\/test\/|\/tests\//.test(rel)) continue;
     if(f.data.length>400000) continue;
     out.push({path:rel, text:f.data.toString('utf8')});

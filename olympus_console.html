@@ -678,6 +678,8 @@ async function sget(k){try{const r=await STORE.get(k);return r?JSON.parse(r.valu
 async function sset(k,v){try{await STORE.set(k,JSON.stringify(v));}catch(e){console.error(e);}}
 async function sgetRaw(k){try{const r=await STORE.get(k);return r?r.value:'';}catch(e){return '';}}
 function clone(x){return JSON.parse(JSON.stringify(x));}
+// Backfill any missing fields so older/partial persisted repos never crash the renderers.
+function normalizeRepo(r){if(!r||typeof r!=='object')return r;r.slots=Array.isArray(r.slots)?r.slots:[];while(r.slots.length<MAX_FEATURES)r.slots.push('');r.slotState=Array.isArray(r.slotState)?r.slotState:[];while(r.slotState.length<MAX_FEATURES)r.slotState.push('idea');r.slotCat=Array.isArray(r.slotCat)?r.slotCat:[];while(r.slotCat.length<MAX_FEATURES)r.slotCat.push('feature');r.displayName=r.displayName||r.fullName||'(unknown)';r.areas=Array.isArray(r.areas)?r.areas:[];return r;}
 function dedupe(a){const s=new Set(),o=[];a.forEach(n=>{const k=String(n).toLowerCase();if(!s.has(k)){s.add(k);o.push(n);}});return o;}
 
 function harvest(...batches){const m={};batches.forEach(b=>{if(!b||!b.repos)return;if(b.batch&&b.batch>1)return;b.repos.forEach(r=>m[String(r.fullName).toLowerCase()]=r);});return m;}
@@ -696,6 +698,10 @@ function seedWithState(seed,prev){
     }
     return f;
   });
+  // Carry forward any promoted/custom repos present on the persisted board but not in the seed
+  // list, so a SEED_VERSION bump never silently deletes them and their logged work.
+  const seedNames=new Set(seed.repos.map(s=>String(s.fullName).toLowerCase()));
+  Object.keys(prev).forEach(k=>{if(!seedNames.has(k)){repos.push(normalizeRepo(clone(prev[k])));}});
   return {batch:seed.batch,repos};
 }
 async function load(){
@@ -706,7 +712,8 @@ async function load(){
     m=(m&&m.batch>1)?m:seedWithState(SEED_MARS,prev);
     await sset(KEYS.olympus,o);await sset(KEYS.mars,m);await sset(KEYS.version,SEED_VERSION);
   }
-  state.olympus=o||clone(SEED_OLYMPUS);state.mars=m||clone(SEED_MARS);
+  state.olympus=(o&&Array.isArray(o.repos))?o:clone(SEED_OLYMPUS);state.mars=(m&&Array.isArray(m.repos))?m:clone(SEED_MARS);
+  [state.olympus,state.mars].forEach(bd=>{bd.repos=(bd.repos||[]).filter(Boolean).map(normalizeRepo);});
   let u=await sget(KEYS.used)||[];u=dedupe([...u,...state.olympus.repos.map(r=>r.fullName),...state.mars.repos.map(r=>r.fullName)]);
   state.used=u;await sset(KEYS.used,u);
   state.gh=await sget(KEYS.gh)||'';
@@ -750,7 +757,7 @@ function renderBoard(){
 }
 function repoCard(r,idx){
   const verChip=r.verified?`<span class="chip ver">✓</span>`:`<span class="chip unver">verify</span>`;
-  const pathChip=r.path?`<span class="chip path ${r.path.replace('+','')}">Path ${r.path}</span>`:'';
+  const _pp={'A':'A','B':'B','A+B':'AB'}[r.path];const pathChip=_pp?`<span class="chip path ${_pp}">Path ${esc(r.path)}</span>`:'';
   const accepted=r.slotState.some(s=>s==='accepted');
   const hasIntel=accepted||(r.intelligence&&r.intelligence.trim());
   const slots=r.slots.map((s,j)=>{
@@ -769,11 +776,11 @@ function repoCard(r,idx){
   const intelBlock=hasIntel?`<details class="disc"><summary>Repo intelligence</summary><textarea class="intelta" placeholder="Paste the Repo Intelligence doc Claude Code generated after acceptance…" data-intel="${idx}">${esc(r.intelligence)}</textarea></details>`:'';
   return `<div class="card ${r.kind} ${r.archived?'archived':''}">
     ${r.archived?'<span class="stamp">CLOSED</span>':''}
-    <div class="chead"><div class="titlecol"><h3 class="reponame">${r.displayName}</h3>
-      <div class="meta"><span class="chip"><b>${r.lang}</b></span><span class="chip">${r.license}</span><span class="chip">★ <b>${r.stars}</b></span>${pathChip}${verChip}</div></div>
+    <div class="chead"><div class="titlecol"><h3 class="reponame">${esc(r.displayName)}</h3>
+      <div class="meta"><span class="chip"><b>${esc(r.lang)}</b></span><span class="chip">${esc(r.license)}</span><span class="chip">★ <b>${esc(r.stars)}</b></span>${pathChip}${verChip}</div></div>
       <span class="kind ${r.kind}">${r.kind==='gold'?'Confirmed':'Candidate'}</span></div>
-    <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.commitsUrl}" target="_blank" rel="noopener">Commits ↗</a></div>
-    <p class="why">${r.why}</p>
+    <div class="links"><a href="${esc(r.url)}" target="_blank" rel="noopener">Repo ↗</a><a href="${esc(r.commitsUrl)}" target="_blank" rel="noopener">Commits ↗</a></div>
+    <p class="why">${esc(r.why)}</p>
     <div class="sec"><div class="seclbl">Features <span class="hint">${r.slots.filter(Boolean).length}/${MAX_FEATURES} · set a category + advance the status per feature</span></div>${slots}</div>
     ${areasBlock}
     ${intelBlock}
@@ -896,7 +903,7 @@ async function ghCodeSearch(name,term){
 // ===== RUNG 1 — read the actual source (browser-only; works in the downloaded copy, CSP-blocked in the sandbox) =====
 // Fetches a targeted slice of files at the pinned commit and counts REAL exported/public symbols,
 // converting the surface + helper screen inputs from name-keyword guesses into measurements.
-function langOf(path){if(/\.tsx?$/.test(path))return 'ts';if(/\.jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
+function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
 function scanSymbols(text,path){
   const L=langOf(path),lines=text.split('\n'),sym=new Set();let methods=0,barrel=0,concreteMethods=0;
   const add=n=>{if(n&&n.length>1&&n!=='from'&&n!=='type')sym.add(n);};
@@ -909,7 +916,8 @@ function scanSymbols(text,path){
       else if(m=ln.match(/^export\s+(?:default\s+)?enum\s+([A-Za-z0-9_$]+)/))add(m[1]);
       else if(m=ln.match(/^export\s+(?:type\s+)?\{([^}]*)\}/))m[1].split(',').forEach(p=>{const nm=p.trim().split(/\s+as\s+/).pop().trim();if(nm&&nm!=='type')add(nm);});
       else if(/^export\s+(?:type\s+)?\*\s+from/.test(ln))barrel++;
-      if(/^\s{2,}(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concreteMethods++;}
+      else if(m=ln.match(/^(?:module\.)?exports\.([A-Za-z0-9_$]+)\s*=/))add(m[1]);
+      if(/^(?:\t+| {2,})(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concreteMethods++;}
     });
   } else if(L==='go'){
     lines.forEach(ln=>{let m;
@@ -922,11 +930,11 @@ function scanSymbols(text,path){
 function pickTargetFiles(paths,kinds){
   if(!paths||!paths.length)return [];
   const ENTRY=/(^|\/)(index|mod|lib|main|__init__)\.(ts|tsx|js|jsx|go|rs|py)$|(^|\/)src\/index\./;
-  const contRe=new RegExp('(^|/)('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9]/gi,'')).join('|'):'adapters|drivers|dialects|providers|backends|handlers|plugins|modules|stores|engines')+')(/|$)','i');
+  const contRe=new RegExp('(^|/)('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9-]/gi,'')).join('|'):'adapters|drivers|dialects|providers|backends|handlers|plugins|modules|stores|engines')+')(/|$)','i');
   const entries=paths.filter(p=>ENTRY.test(p)&&p.split('/').length<=3);
   const variantFiles=paths.filter(p=>contRe.test(p));
   // the layer ABOVE the variant dirs: files that sit one level up from a container dir
-  const parentDirs=new Set(variantFiles.map(p=>p.replace(new RegExp('(.*?)/?('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9]/gi,'')).join('|'):'adapters|drivers')+')\\b.*','i'),'$1')).filter(Boolean));
+  const parentDirs=new Set(variantFiles.map(p=>p.replace(new RegExp('(.*?)/?('+(kinds&&kinds.length?kinds.map(k=>k.replace(/[^a-z0-9-]/gi,'')).join('|'):'adapters|drivers')+')\\b.*','i'),'$1')).filter(Boolean));
   const parentLayer=paths.filter(p=>{const dir=p.split('/').slice(0,-1).join('/');return parentDirs.has(dir);});
   // sample: all entries, up to 8 parent-layer files, up to 2 files from each of the first ~6 variants
   const byVariant={};variantFiles.forEach(p=>{const seg=(p.match(contRe)?p.split('/').slice(0, p.split('/').findIndex(s=>contRe.test('/'+s+'/'))+2 ).join('/'):p);byVariant[seg]=byVariant[seg]||[];if(byVariant[seg].length<2)byVariant[seg].push(p);});
@@ -987,7 +995,7 @@ function estPass(r){
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
-      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the <=30% ceiling but the hard-behaviour parts read as bolted-on',cls:'warn',tier:'mars',overreach:true}
+      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the <=30% ceiling but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
       : {lo:18,hi:30,label:'Solid Mars structure (within the <=30% ceiling)',cls:'ok',tier:'mars'};
   }
   if(hard===2) return {lo:12,hi:20,label:'Proven Olympus structure (<=20% ceiling)',cls:'ok',tier:'olympus'};
@@ -1119,8 +1127,10 @@ function judgeBlock(r){
       <div class="setrow"><button class="btn primary" id="judgeSave">Save judgment</button>${j.pasteErr?'<span class="hint" style="color:var(--warn)">'+esc(j.pasteErr)+'</span>':''}</div></div>`;
   if(j.data){
     const d=j.data,aw=d.approachWrong||{},iv=d.invariant||{};
+    const isHeur=String(d.source||'').indexOf('heuristic')>=0;
+    const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':'✓ model judgment';
     const row=(lbl,o)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
-    return head+`<div class="honest measured">✓ model judgment (${esc(d.source||'model')}${d.cached?', cached':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw)}${row('invariant',iv)}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
+    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw)}${row('invariant',iv)}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
   }
   return head;
 }
@@ -1163,10 +1173,11 @@ async function saveJudge(name,txt){
 }
 function applyJudge(name){
   const key=name.toLowerCase(),c=extCache[key]||{},d=(c.judge&&c.judge.data)||{};
-  const yes=o=>/^(likely\s*yes|yes)/i.test((o&&o.verdict)||'');
+  // Map verdict -> yes/no/null; only apply confident verdicts (an 'unclear' must NOT become the EASY answer).
+  const v=o=>{const z=((o&&o.verdict)||'').toLowerCase();return /^(likely\s*yes|yes)/.test(z)?'yes':/^(likely\s*no|no)/.test(z)?'no':null;};
   const sc={...(c.screen||{})};
-  if(d.approachWrong)sc.approach=yes(d.approachWrong)?'wrong':'works';
-  if(d.invariant)sc.invariant=yes(d.invariant)?'fails':'passes';
+  const a=v(d.approachWrong); if(a==='yes')sc.approach='wrong'; else if(a==='no')sc.approach='works';
+  const i=v(d.invariant); if(i==='yes')sc.invariant='fails'; else if(i==='no')sc.invariant='passes';
   extCache[key]={...c,screen:sc};paintDash();
 }
 function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':'var(--muted-2)';}
@@ -1313,7 +1324,7 @@ ${tips}
 -> Next: confirm the five points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
 --- END BRIEFING ---`;
   document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Drop this in right after your STANDARDS block, above PHASE 0. It carries the proven difficulty mechanism + the screen + the cascade warning. It does NOT pick a category: the AI chooses, checking your REPEAT REPO section for overlap.</p></div>`;
-  document.getElementById('lCopy').addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(txt);const b=document.getElementById('lCopy');b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1400);});
+  document.getElementById('lCopy').addEventListener('click',()=>{let ok=false;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);ok=true;}else{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}}catch(e){ok=false;}const b=document.getElementById('lCopy');b.textContent=ok?'Copied ✓':'Copy failed';setTimeout(()=>b.textContent='Copy',1400);});
 }
 
 /* ---------- ANALYZE ---------- */
@@ -1429,7 +1440,7 @@ function paintDash(){
   }
   const div=repoDiv(r),fit=olympusFit(r);
   const extBanner=(isExternal(r)&&c)?`<div class="fit possible" style="margin:0 0 12px"><span class="fitdot"></span>${c.manual?'Code paths <b>you entered</b>':'Read <b>live from GitHub</b>'} — <b>${div}</b> ${repoUnit(r)}. ${c.commit?'Latest commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span> — pin this in Launch. ':''}<a href="#" id="anEditDiv" style="color:var(--green)">set count</a></div>`:'';
-  const liveBanner=(c&&c.live&&!isExternal(r))?`<div class="fit strong" style="margin:0 0 12px"><span class="fitdot"></span>Read <b>live from GitHub</b> just now — <b>${div}</b> ${repoUnit(r)} counted from the current tree${c.commit?', commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span>':''}.</div>`:'';
+  const liveBanner=(c&&c.live&&!isExternal(r))?`<div class="fit strong" style="margin:0 0 12px"><span class="fitdot"></span>Read <b>live from GitHub</b>${c.commit?' — commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span>':''}. Path count <b>${div}</b> ${repoUnit(r)} (curated)${(c.liveDiv!=null&&c.liveDiv!==div)?'; live tree-walk saw '+c.liveDiv:''}${c.truncated?'; tree too large to read fully (truncated)':''}.</div>`:'';
   const liveErr=(c&&c.liveError)?`<div class="hint" style="margin:0 0 10px;color:var(--warn)">Live refresh didn't complete (${esc(c.liveError)}) — showing pre-verified stored numbers.</div>`:'';
   const licWarn=(r.license&&r.license!=='?'&&!permissive(r.license))?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>License check:</b> ${esc(r.license)} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0). Likely <b>disqualified</b> — verify before investing.</div>`:'';
   const lowDivWarn=(div!=null&&div<=2)?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>Low path count (${div}).</b> The counter only sees paths expressed as sibling <i>folders</i>. If this repo branches <i>in code</i> (a switch / registry over variants — like ni over package managers) the true count is higher; <a href="#" id="anEditDiv2" style="color:var(--green)">set count</a>. If it is genuinely flat, route to Mars.</div>`:'';
@@ -1526,13 +1537,17 @@ async function fetchRepoLive(name,opts){
     if(mr.status===404||(meta&&/not found/i.test(meta.message||''))){extCache[key]={notRepo:true,loading:false};repaintLive();return;}
     if(!mr.ok||!meta.full_name)throw new Error(meta.message?meta.message:('HTTP '+mr.status));
     const branch=meta.default_branch||'main';
-    let div=null,kinds=[],treePaths=[];
-    try{const tr=await fetch('https://api.github.com/repos/'+name+'/git/trees/'+branch+'?recursive=1',{headers:hdr});const tree=await tr.json();if(tree&&tree.tree){div=countDivergence(tree);kinds=divergenceKinds(tree);treePaths=tree.tree.filter(t=>t.type==='blob'&&/\.(ts|tsx|js|jsx|go|rs|py)$/.test(t.path)&&!/\.(test|spec|d)\.|__tests__|\/test\//.test(t.path)).map(t=>t.path);}}catch(_){}
+    let div=null,kinds=[],treePaths=[],treeRead=false,truncated=false;
+    try{const tr=await fetch('https://api.github.com/repos/'+name+'/git/trees/'+branch+'?recursive=1',{headers:hdr});const tree=await tr.json();
+      if(tree&&tree.tree&&!tree.truncated){treeRead=true;div=countDivergence(tree);kinds=divergenceKinds(tree);treePaths=tree.tree.filter(t=>t.type==='blob'&&/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/.test(t.path)&&!/\.(test|spec|d)\.|__tests__|\/test\//.test(t.path)).map(t=>t.path);}
+      else if(tree&&tree.truncated){truncated=true;}}catch(_){}
     let commit='';
     try{const cr=await fetch('https://api.github.com/repos/'+name+'/commits?per_page=1&sha='+branch,{headers:hdr});const cm=await cr.json();if(Array.isArray(cm)&&cm[0])commit=cm[0].sha;}catch(_){}
-    const out={lang:meta.language||'?',license:(meta.license&&meta.license.spdx_id&&meta.license.spdx_id!=='NOASSERTION')?meta.license.spdx_id:(meta.license&&meta.license.key?meta.license.key:'?'),stars:formatStars(meta.stargazers_count),commit:commit,defaultBranch:branch,divKinds:kinds,treePaths:treePaths,verified:true,live:true,loading:false};
-    // Board/pool repos keep their curated divergence only if the live tree count came back empty; otherwise live wins.
-    if(div!=null)out.divergence=div; else if(board){/* keep stored: leave divergence unset so base value shows */} else out.divergence=null;
+    const out={lang:meta.language||'?',license:(meta.license&&meta.license.spdx_id&&meta.license.spdx_id!=='NOASSERTION')?meta.license.spdx_id:(meta.license&&meta.license.key?meta.license.key:'?'),stars:formatStars(meta.stargazers_count),commit:commit,defaultBranch:branch,divKinds:kinds,treePaths:treePaths,verified:true,live:true,loading:false,treeRead:treeRead,truncated:truncated};
+    // Curated board repos keep their authoritative divergence (a raw tree-walk can disagree); the
+    // live count is stored as liveDiv for reference. External/pasted repos use the live count directly.
+    if(board){ if(div!=null)out.liveDiv=div; }
+    else { out.divergence=(div!=null?div:null); }
     if(keepPath)out.path=keepPath;
     if(prevScreen)out.screen=prevScreen;
     if(prevSource)out.source=prevSource;
@@ -1551,28 +1566,39 @@ function selectRepo(name){
   renderAcquire();
 }
 function countDivergence(tree){
-  // Honest "implementation divergence": count directories that sit directly inside a
-  // container-named folder (adapters/, drivers/, dialects/, providers/, platform-*/ ...).
-  // Each such directory is one genuine sibling implementation. We deliberately do NOT
-  // count files under those folders — that inflates the number with non-divergent noise.
+  // "Implementation divergence": for each container folder (adapters/, drivers/, dialects/ ...),
+  // count its sibling-implementation children. Prefer subdirectories; if a container holds no
+  // qualifying subdir, count its source FILES (file-per-variant repos, e.g. dialects/mysql.ts).
+  // Test/fixture trees are excluded so they do not inflate the count.
   const containers=/^(adapters?|drivers?|backends?|handlers?|transports?|protocols?|providers?|dialect|dialects|balancer|balancers|resolver|resolvers|credentials|plugins?|integrations?|modules?|exporters?|connectors?|codecs?|stores?|engines?|commands?|agents?|languages?|rules?|strategies|strategy|policies|generators?|parsers?|loaders?|formats?|targets?|kinds?|presets?|runtimes?|frameworks?|serializers?|validators?|formatters?)$/i;
-  const platform=/^platform[-a-z0-9]*$/i;const dirs=new Set();const nodes=tree.tree||[];
+  const platform=/^platform[-a-z0-9]*$/i;
+  const TESTRE=/(^|\/)(tests?|__tests__|spec|specs|fixtures?|testdata|__fixtures__|e2e|examples?|benchmarks?|node_modules)(\/|$)/i;
+  const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/i;
+  const ENTRY=/(^|\/)(index|mod|lib|main|__init__)\.[a-z]+$/i;
+  const isCont=s=>!!s&&(containers.test(s)||platform.test(s));
+  const nodes=(tree.tree||[]).filter(n=>!TESTRE.test(n.path));
   const haveTypes=nodes.some(n=>n.type);
-  if(haveTypes){
-    nodes.forEach(n=>{if(n.type!=='tree')return;const seg=n.path.split('/');const parent=seg[seg.length-2];
-      if(parent&&(containers.test(parent)||platform.test(parent)))dirs.add(n.path);});
-  }else{
-    // Fallback when type info is absent: a child is a directory iff a deeper segment exists.
-    nodes.forEach(n=>{const seg=n.path.split('/');for(let i=0;i<seg.length-2;i++){if((containers.test(seg[i])||platform.test(seg[i]))&&seg[i+1]&&seg[i+2])dirs.add(seg.slice(0,i+2).join('/'));}});
-  }
-  return dirs.size;
+  const subs={},files={};
+  nodes.forEach(n=>{const seg=n.path.split('/');
+    if(haveTypes){const parent=seg[seg.length-2];if(!isCont(parent))return;const cdir=seg.slice(0,-1).join('/');
+      if(n.type==='tree')(subs[cdir]=subs[cdir]||new Set()).add(n.path);
+      else if(n.type==='blob'&&SRC.test(n.path)&&!ENTRY.test(n.path))(files[cdir]=files[cdir]||new Set()).add(n.path);}
+    else{for(let i=0;i<seg.length-2;i++){if(isCont(seg[i])&&seg[i+1]&&seg[i+2]){const cdir=seg.slice(0,i+1).join('/');(subs[cdir]=subs[cdir]||new Set()).add(seg.slice(0,i+2).join('/'));}}}});
+  let total=0;new Set([...Object.keys(subs),...Object.keys(files)]).forEach(cdir=>{const s=(subs[cdir]||new Set()).size;total+= s>0 ? s : (files[cdir]||new Set()).size;});
+  return total;
 }
 function divergenceKinds(tree){
   const containers=/^(adapters?|drivers?|backends?|handlers?|transports?|protocols?|providers?|dialect|dialects|balancer|balancers|resolver|resolvers|credentials|plugins?|integrations?|modules?|exporters?|connectors?|codecs?|stores?|engines?|commands?|agents?|languages?|rules?|strategies|strategy|policies|generators?|parsers?|loaders?|formats?|targets?|kinds?|presets?|runtimes?|frameworks?|serializers?|validators?|formatters?)$/i;
-  const platform=/^platform[-a-z0-9]*$/i;const counts={};const nodes=tree.tree||[];const haveTypes=nodes.some(n=>n.type);
-  nodes.forEach(n=>{if(haveTypes&&n.type!=='tree')return;const seg=n.path.split('/');const idx=haveTypes?seg.length-2:-1;
-    if(haveTypes){const parent=seg[idx];if(parent&&(containers.test(parent)||platform.test(parent)))counts[parent.toLowerCase()]=(counts[parent.toLowerCase()]||0)+1;}
-    else{for(let i=0;i<seg.length-2;i++){if((containers.test(seg[i])||platform.test(seg[i]))&&seg[i+1]&&seg[i+2])counts[seg[i].toLowerCase()]=(counts[seg[i].toLowerCase()]||0)+1;}}});
+  const platform=/^platform[-a-z0-9]*$/i;
+  const TESTRE=/(^|\/)(tests?|__tests__|spec|specs|fixtures?|testdata|__fixtures__|e2e|examples?|benchmarks?|node_modules)(\/|$)/i;
+  const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/i;
+  const ENTRY=/(^|\/)(index|mod|lib|main|__init__)\.[a-z]+$/i;
+  const isCont=s=>!!s&&(containers.test(s)||platform.test(s));
+  const counts={};const nodes=(tree.tree||[]).filter(n=>!TESTRE.test(n.path));const haveTypes=nodes.some(n=>n.type);
+  nodes.forEach(n=>{const seg=n.path.split('/');
+    if(haveTypes){const parent=seg[seg.length-2];if(!isCont(parent))return;
+      if(n.type==='tree'||(n.type==='blob'&&SRC.test(n.path)&&!ENTRY.test(n.path)))counts[parent.toLowerCase()]=(counts[parent.toLowerCase()]||0)+1;}
+    else{for(let i=0;i<seg.length-2;i++){if(isCont(seg[i])&&seg[i+1]&&seg[i+2])counts[seg[i].toLowerCase()]=(counts[seg[i].toLowerCase()]||0)+1;}}});
   // keep kinds with at least 2 members (a real divergent surface), most-divergent first
   return Object.keys(counts).filter(k=>counts[k]>=2).sort((a,b)=>counts[b]-counts[a]);
 }
@@ -1684,5 +1710,5 @@ function openSettings(){
 document.getElementById('resetBtn').addEventListener('click',openSettings);
 
 /* ---------- boot ---------- */
-(async function(){await load();render();})();
+(async function(){try{await load();}catch(e){console.error('load failed',e);state.olympus=clone(SEED_OLYMPUS);state.mars=clone(SEED_MARS);state.used=dedupe([...SEED_OLYMPUS.repos,...SEED_MARS.repos].map(r=>r.fullName));}render();})();
 </script>
