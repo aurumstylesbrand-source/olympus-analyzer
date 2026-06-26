@@ -1140,11 +1140,14 @@ function wireScreen(r){
 // Needs the analyzer backend set. If the backend has no model key it returns a paste-ready prompt
 // (paste into a Claude chat, paste the JSON back) which we POST to cache; otherwise it answers directly.
 function judgeLayer(r){return (r.divKinds&&r.divKinds[0])||'';}
+// The layer the judge actually analyzes: the operator's override (needed for monorepos where the
+// real variant layer is not a folder the tree-walk detects) else the auto-detected top divergent kind.
+function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};return (c.judgeLayerOverride&&String(c.judgeLayerOverride).trim())||judgeLayer(r);}
 function judgeBlock(r){
-  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayer(r);
+  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
   if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
-  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer &mdash; <b>free</b> (2-model consensus when the backend has provider keys, else a rubric scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button></div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Judge layer <input id="judgeLayerInp" value="${esc(layer)}" placeholder="e.g. dialects or src/dialects" style="font-family:var(--mono);font-size:11px;width:180px;padding:3px 7px;background:var(--surface-3);border:1px solid var(--line);border-radius:6px;color:var(--green)"> &mdash; <b>free</b> (2-3 model consensus when the backend has provider keys, else a rubric scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">Auto-detected from folder kinds. For a <b>monorepo</b> (packages), type the REAL variant layer (a path fragment or container kind, e.g. <span class="mono">dialects</span>) so the judge reads the right code, not a stray utility folder.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1166,7 +1169,7 @@ function judgeBlock(r){
   return head;
 }
 async function runJudge(name){
-  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayer(r);
+  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r);
   if(!state.analyzer||!layer)return;
   const ref=c.commit||c.defaultBranch||'HEAD';
   extCache[key]={...c,judge:{loading:true,layer}};paintDash();
@@ -1179,7 +1182,7 @@ async function runJudge(name){
 }
 // Deeper (optional, still free): fetch the paste-ready prompt for a Claude chat instead of the heuristic.
 async function runJudgePrompt(name){
-  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayer(r);
+  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r);
   if(!state.analyzer||!layer)return;
   const ref=c.commit||c.defaultBranch||'HEAD';
   extCache[key]={...c,judge:{loading:true,layer}};paintDash();
@@ -1191,7 +1194,7 @@ async function runJudgePrompt(name){
 }
 async function saveJudge(name,txt){
   const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name);
-  const layer=(c.judge&&c.judge.layer)||judgeLayer(r),ref=c.commit||c.defaultBranch||'HEAD';
+  const layer=(c.judge&&c.judge.layer)||judgeLayerOf(r),ref=c.commit||c.defaultBranch||'HEAD';
   let body;try{body=JSON.parse(txt||'');}catch(e){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:'that is not valid JSON'}};paintDash();return;}
   try{
     const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1498,10 +1501,11 @@ function paintDash(){
   wireScreen(r);
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
   const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
+  const jli=document.getElementById('judgeLayerInp');if(jli)jli.addEventListener('change',()=>{const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),judgeLayerOverride:jli.value};});
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
   const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
   const jap=document.getElementById('judgeApply');if(jap)jap.addEventListener('click',()=>applyJudge(r.fullName));
-  const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName,{board:!isExternal(r)});});
+  const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
   const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
   const ed=document.getElementById('anEditDiv');if(ed)ed.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
   const ed2=document.getElementById('anEditDiv2');if(ed2)ed2.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
@@ -1559,6 +1563,7 @@ async function fetchRepoLive(name,opts){
   opts=opts||{};const key=name.toLowerCase();
   const prevScreen=(extCache[key]||{}).screen;
   const prevSource=(extCache[key]||{}).source;
+  const prevLayerOv=(extCache[key]||{}).judgeLayerOverride;
   const board=!!opts.board,keepPath=opts.keepPath||(extCache[key]&&extCache[key].path)||'';
   extCache[key]={loading:true,screen:prevScreen};repaintLive();
   const hdr={'Accept':'application/vnd.github+json'};if(state.gh)hdr['Authorization']='Bearer '+state.gh;
@@ -1582,6 +1587,7 @@ async function fetchRepoLive(name,opts){
     if(keepPath)out.path=keepPath;
     if(prevScreen)out.screen=prevScreen;
     if(prevSource)out.source=prevSource;
+    if(prevLayerOv)out.judgeLayerOverride=prevLayerOv;
     extCache[key]=out;
     repaintLive();
   }catch(e){
