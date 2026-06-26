@@ -496,7 +496,7 @@ Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/Sing
 ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
 Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
 ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
-const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'effect-ts/effect':14,'caddyserver/caddy':12,'apollographql/apollo-server':26,'kysely-org/kysely':7,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
+const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'effect-ts/effect':18,'caddyserver/caddy':12,'apollographql/apollo-server':26,'kysely-org/kysely':7,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
 const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','sequelize/sequelize':'SQL dialects','effect-ts/effect':'platform/sql backends','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','kysely-org/kysely':'dialects','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
@@ -510,17 +510,19 @@ function topAngles(r,n){
   const screenBoost={},s=r.screen||{};
   [['helpers',s.helpers],['approach',s.approach],['invariant',s.invariant]].forEach(([k,v])=>{
     if(v)(SCREEN_ANGLES[k+':'+v]||[]).forEach((a,i)=>{screenBoost[a]=Math.max(screenBoost[a]||0,440-i*20);});});
-  const MULTIPATH=PATH_AFFINITY.A; // generic multi-path fallback
-  const score=a=>{let s2=0;const ai=area.indexOf(a);if(ai>=0)s2+=1000-ai;if(screenBoost[a])s2+=screenBoost[a];if(kindBoost[a])s2+=kindBoost[a];if(MULTIPATH.indexOf(a)>=0)s2+=120;return s2;};
+  const MULTIPATH=(r.path==='B'||s.invariant==='fails')?PATH_AFFINITY.B:PATH_AFFINITY.A; // path-aware tie-breaker
+  // Area bonus is capped to ~300 (was 1000-i, which buried every other signal) so a strong
+  // screen (440..300) or kind (300..225) answer can actually reorder the curated seed angles.
+  const score=a=>{let s2=0;const ai=area.indexOf(a);if(ai>=0)s2+=300-ai*8;if(screenBoost[a])s2+=screenBoost[a];if(kindBoost[a])s2+=kindBoost[a];if(MULTIPATH.indexOf(a)>=0)s2+=20;return s2;};
   return ANGLES.slice().map(a=>[a,score(a)]).sort((x,y)=>y[1]-x[1]).slice(0,n).map(x=>x[0]);
 }
 function screenAnswered(r){const s=r.screen||{};return s.helpers!=null||s.approach!=null||s.invariant!=null;}
-function anglesAreTemplate(r){return !((r.areas||[]).some(a=>a.angle&&a.angle!=='—'))&&!((r.divKinds||[]).length)&&!screenAnswered(r);}
+function anglesAreTemplate(r){return !((r.areas||[]).some(a=>a.angle&&a.angle!=='—'))&&!screenAnswered(r);}
 function comboFor(r){
   const t=topAngles(r,10),div=repoDiv(r),unit=repoUnit(r),p=r.path||'';
   const specs=[[0,1],[0,2,4],[1,3,5,7],[2,6],[0,4,8]];
   const why=angs=>{const k=angs.length;
-    if(div&&div>=5)return `${angs[0]} is the visible behaviour across the ${div} ${unit}; the other ${k-1} become cross-cutting invariants that fail silently on one path. Fuse only when the single-angle feature is transcribable.`;
+    if(div&&div>=5)return `${angs[0]} is the visible behaviour across the ${div} ${unit}; the other ${k-1} are CANDIDATE cross-cutting invariants -- verify each is actually load-bearing (backend /judge), do not assume. Fuse only to harden a single angle that is otherwise too transcribable on its own.`;
     return `One feature spanning ${k} load-bearing concerns. Confirm each genuinely raises the discovery gap before building.`;};
   return specs.map(ix=>{const angs=ix.map(i=>t[i]).filter(Boolean);return angs.length>=2?{angles:angs,why:why(angs)}:null;}).filter(Boolean);
 }
@@ -611,12 +613,12 @@ const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
 
 const SEED_OLYMPUS={batch:1,repos:[
  repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','34k',true,'gold',
-  'High divergence: ~25 DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A+B',[
-   A('The driver layer — ~25 drivers each generating SQL differently','Adapter Abstraction','a feature wired across the drivers where one cross-driver invariant fails silently on a single driver = the discovery gap. Build across a representative subset, not all 25.'),
+  'High divergence: ~17 concrete DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A+B',[
+   A('The driver layer — ~17 concrete drivers each generating SQL differently','Adapter Abstraction','a feature wired across the drivers where one cross-driver invariant fails silently on a single driver = the discovery gap. Build across a representative subset, not all 17.'),
    A('Query-builder / relation-loading semantics','Type Safety','how relations + the builder resolve is a non-obvious contract — the obvious approach is wrong'),
    A('Schema-sync / migration diffing per driver','Ordered Execution','each driver diffs schema differently — a cross-driver invariant lives here')]),
  repo('nestjs/nest','https://github.com/nestjs/nest','TypeScript','MIT','70k',true,'gold',
-  'HTTP platform adapters (express / fastify / ws) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A+B',[
+  'HTTP platform adapters (express / fastify / ws / socket.io) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A+B',[
    A('Platform adapters + microservice transports','Adapter Abstraction','feature spanning the adapters with a contract that breaks on exactly one = Path A gap'),
    A('DI / provider lifecycle + scope resolution','Lifecycle Hooks Multi-Consumer','the injector lifecycle is a cross-cutting invariant the naive impl violates'),
    A('Interceptor / guard / pipe execution ordering','Ordered Execution','an ordering invariant across the request pipeline')]),
@@ -626,12 +628,12 @@ const SEED_OLYMPUS={batch:1,repos:[
    A('Middleware chain ordering + dynamic config reload','Ordered Execution','a cross-cutting ordering / reload invariant the naive impl fails'),
    A('Load-balancer / health-check state','Health-aware LB','per-backend health-state contract')]),
  repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30k',true,'gold',
-  '~8 SQL dialects, each its own SQL generation + query interface, over an association / eager-loading engine. Drizzle-like heterogeneity — the dialect SQL genuinely diverges.','A+B',[
-   A('The dialect layer (~8 dialects, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
+  '9 dialect packages (db2, ibmi, mariadb, mssql, mysql, oracle, postgres, snowflake, sqlite3), each its own SQL generation + query interface, over an association / eager-loading engine. The dialect SQL genuinely diverges; the live container-scan sees only the shared parsers (monorepo), so the path count is a manual one.','A+B',[
+   A('The dialect layer (9 dialect packages, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
    A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
    A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
  repo('Effect-TS/effect','https://github.com/Effect-TS/effect','TypeScript','MIT','15k',true,'gold',
-  'Kept by request. ~4 platform variants + @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). Note: strict divergence ~14, just under the 15 floor — a deliberate A+B exception where the depth carries it.','A+B',[
+  '~4 platform variants + ~14 @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). The backend scan measures freeHelperSignal=false (no free per-variant helpers) -- the real reason it earns Olympus, not the path count. Variants are top-level packages, so the live container-scan reads 0; the count is manual.','A+B',[
    A('@effect/sql feature across backends','Adapter Abstraction','each backend a different client wiring = Path A'),
    A('Stream operator with back-pressure semantics','Backpressure','subtle async-orchestration invariant the naive impl fails'),
    A('Schedule combinator (retry / backoff policy)','Retry','interpretation-depth contract')])
@@ -862,8 +864,12 @@ function repoTier(r){
   const richHit=RICH.test(hay), thinHit=THIN.test(hay);
   // approachFeasible: can the repo host a feature whose OBVIOUS approach is wrong? (keyword proxy)
   // invariantFeasible: does it carry order/lifecycle/intermediate state to violate? (keyword proxy)
-  let approachFeasible = richHit ? true : (thinHit ? false : (kinds.length>=4));
-  let invariantFeasible = STATEFUL.test(hay) && !thinHit;
+  // approachFeasible / invariantFeasible are BEHAVIOURAL properties the doctrine says are NOT
+  // readable from names; this regex is a keyword PROXY only, and is labelled unverified downstream.
+  // Removed: the kinds.length>=4 folder-count inference, and the single-THIN-folder veto that
+  // wrongly demoted rich repos (e.g. drizzle, just because one folder is named 'serializer').
+  let approachFeasible = richHit;
+  let invariantFeasible = STATEFUL.test(hay);
   const curated=(r.tier==='olympus'||r.tier==='mars')?r.tier:null;
   let tier, why;
   if(curated){tier=curated;
@@ -998,7 +1004,7 @@ function estPass(r){
       ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the <=30% ceiling but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
       : {lo:18,hi:30,label:'Solid Mars structure (within the <=30% ceiling)',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:12,hi:20,label:'Proven Olympus structure (<=20% ceiling)',cls:'ok',tier:'olympus'};
+  if(hard===2) return {lo:18,hi:30,label:'Proven Olympus structure — measured anchors land 20% (tRPC) to 30% (TypeORM); the <=20% ceiling is the TARGET to harden toward, not a floor that has been measured',cls:'ok',tier:'olympus'};
   if(hard===1) return {lo:22,hi:34,label:'Above the 20% Olympus ceiling — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — too easy; drop to Mars scale',cls:'warn',tier:'olympus',demote:true};
 }
@@ -1059,7 +1065,7 @@ function tierBanner(r){
   if(paths==null&&!t.curated) return '';
   const label=t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY';
   const pathNote=(paths==null&&t.curated)?' <span class="hint">(path count reads live on select)</span>':'';
-  return `<div class="tierband ${t.tier}"><div class="tiertop"><span class="tierlabel">${label}</span><span class="tiertag">${t.curated?'curated':'assessed live'}</span></div><div class="tierwhy">${esc(t.why)}${pathNote}</div><div class="tierstd">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards — LOC <b>${std.loc}</b> · files ${std.files} · description ${std.desc} · pass ${std.pass}.</div></div>`;
+  return `<div class="tierband ${t.tier}"><div class="tiertop"><span class="tierlabel">${label}</span><span class="tiertag">${t.curated?'curated':'name-heuristic · unverified'}</span></div><div class="tierwhy">${esc(t.why)}${pathNote}</div><div class="tierstd">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards — LOC <b>${std.loc}</b> · files ${std.files} · description ${std.desc} · pass ${std.pass}.</div></div>`;
 }
 function difficultyScreen(r){
   const s=r.screen||{},paths=repoDiv(r),rec=recommendScreen(r),t=repoTier(r),pr=(extCache[(r.fullName||'').toLowerCase()]||{}).probe;
@@ -1116,7 +1122,7 @@ function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayer(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
   if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
-  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer &mdash; <b>free, no API key</b> (rubric-signal scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button></div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer &mdash; <b>free</b> (2-model consensus when the backend has provider keys, else a rubric scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1127,10 +1133,13 @@ function judgeBlock(r){
       <div class="setrow"><button class="btn primary" id="judgeSave">Save judgment</button>${j.pasteErr?'<span class="hint" style="color:var(--warn)">'+esc(j.pasteErr)+'</span>':''}</div></div>`;
   if(j.data){
     const d=j.data,aw=d.approachWrong||{},iv=d.invariant||{};
-    const isHeur=String(d.source||'').indexOf('heuristic')>=0;
-    const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':'✓ model judgment';
-    const row=(lbl,o)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
-    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw)}${row('invariant',iv)}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
+    const src=String(d.source||'');
+    const isHeur=src.indexOf('heuristic')>=0, isEns=src.indexOf('ensemble')>=0;
+    const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':isEns?'✓ centralized model consensus':'✓ model judgment';
+    const agBadge=k=>{const a=d.agreement&&d.agreement[k];return a?` <span class="chip ${a==='full'?'ver':'unver'}">${a==='full'?'all agree':a==='split'?'models disagree':'split'}</span>`:'';};
+    const row=(lbl,o,k)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${agBadge(k)} ${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
+    const members=(d.members&&d.members.length)?`<details class="disc"><summary>Per-model verdicts (${d.members.map(m=>esc(m.label)).join(' + ')})</summary>`+d.members.map(m=>`<div class="hint" style="margin:6px 0"><b>${esc(m.label)}</b> &mdash; approach: ${esc((m.approachWrong||{}).verdict||'?')} &middot; invariant: ${esc((m.invariant||{}).verdict||'?')}</div>`).join('')+`</details>`:'';
+    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
   }
   return head;
 }
@@ -1186,15 +1195,15 @@ function deriveAreas(r){
   const kinds=r.divKinds||[]; if(!kinds.length) return [];
   const k0=(kinds[0]||'variant'), sing=k0.replace(/s$/,''), best=topAngles(r,3);
   return [
-    {area:'A unified '+best[0]+' operation across all '+k0, angle:best[0], why:'every '+sing+' must implement it identically; one silent gap on a single path is the failing test — agents must read all '+(repoDiv(r)||'the')+' paths'},
-    {area:'Cross-'+sing+' invariant — '+best[1], angle:best[1], why:'holds across every path; fails silently if one '+sing+' diverges. This is the discovery gap, not a transcribable line'},
-    {area:best[2]+' on the shared surface', angle:best[2], why:'layer this onto the same API so the feature carries '+(repoDiv(r)||'multiple')+' paths of weight, not one'}
+    {area:'A unified '+best[0]+' operation across every '+sing, angle:best[0], why:'CANDIDATE: every '+sing+' would implement it; a silent gap on one path is the kind of failing test that creates the discovery gap -- confirm via backend /judge, do not assume'},
+    {area:'Possible cross-'+sing+' invariant -- '+best[1], angle:best[1], why:'CANDIDATE invariant inferred from the '+k0+' folder names + angle ranking, NOT measured -- confirm a naive impl actually violates it (backend /judge) before treating it as the gap'},
+    {area:best[2]+' on the shared surface', angle:best[2], why:'layer onto the same API so the feature spans '+(repoDiv(r)||'multiple')+' paths, not one'}
   ];
 }
 function analysisResults(r,div){
   const t=repoTier(r),best=topAngles(r,10),tmpl=anglesAreTemplate(r),std=standardsFor(t.tier);
   const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
-  const angWarn=tmpl?`<div class="fit weak" style="margin:0 0 10px"><span class="fitdot"></span><b>These angles are TEMPLATE-derived, not repo-specific.</b> No variant folders were detected and the screen is unanswered, so the ranking is a generic list. Answer the screen or set the path count to make it repo-specific.</div>`:'';
+  const angWarn=tmpl?`<div class="fit weak" style="margin:0 0 10px"><span class="fitdot"></span><b>These angles are inferred from folder NAMES + a generic ranking, not from reading code.</b> Answer the difficulty screen, or run the backend /judge, to ground them in this repo's behaviour.</div>`:'';
   const angChips=best.map((a,i)=>`<span class="angle sel" style="cursor:default"><b style="color:var(--bg);margin-right:5px">${i+1}</b>${esc(a)}</span>`).join('');
   const comboHtml=comboFor(r).map((c,i)=>`<div class="combo"><div class="cpair">${i+1}. ${c.angles.map(esc).join('  +  ')} &rarr; 1</div><div class="cwhy">${esc(c.why)}</div></div>`).join('');
   const areas=deriveAreas(r),derived=!((r.areas||[]).length);
@@ -1209,8 +1218,8 @@ function analysisResults(r,div){
     : `<div class="hint" style="margin:0 0 6px">No accepted submissions logged on ${esc(r.fullName)} yet. Structural profile read live:</div><div class="repointel">${repoProfile}</div>`;
   const tipsHtml=`<details class="disc"><summary>General field notes &mdash; for a clean 1&ndash;2 iteration pass</summary>`+TIPS.map((t,i)=>`<div class="tip"><span class="tipn">${String(i+1).padStart(2,'0')}</span><div><b>${esc(t.h)}.</b> ${esc(t.b)}</div></div>`).join('')+`</details>`;
   return `
-    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">top 10 from this repo's ${esc(kindsLabel)} surface + your screen answers</span></div>${angWarn}<div class="recang">${angChips}</div></div>
-    <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">fuse angles into one feature so the extras become cross-cutting invariants over the ${div!=null?div+' ':''}paths</span></div>${comboHtml}</div>
+    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">ranked from ${esc(kindsLabel)} folder kinds + your screen answers — a heuristic ranking, not a code read</span></div>${angWarn}<div class="recang">${angChips}</div></div>
+    <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">heuristic angle pairings — each is a CANDIDATE; confirm the angles share a code path (backend /judge) before building</span></div>${comboHtml}</div>
     ${(openA||doneA)?`<div class="sec"><div class="seclbl">Strong areas <span class="hint">${derived?'derived from the live '+esc(kindsLabel)+' surface':'curated for this repo'}</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
     <div class="sec"><div class="seclbl">Repo insights <span class="hint">what this repo has taught us &mdash; plus general field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
     <div class="sec"><div class="seclbl">Doctrine + standards <span class="hint">proven laws + the standard THIS tier is scored against</span></div>${stdCard}${doctrineHtml}</div>`;
@@ -1250,6 +1259,8 @@ function selectLaunchLive(name){const k=name.toLowerCase();if(extCache[k]){delet
 function genLaunch(){
   const r=resolveRepo(launchSel.repo);if(!r)return;
   const commit=r.commit||'<pin an immutable commit from Commits>';
+  const liveRead=!!(r.live&&r.commit);
+  const prov=liveRead?('Pre-filled live from the repo tree (commit '+String(r.commit).slice(0,10)+'). Treat structural claims as leads to verify in-editor -- do NOT assume LOC or pass-rate.'):('Assembled from curated / last-known data -- NOT read live this session (open in Analyze with a token to refresh). Structural claims are leads to verify in-editor, never measurements.');
   const div=repoDiv(r),unit=repoUnit(r),fit=olympusFit(r),s=r.screen||{},t=repoTier(r),std=standardsFor(t.tier);
   const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'none at directory level — verify whether variants branch in-code';
   const _areas=deriveAreas(r);
@@ -1277,14 +1288,14 @@ function genLaunch(){
 
 ## REPO BRIEFING — ${r.fullName}
 
-> Pre-filled live from the repo tree by Olympus Console. Treat structural claims as leads to verify in-editor — do NOT assume LOC or pass-rate.
+> ${prov}
 
-**TIER VERDICT: ${t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY'}** ${t.curated?'(curated)':'(assessed live)'} — ${t.why}
+**TIER VERDICT: ${t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY'}** ${t.curated?'(curated)':'(name-heuristic, unverified -- read source to confirm)'} — ${t.why}
 **Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.**
 
 **Phase 0 screening:** ${fit.v==='strong'?'VIABLE':fit.v==='weak'?'NOT VIABLE as-is':fit.v==='screen'?'NEEDS SCREENING':'BORDERLINE'}  |  **Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty)
 ${fit.t}
-${licLine}**Variant surface (read from the tree):** ${kindsTxt}.
+${licLine}**Variant surface (${(r.divKinds&&r.divKinds.length)?'divergent folder kinds, pattern-matched from the tree':'no divergent folders detected by name -- variants may branch in-code'}):** ${kindsTxt}.
 ${divNote}
 **THE DIFFICULTY MECHANISM (proven across builds):** difficulty is NOT divergence and NOT surface size. It is whether Nova can transcribe the spec without reading deep. Build a feature that: (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers (TreeRepository had them = 100% pass; DataSource/EntityManager did not = 30%); (2) adds only 1-2 new public symbols but makes the behaviour hard — design it so the obvious first approach is WRONG (more symbols = more prescriptive = easier); (3) makes the obvious implementation wrong in a way not visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) the naive impl violates while passing every value check.
 
@@ -1320,8 +1331,9 @@ ${tips}
   3. The intermediate-state invariant (count / ordering / lifecycle) actually exists to violate, and a fair test can assert it.
   4. Run Phase 1's 7 rejection checks yourself: plagiarism grep of your symbols, closed issues, docs scope, merged PRs, maintainer philosophy, CONTRIBUTING scale, closed-concept. (The console does none of these.)
   5. FLAKINESS (now a mandatory platform check): the repo's existing suite is deterministic (no WASM-heap / network / clock / port / parallel-DB / order-dependent flakiness), AND every test you add is deterministic. Run F2P/P2P 3x each locally; if any run flips, fix it before submitting.
+  6. GROUND TRUTH the console already has: with a backend set, run /analyze + /judge on this repo (Analyze tab) and fold the measured per-variant surface + the approach-wrong / invariant verdicts (with citations; "model judgment, not proof") into the design -- they beat the folder-name heuristics above.
 
--> Next: confirm the five points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
+-> Next: confirm the points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
 --- END BRIEFING ---`;
   document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Drop this in right after your STANDARDS block, above PHASE 0. It carries the proven difficulty mechanism + the screen + the cascade warning. It does NOT pick a category: the AI chooses, checking your REPEAT REPO section for overlap.</p></div>`;
   document.getElementById('lCopy').addEventListener('click',()=>{let ok=false;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);ok=true;}else{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}}catch(e){ok=false;}const b=document.getElementById('lCopy');b.textContent=ok?'Copied ✓':'Copy failed';setTimeout(()=>b.textContent='Copy',1400);});

@@ -7,16 +7,46 @@ const fs = require('fs');
 const path = require('path');
 const { analyzeRepo, loadRepoFiles, CONTAINER } = require('./analyze.js');
 
+// Minimal .env loader (dependency-free): populate process.env from a local .env if present, so
+// `node server.js` works locally without exporting vars. Real host env vars always take precedence.
+try { fs.readFileSync(path.join(__dirname, '.env'), 'utf8').split('\n').forEach(l => {
+  const m = l.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+  if (m && !process.env[m[1]]) { let v = m[2]; if ((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'"))) v = v.slice(1,-1); process.env[m[1]] = v; }
+}); } catch {}
+
 const PORT = process.env.PORT || 8787;
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
-// Optional FREE model path: any OpenAI-compatible endpoint (Google AI Studio / Gemini, Groq,
-// NVIDIA NIM, OpenRouter, ...). Set JUDGE_API_KEY (+ JUDGE_BASE_URL, JUDGE_MODEL) to get
-// automated model judgments at zero cost. Used only when ANTHROPIC_API_KEY is not set.
+// Optional FREE model path: any OpenAI-compatible endpoint (Google AI Studio / Gemini, Zhipu GLM,
+// Groq, DeepSeek, OpenRouter, NVIDIA NIM, ...). Used only when ANTHROPIC_API_KEY is not set.
+// Two modes:
+//   1. Single model  — set JUDGE_API_KEY (+ JUDGE_BASE_URL, JUDGE_MODEL).
+//   2. ENSEMBLE      — set JUDGE_A_KEY/_BASE_URL/_MODEL and JUDGE_B_KEY/_BASE_URL/_MODEL.
+//      Both models run IN PARALLEL on the same prompt; their answers are fused into one
+//      centralized verdict (a synthesis model reconciles them) with an agreement/confidence
+//      signal. Agreement = high confidence; disagreement is flagged, never hidden.
 const JUDGE_API_KEY = process.env.JUDGE_API_KEY || '';
 const JUDGE_BASE_URL = (process.env.JUDGE_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '');
-const JUDGE_MODEL = process.env.JUDGE_MODEL || 'gemini-2.0-flash';
+const JUDGE_MODEL = process.env.JUDGE_MODEL || 'gemini-flash-lite-latest';
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
+function mkProvider(label, key, base, model, small){
+  if(!key) return null;
+  const baseUrl = (base || GEMINI_BASE).replace(/\/$/, '');
+  // Providers with tight free token-per-minute limits (Groq, Cerebras) get a TRIMMED prompt so
+  // they stay under the cap instead of 429-ing out of the ensemble. Auto-detected, or force via env.
+  const isSmall = small===true || /^(1|true|yes)$/i.test(String(small||'')) || /groq\.com|cerebras\.ai/i.test(baseUrl);
+  // Zhipu GLM models reason by default, which consumes the token budget and can blank the answer.
+  // Disable it so tokens go to the JSON (clean output, faster). Harmless on providers that ignore it.
+  const extra = (/bigmodel\.cn/i.test(baseUrl) || /^glm/i.test(model||'')) ? { thinking:{ type:'disabled' } } : {};
+  return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra };
+}
+// Provider roster: explicit A/B/C/D slots, PLUS the legacy single-provider config as an extra
+// member, so existing deployments keep working AND extra free models can be added alongside them.
+const PROVIDERS = [];
+['A','B','C','D'].forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL']); if(p) PROVIDERS.push(p); });
+if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
+const SYNTH = (process.env.JUDGE_SYNTH || 'on').toLowerCase(); // 'on' | 'off' | a provider label that does the reconciliation
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
 
@@ -88,7 +118,25 @@ const JUDGE_TASK =
 Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
 {"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
 
-// Download the repo, isolate the variant layer + the layer above, and assemble the paste-ready prompt.
+// Assemble the paste-ready prompt at a given size profile (so small-context providers get less).
+function assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, sz){
+  return `You are reviewing the "${layer}" layer of ${repo}@${ref} to assess how hard a NEW feature built on this layer would be.
+
+THE VARIANT LAYER (${variant.length} files, ${variantDirs.size} dirs):
+${blob(variant, sz.mv, sz.mvc)}
+
+THE LAYER DIRECTLY ABOVE (${above.length} files):
+${blob(above, sz.ma, sz.mac)}
+${JUDGE_RUBRIC ? `
+Ground your judgment in this general, language-agnostic rubric of code signals (applies to ANY repo). Map what you see in the code above to these signals, then apply the verdict-calibration lines:
+
+${JUDGE_RUBRIC}
+` : ''}
+${JUDGE_TASK}`;
+}
+const PROMPT_FULL = { mv:12, mvc:12000, ma:8, mac:8000 };   // big-context models (Gemini/GLM/Claude)
+const PROMPT_SMALL = { mv:4, mvc:5000, ma:3, mac:4000 };     // tight free TPM (Groq/Cerebras) ~6-8k tokens
+// Download the repo, isolate the variant layer + the layer above, and assemble both prompt sizes.
 async function buildJudgeContext(repo, ref, layer){
   const files = await loadRepoFiles(repo, ref, TOKEN);
   const variant = files.filter(f => inLayer(f.path, layer));
@@ -97,21 +145,9 @@ async function buildJudgeContext(repo, ref, layer){
   const variantPaths = new Set(variant.map(f => f.path));
   const aboveDirs = new Set([...variantDirs].map(d => dirOf(d)));
   const above = files.filter(f => !variantPaths.has(f.path) && aboveDirs.has(dirOf(f.path)));
-  const prompt =
-`You are reviewing the "${layer}" layer of ${repo}@${ref} to assess how hard a NEW feature built on this layer would be.
-
-THE VARIANT LAYER (${variant.length} files, ${variantDirs.size} dirs):
-${blob(variant, 12, 12000)}
-
-THE LAYER DIRECTLY ABOVE (${above.length} files):
-${blob(above, 8, 8000)}
-${JUDGE_RUBRIC ? `
-Ground your judgment in this general, language-agnostic rubric of code signals (applies to ANY repo). Map what you see in the code above to these signals, then apply the verdict-calibration lines:
-
-${JUDGE_RUBRIC}
-` : ''}
-${JUDGE_TASK}`;
-  return { prompt, variantFiles:variant.length, aboveFiles:above.length };
+  const prompt = assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, PROMPT_FULL);
+  const promptSmall = assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, PROMPT_SMALL);
+  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:above.length };
 }
 
 // Normalize any judgment object (from the API or pasted by a human) into the response shape.
@@ -136,38 +172,115 @@ async function judgeViaApi(repo, ref, layer){
   return shapeJudgment(repo, ref, layer, ctx, JSON.parse(textBlock.text), 'api');
 }
 
-// POST to any OpenAI-compatible /chat/completions endpoint (Gemini / Groq / NVIDIA / OpenRouter).
-function openaiChat(payload){
+// POST to ONE OpenAI-compatible /chat/completions endpoint (Gemini / GLM / Groq / DeepSeek / OpenRouter).
+function openaiChat(provider, payload){
   return new Promise((resolve, reject)=>{
     const body = JSON.stringify(payload);
-    const req = https.request(JUDGE_BASE_URL + '/chat/completions', {
+    const req = https.request(provider.baseUrl + '/chat/completions', {
       method:'POST',
-      headers:{ 'content-type':'application/json', 'authorization':'Bearer '+JUDGE_API_KEY, 'content-length':Buffer.byteLength(body) },
+      headers:{ 'content-type':'application/json', 'authorization':'Bearer '+provider.key, 'content-length':Buffer.byteLength(body) },
     }, res=>{
       const chunks=[]; res.on('data',c=>chunks.push(c));
       res.on('end',()=>{
         const txt=Buffer.concat(chunks).toString('utf8');
-        if(res.statusCode!==200) return reject(new Error('judge LLM HTTP '+res.statusCode+': '+txt.slice(0,300)));
-        try { resolve(JSON.parse(txt)); } catch(e){ reject(new Error('bad JSON from judge LLM: '+txt.slice(0,200))); }
+        if(res.statusCode!==200) return reject(new Error(provider.label+' HTTP '+res.statusCode+': '+txt.slice(0,200)));
+        try { resolve(JSON.parse(txt)); } catch(e){ reject(new Error('bad JSON from '+provider.label+': '+txt.slice(0,160))); }
       });
     });
     req.on('error', reject); req.write(body); req.end();
   });
 }
-// Free automated judgment via the configured OpenAI-compatible model. Parses JSON defensively
-// (strips code fences / prose) so it works across providers without a strict-schema dependency.
-async function judgeViaOpenAI(repo, ref, layer){
-  const ctx = await buildJudgeContext(repo, ref, layer);
-  const resp = await openaiChat({
-    model: JUDGE_MODEL,
-    messages:[{ role:'user', content: ctx.prompt }],
-    max_tokens: 1500,
-  });
-  let content = resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content;
-  if(!content) throw new Error('no content from judge LLM');
+// Defensive parse: strip ```json fences / prose, keep the first {...} object.
+function parseModelJson(content){
+  if(!content) throw new Error('empty model content');
   content = String(content).replace(/```json/gi,'').replace(/```/g,'').trim();
   const m = content.match(/\{[\s\S]*\}/); if(m) content = m[0];
-  return shapeJudgment(repo, ref, layer, ctx, JSON.parse(content), 'llm:'+JUDGE_MODEL);
+  return JSON.parse(content);
+}
+function contentOf(resp){ return resp && resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content; }
+// Ask ONE provider the judge question; return its per-model verdict object.
+async function judgeOneModel(provider, prompt){
+  const resp = await openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{}));
+  const raw = parseModelJson(contentOf(resp));
+  return { label: provider.label, model: provider.model, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {} };
+}
+// Normalize any verdict phrasing to one of yes|no|unclear.
+function normVerdict(v){ const z = String(v||'').toLowerCase().trim();
+  if(/^(likely\s*yes|yes\b|probably|definitely)/.test(z)) return 'yes';
+  if(/^(likely\s*no|no\b|unlikely|none)/.test(z)) return 'no';
+  return 'unclear'; }
+// Deterministically fuse one dimension across members: centralized verdict + agreement + merged cites.
+function fuseDimension(members, dim){
+  const items = members.map(m => ({ label:m.label, v:(m[dim]&&m[dim].verdict)||'?', n:normVerdict(m[dim]&&m[dim].verdict),
+    reason:(m[dim]&&m[dim].reason)||'', cites:(m[dim]&&m[dim].citations)||[] }));
+  const counts = { yes:0, no:0, unclear:0 }; items.forEach(i => counts[i.n]++);
+  const distinct = new Set(items.map(i => i.n));
+  const agreement = distinct.size===1 ? 'full' : (counts.yes && counts.no ? 'split' : 'partial');
+  let cn; // centralized normalized verdict
+  if(distinct.size===1) cn = items[0].n;
+  else if(counts.yes && counts.no) cn = 'unclear';            // hard disagreement -> conservative
+  else cn = counts.yes >= counts.no ? (counts.yes>=counts.unclear?'yes':'unclear') : (counts.no>=counts.unclear?'no':'unclear');
+  const disp = { yes:'likely yes', no:'no', unclear:'unclear' }[cn];
+  const cites = [...new Set(items.flatMap(i => i.cites))];
+  const reason = (agreement==='full' ? 'All models agree. ' : agreement==='split' ? 'Models DISAGREE -> centralized to unclear. ' : 'Models partially agree. ')
+    + items.map(i => i.label+' ('+i.v+'): '+i.reason).join('  |  ');
+  return { verdict:disp, reason, citations:cites, agreement, members: items.map(i => ({ label:i.label, verdict:i.v })) };
+}
+// Optional synthesis: one model reads both verdicts and writes a reconciled, centralized reason.
+async function judgeSynthesize(provider, repo, layer, members){
+  const prompt = `Two independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
+
+`+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
+
+Questions: (1) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (2) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
+Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
+{"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from 2 models; not proof."}`;
+  const resp = await openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{}));
+  return parseModelJson(contentOf(resp));
+}
+// FREE ensemble judge: run every configured provider in parallel, fuse into one centralized verdict.
+async function judgeViaEnsemble(repo, ref, layer){
+  const ctx = await buildJudgeContext(repo, ref, layer);
+  const settled = await Promise.allSettled(PROVIDERS.map(p => judgeOneModel(p, p.small ? ctx.promptSmall : ctx.prompt)));
+  const members = []; const errors = [];
+  settled.forEach((s,i) => s.status==='fulfilled' ? members.push(s.value) : errors.push(PROVIDERS[i].label+': '+String(s.reason&&s.reason.message||s.reason)));
+  if(!members.length) throw new Error('all judge providers failed -> '+errors.join(' | '));
+  // Single model available (one configured, or the other failed): return it directly.
+  if(members.length===1){
+    const m = members[0];
+    const out = shapeJudgment(repo, ref, layer, ctx, { approachWrong:m.approachWrong, invariant:m.invariant,
+      disclaimer:'Single model ('+m.label+'). Not proof.'+(errors.length?' (other provider failed: '+errors.join('; ')+')':'') }, 'llm:'+m.model);
+    if(errors.length) out.providerErrors = errors;
+    return out;
+  }
+  // >=2 members: deterministic fusion + optional synthesis pass.
+  const fa = fuseDimension(members,'approachWrong'), fi = fuseDimension(members,'invariant');
+  let aw = { verdict:fa.verdict, reason:fa.reason, citations:fa.citations };
+  let iv = { verdict:fi.verdict, reason:fi.reason, citations:fi.citations };
+  let synthesized = false;
+  if(SYNTH !== 'off'){
+    try {
+      const synthProvider = PROVIDERS.find(p => p.label.toLowerCase()===SYNTH) || members[0] && PROVIDERS.find(p=>p.label===members[0].label) || PROVIDERS[0];
+      const s = await judgeSynthesize(synthProvider, repo, layer, members);
+      // Synthesis writes the centralized reason+verdict, BUT a hard split is never papered over: force unclear.
+      if(s.approachWrong) aw = { verdict: fa.agreement==='split' ? 'unclear' : (s.approachWrong.verdict||fa.verdict),
+        reason: (fa.agreement==='split'?'[models disagreed] ':'')+(s.approachWrong.reason||fa.reason),
+        citations: [...new Set([...(s.approachWrong.citations||[]), ...fa.citations])] };
+      if(s.invariant) iv = { verdict: fi.agreement==='split' ? 'unclear' : (s.invariant.verdict||fi.verdict),
+        reason: (fi.agreement==='split'?'[models disagreed] ':'')+(s.invariant.reason||fi.reason),
+        citations: [...new Set([...(s.invariant.citations||[]), ...fi.citations])] };
+      synthesized = true;
+    } catch(e){ /* keep deterministic fusion */ }
+  }
+  const labels = members.map(m => m.label).join('+');
+  const out = shapeJudgment(repo, ref, layer, ctx, { approachWrong:aw, invariant:iv,
+    disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
+      +'. Agreement: approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
+  out.members = members.map(m => ({ label:m.label, model:m.model, approachWrong:m.approachWrong, invariant:m.invariant }));
+  out.agreement = { approachWrong:fa.agreement, invariant:fi.agreement };
+  out.synthesized = synthesized;
+  if(errors.length) out.providerErrors = errors;
+  return out;
 }
 
 // FREE, model-free judge: scan the variant + above layers for the rubric's signals and emit
@@ -300,9 +413,12 @@ http.createServer(async (req, res) => {
           howto: 'Paste `prompt` into any Claude chat, then POST Claude\'s JSON back to this same /judge URL to cache it.',
         }));
       }
-      const result = ANTHROPIC_KEY ? await judgeViaApi(repo, ref, layer)
-        : JUDGE_API_KEY ? await judgeViaOpenAI(repo, ref, layer)
-        : await judgeHeuristic(repo, ref, layer);
+      let result;
+      if (ANTHROPIC_KEY) result = await judgeViaApi(repo, ref, layer);
+      else if (PROVIDERS.length) {
+        try { result = await judgeViaEnsemble(repo, ref, layer); }
+        catch (e) { result = await judgeHeuristic(repo, ref, layer); result.ensembleError = String(e.message || e); }
+      } else result = await judgeHeuristic(repo, ref, layer);
       fs.writeFileSync(jf, JSON.stringify(result));
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
