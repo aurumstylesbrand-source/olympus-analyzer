@@ -445,6 +445,27 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .bento .bcard{display:flex;flex-direction:column}
 .charttip{position:fixed;z-index:90;display:none;background:var(--surface-3);border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text);pointer-events:none;box-shadow:var(--sh-sm);white-space:nowrap}
 .divdot:hover circle:last-child{stroke:var(--text);stroke-width:1.5}
+/* ---------- two-pane analyze layout (sticky verdict rail + scrolling detail) ---------- */
+.alayout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:900px){.alayout{grid-template-columns:1fr}}
+.aside{position:sticky;top:78px;background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--sh)}
+@media(max-width:900px){.aside{position:static}}
+.asidename{font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;margin:0;line-height:1.4;color:var(--muted-2)}
+.asidename em{display:block;font-style:normal;color:var(--text);font-size:20px;letter-spacing:-.02em;text-transform:none;margin-top:3px;word-break:break-word}
+.asidesub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:9px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.asideverdict{margin:16px 0 4px}
+.asidelevers{display:flex;flex-direction:column;gap:8px;margin:4px 0 14px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.asidelever{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--text-2)}
+.asidelever .vlamp{width:8px;height:8px;border-radius:50%;flex:none}
+.asidestats{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.asidestat{display:flex;flex-direction:column;gap:2px}
+.asidestat span{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2)}
+.asidestat b{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.asidelinks{display:flex;gap:12px;margin-top:13px;justify-content:center}
+.asidelinks a{font-family:var(--mono);font-size:10px;color:var(--muted);text-decoration:none;cursor:pointer}
+.asidelinks a:hover{color:var(--green)}
+.amain{min-width:0}
+.amain .panel{margin-bottom:0}
 </style>
 
 <div id="app">
@@ -1831,22 +1852,32 @@ function paintDash(){
   } else {
     gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'variant')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div);
   }
-  const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_vp=(c&&c.judge&&c.judge.data&&c.analysisRun)?finalVerdict(r):null;
-  const _vchip=_vp?`<span class="verdictchip ${_vp.vclass}" style="font-size:13px;padding:6px 13px">${esc(_vp.verdict)}</span>`:`<span class="verdictchip pending" style="font-size:11.5px;padding:6px 12px">verdict pending</span>`;
-  const _hero=`<div class="ahero"><div><h2>Analyzing <em>${esc(r.fullName)}</em></h2><div class="asub">${(c&&c.live)?'<span class="livedot on" style="width:7px;height:7px"></span> live · ':''}${esc(r.lang)} · ${esc(r.license)} · ★ ${esc(r.stars)}${c&&c.commit?' · '+esc(String(c.commit).slice(0,10)):''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${_vchip}<span class="chip">${_t2.tier==='olympus'?'Olympus':'Mars'} · target ${esc(_std2.pass)}</span></div></div>
-  <div class="bento"><div class="bcard bcol-4"><div class="blabel">Tier${_t2.curated?' · curated':' · assessed'}</div><div class="bignum">${_t2.tier==='olympus'?'OLYMPUS':'MARS'}</div><div style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.5">${esc((_t2.why||'').slice(0,118))}</div></div>
-  <div class="bcard bcol-4"><div class="blabel">Divergent paths</div><div class="bignum">${div!=null?div:'?'}<span class="unit">${div!=null?esc(repoUnit(r)):'read live'}</span></div><div style="margin-top:8px;font-size:11px;color:var(--muted)">5+ is the precondition, not the difficulty</div></div>
-  <div class="bcard bcol-4"><div class="blabel">Surface symbols</div><div class="bignum">${srcObj?srcObj.surface:'—'}</div><div style="margin-top:8px;font-size:11px;color:var(--muted)">${srcObj?(srcObj.filesRead+' source files scanned'):'read source to measure'}</div></div></div>`;
-  document.getElementById('anDash').innerHTML=_hero+`<div class="panel">
-    <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a>${unknown?'<a href="#" id="anVerify">Verify tree ↻</a>':''}<a href="#" id="anLiveAgain">↻ Read live again</a></div>
+  const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_fv=finalVerdict(r);
+  const _vchip=`<span class="verdictchip ${_fv.vclass}" style="font-size:15px">${esc(_fv.verdict)}</span>`;
+  const _levers=_fv.high.map(x=>`<div class="asidelever"><span class="vlamp ${x.ok?'pass':'fail'}"></span>${esc(x.k.split('(')[0].split('—')[0].trim())}</div>`).join('');
+  const _aside=`<aside class="aside">
+    <h2 class="asidename">Analyzing<em>${esc(r.fullName)}</em></h2>
+    <div class="asidesub">${(c&&c.live)?'<span class="livedot on" style="width:6px;height:6px"></span> live · ':''}${esc(r.lang)} · ${esc(r.license)} · ★ ${esc(r.stars)}</div>
+    <div class="asideverdict">${_vchip} <span class="hint">${_fv.highPass}/3 levers</span></div>
+    <div class="asidelevers">${_levers}</div>
+    <div class="asidestats">
+      <div class="asidestat"><span>Tier</span><b>${_t2.tier==='olympus'?'Olympus':'Mars'}</b></div>
+      <div class="asidestat"><span>Paths</span><b>${div!=null?div:'?'}</b></div>
+      <div class="asidestat"><span>Surface</span><b>${srcObj?srcObj.surface:'—'}</b></div>
+      <div class="asidestat"><span>Target</span><b>${esc((_std2.pass||'').split(' ')[0])}</b></div>
+    </div>
+    <button class="btn primary" id="anToLaunch" style="width:100%;margin-top:16px">Open in Launch →</button>
+    <div class="asidelinks"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a id="anLiveAgain">↻ read live</a></div>
+  </aside>`;
+  document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and determines the three levers (helpers / approach / invariant) with code citations &mdash; this IS the difficulty screen, you don't set it by hand</span></div>${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}
-    <div class="cfoot"><span class="hint">tier: ${repoTier(r).tier} &middot; gap: ${gapTypeFor(r)}</span><button class="btn primary" id="anToLaunch">Open in Launch →</button></div>
-  </div>`;
+    <div class="cfoot"><span class="hint">tier: ${_t2.tier} &middot; gap: ${gapTypeFor(r)}</span>${unknown?'<a href="#" id="anVerify" class="hint" style="color:var(--green)">Verify tree ↻</a>':''}</div>
+  </div></div></div>`;
   wireScreen(r);
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
   const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
