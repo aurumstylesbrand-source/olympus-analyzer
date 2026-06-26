@@ -1330,26 +1330,30 @@ function finalVerdict(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,t=repoTier(r),paths=repoDiv(r),s=r.screen||{};
   const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase();return /unclear|\?/.test(z)?'unclear':/likely yes|^yes|present|wrong|fails/.test(z)?'yes':/likely no|^no\b|works|passes/.test(z)?'no':'unclear';};
   const fhV=jd?((jd.freeHelpers||{}).verdict||'').toLowerCase():'';
-  const altitudeOk = jd ? /no (free )?helpers|hand-?roll|per-variant code/.test(fhV) : (s.helpers==='none');
-  const altitudeBad = jd ? /free helpers present|helpers present|reusable/.test(fhV) : false;
+  const altitudeFree = jd ? /free helpers present|helpers present|reusable/.test(fhV) : false; // helpers AT the judged layer
   const gapOk = jd ? (nv(jd.approachWrong)==='yes') : (s.approach==='wrong');
   const invOk = jd ? (nv(jd.invariant)==='yes') : (s.invariant==='fails');
   const pathsOk = (paths!=null&&paths>=5)||(paths==null&&t.curated);
   const layers=(gapOk?1:0)+(invOk?1:0);
+  // The 3 STRUCTURAL levers (auto-checkable). Altitude is GUIDANCE, not a pass/fail lever:
+  // mature repos legitimately have helpers; the point is to build a feature ABOVE them.
   const high=[
-    {k:'Sibling / divergent paths (>=5)',ok:pathsOk,d:pathsOk?(paths!=null?paths+' divergent variant paths — enough breadth to force per-variant code':'curated multi-path structure'):'fewer than 5 divergent paths — a known surface cannot be made Olympus-hard with edge cases'},
-    {k:'Altitude — above the helper layer',ok:altitudeOk,d:altitudeOk?'no free per-variant helpers at the judged layer — agents must hand-roll per variant (the LOC + the difficulty)':(altitudeBad?'free per-variant helpers exist here — the feature would be a thin transcribe; aim a layer ABOVE them or judge a deeper layer':'run the judgment to evidence this')},
-    {k:'Discovery gap — obvious approach is wrong',ok:gapOk,d:gapOk?'the first approach an agent reaches for is wrong — a real gap to discover':'no clear gap — reads as a known / transcribable algorithm'},
-    {k:'Second layer — naive fails an invariant',ok:invOk,d:invOk?'a naive impl passes value checks but violates an intermediate-state invariant — the discriminating 2nd layer':'no second discovery layer; one lever rarely clears <=20% on a close-to-known shape'},
+    {k:'Divergent paths (>=5)',ok:pathsOk,d:pathsOk?(paths!=null?paths+' divergent variant paths — enough breadth that a feature writes per-variant code':'curated multi-path structure'):'fewer than 5 divergent paths — a known surface cannot be made Olympus-hard with edge cases'},
+    {k:'Discovery gap — obvious approach is wrong',ok:gapOk,d:gapOk?'the first approach an agent reaches for is wrong — a real gap to discover':'the model found no wrong-obvious-approach on the judged layer'},
+    {k:'Second layer — naive fails an invariant',ok:invOk,d:invOk?'a naive impl passes value checks but violates an intermediate-state invariant — the discriminating 2nd layer':'the model found no naive-failing invariant on the judged layer'},
   ];
   const highPass=high.filter(x=>x.ok).length;
+  const layerName = (c.judge&&c.judge.layer)||'this';
+  const altitudeNote = !jd ? '' : altitudeFree
+    ? 'Altitude guidance: the judged "'+layerName+'" layer exposes free per-variant helpers — target a feature a layer ABOVE them (or judge a deeper layer); a feature built AT this layer would be a thin transcribe (~80% pass).'
+    : 'Altitude: no free per-variant helpers at the judged "'+layerName+'" layer — a feature here forces hand-rolled per-variant code (the LOC + the difficulty).';
   let verdict,vclass,line;
-  if(!jd){ verdict='Run the judgment'; vclass='pending'; line='The final verdict is computed from the model consensus + the accepted-project rubric. Run the free judgment first.'; }
-  else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. The accepted projects show a known surface cannot be made Olympus-hard by adding edge cases — pick a repo with real per-variant divergence, or route to Mars.'; }
-  else if(altitudeBad && !gapOk && !invOk){ verdict='NO-GO'; vclass='nogo'; line='This layer hands agents free per-variant helpers and the consensus found no gap or invariant — the feature would be a thin transcribe. Move ABOVE the helper layer, judge a deeper layer, or pick another repo.'; }
-  else if(highPass===4){ verdict='GO'; vclass='go'; line='Matches the profile of the recently-accepted projects: divergent paths, no free helpers, a wrong obvious approach AND a naive-failing invariant (two discovery layers). Build it — then a real agent batch is the only true pass-rate measure.'; }
-  else if(pathsOk && altitudeOk && layers>=1){ verdict='REFINE'; vclass='refine'; line='Structurally sound but short one discovery layer — add the missing '+(gapOk?'naive-failing invariant':'wrong-obvious-approach lever')+' so it does not ceiling above 20%. Fixable in-submission per the accepted-project debriefs.'; }
-  else { verdict='REFINE'; vclass='refine'; line='Some structural levers are missing or unevidenced. Strengthen the weak criteria below (the judgment can evidence them) before building.'; }
+  if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model assessment + the accepted-project rubric. Run the assessment first (the model reads the layer).'; }
+  else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
+  else if(!gapOk && !invOk && altitudeFree){ verdict='NO-GO'; vclass='nogo'; line='No discoverable difficulty on this layer: the model found neither a wrong obvious approach nor a naive-failing invariant, and the layer hands agents free helpers — a feature here is a thin transcribe. Judge a DEEPER layer, or drop and replace.'; }
+  else if(gapOk && invOk){ verdict='PASS'; vclass='go'; line='Olympus-shaped: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with TWO discovery layers — the obvious approach is wrong AND a naive impl violates an intermediate-state invariant. This is the profile of the recently-accepted projects. Build the feature above the helper layer; only a real agent batch measures the true pass rate.'; }
+  else if(layers===1){ verdict='REFINE'; vclass='refine'; line='Workable: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with ONE discovery layer ('+(gapOk?'the obvious approach is wrong':'a naive-failing invariant')+') — one short of the proven <=20% shape. Engineer the missing '+(gapOk?'intermediate-state invariant':'wrong-obvious-approach')+' (a 2nd layer) and it clears.'; }
+  else { verdict='REFINE'; vclass='refine'; line='Workable structure ('+(paths!=null?paths+' divergent paths':'curated multi-path')+') but the judged layer showed no discovery gap. Judge a deeper / different layer, or design a feature that makes the obvious approach wrong AND violates an invariant.'; }
   const manual=[
     'Coherence / system-level: one feature spanning 3+ subsystems reaching 700+ LOC and 6+ files without padding (the newest accepted shape: a feature that REQUIRES a cross-subsystem fix as prerequisite).',
     'Plagiarism: grep your API symbols in the repo; below 0.5, or similar_idea only with a REAL discriminant. Do this check FIRST.',
@@ -1357,20 +1361,43 @@ function finalVerdict(r){
     'Spec: 490-500 words, ASCII, behavioural, name every callable signature once, state silent directional choices — but leave the mechanism as the discovery gap.',
     'Flakiness (MANDATORY now): deterministic suite, no time / network / order / JIT nondeterminism; prove F2P/P2P stable across 3+ runs.'
   ];
-  return {verdict,vclass,line,high,highPass,manual};
+  return {verdict,vclass,line,high,highPass,altitudeNote,manual};
 }
 function verdictCard(r){
   const v=finalVerdict(r);
   const crit=v.high.map(x=>`<div class="vcrit"><span class="vlamp ${x.ok?'pass':'fail'}"></span><div><div class="vk">${x.ok?'✓':'✕'} ${esc(x.k)}</div><div class="vd">${esc(x.d)}</div></div></div>`).join('');
+  const altit=v.altitudeNote?`<div class="vcrit"><span class="vlamp idle"></span><div><div class="vk" style="color:var(--text-2)">↕ ${esc(v.altitudeNote.split(':')[0])}</div><div class="vd">${esc(v.altitudeNote.split(':').slice(1).join(':').trim())}</div></div></div>`:'';
   const manual=v.manual.map(m=>`<div class="vmanual">• ${esc(m)}</div>`).join('');
+  const drop=v.vclass==='nogo'?`<button class="btn warn" id="anDropRepo" style="margin-left:auto">Drop repo &amp; find a replacement →</button>`:'';
+  const meaning={go:'PASS = Olympus-shaped (two discovery layers). Build the feature.',refine:'REFINE = the repo works, but the assessed layer is one lever short — the line above says exactly what to engineer or which deeper layer to judge.',nogo:'NO-GO = no discoverable difficulty here (too few paths, or a thin transcribe). Drop it and pick a stronger repo.',pending:''}[v.vclass]||'';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
-    <div class="blabel">Final verdict <span class="hint">model consensus + accepted-project rubric (Jun 2026 checks)</span></div>
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/4 structural levers satisfied</span></div>
+    <div class="blabel">Final verdict <span class="hint">model assessment + accepted-project rubric (Jun 2026)</span></div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${drop}</div>
     <div style="font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px">${esc(v.line)}</div>
-    ${crit}
+    ${crit}${altit}
+    ${meaning?`<div class="vmanual" style="margin-top:11px;color:var(--muted)">${esc(meaning)}</div>`:''}
     <div class="vmanual" style="margin-top:13px"><b>Cannot be auto-checked (depends on the feature + tests you write) — verify before building:</b></div>${manual}
     <div class="setrow" style="margin-top:12px"><a class="explink" href="file:///Users/mac/Desktop/olympus-experience/" target="_blank" rel="noopener" title="open the accepted-project debriefs">▸ accepted-project debriefs (experience folder)</a></div>
   </div>`;
+}
+// Drop a NO-GO repo and swap in the next verified candidate from the POOL (real, not a stub).
+async function dropRepo(name){
+  const key=(name||'').toLowerCase();
+  ['olympus','mars'].forEach(tier=>{const bd=state[tier];if(bd&&Array.isArray(bd.repos)){const before=bd.repos.length;bd.repos=bd.repos.filter(x=>x.fullName.toLowerCase()!==key);if(bd.repos.length!==before)persistTier(tier);}});
+  const used=new Set(state.used.map(s=>s.toLowerCase()));
+  const repl=POOL.find(p=>!used.has(p.fullName.toLowerCase())&&p.fullName.toLowerCase()!==key);
+  delete extCache[key];
+  if(repl){
+    const nr=repo(repl.fullName,repl.url,repl.lang,repl.license,repl.stars,true,'gold',repl.why,repl.path,[{area:repl.gap,angle:repl.path&&repl.path.indexOf('A')>=0?'Adapter Abstraction':'Lifecycle Hooks Multi-Consumer',why:repl.why}]);
+    nr.divergence=repl.div;nr.source='replacement';
+    state.olympus.repos.push(nr);state.used=dedupe([...state.used,repl.fullName]);
+    await persistTier('olympus');await persistUsed();
+    analyzeSel=repl.fullName;renderAcquire();
+    if(state.gh||state.analyzer)fetchRepoLive(repl.fullName,{board:true});
+  } else {
+    analyzeSel=null;renderAcquire();
+    const h=document.getElementById('anPasteHint');if(h){h.textContent='Dropped '+name+'. The verified candidate pool is exhausted — paste a fresh owner/name to analyse a replacement.';h.style.color='var(--warn)';}
+  }
 }
 function deriveAreas(r){
   if((r.areas||[]).length) return r.areas;
@@ -1729,7 +1756,7 @@ function paintDash(){
   let gated;
   if(!state.analyzer){
     gated=scDone
-      ? `<div class="genbar"><span class="hint">↓ Built from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers. <b>Set the Analyzer backend</b> in Settings for the evidence-first flow (a model judgment grounds every answer).</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div)
+      ? `<div class="genbar"><span class="hint">↓ Built from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers. <b>Set the Analyzer backend</b> in Settings for the evidence-first flow (a model judgment grounds every answer).</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div)
       : `<div class="genwait"><b>Answer the difficulty screen above to generate the results</b><span class="hint">— or set the Analyzer backend in Settings so the analysis is generated from a real model judgment instead of folder names + toggles.</span></div>`;
   } else if(!hasReport){
     gated=`<div class="genwait"><b>Run the live report first to activate the analysis.</b><span class="hint">The analysis is generated from EVIDENCE, not folder names: ${srcRead?'✓ source read':'• read source'} &middot; ${'• run the free model judgment (the Model judgment section above)'}. Once the judgment has run, "Run analysis" lights up and generates report-specific results.</span><button class="btn" disabled style="opacity:.45;margin-top:10px;cursor:not-allowed">Run analysis — gather the live report first</button></div>`;
@@ -1738,7 +1765,7 @@ function paintDash(){
   } else if(!analysisRun){
     gated=`<div class="genwait"><b>Live report ready — judged the ${esc(judgedLayer||'variant')} layer${srcRead?', source measured':''}, ${div} code paths.</b><span class="hint">Run the analysis: the console weighs the model consensus against the accepted-project rubric, returns a <b>final verdict</b> (go / refine / no-go), then generates the report-specific angles, combinations, strong areas, insights and standards.</span><button class="btn primary" id="anRunAnalysis" style="margin-top:10px">Run analysis →</button></div>`;
   } else {
-    gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'variant')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div);
+    gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'variant')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div);
   }
   const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_vp=(c&&c.judge&&c.judge.data&&c.analysisRun)?finalVerdict(r):null;
   const _vchip=_vp?`<span class="verdictchip ${_vp.vclass}" style="font-size:13px;padding:6px 13px">${esc(_vp.verdict)}</span>`:`<span class="verdictchip pending" style="font-size:11.5px;padding:6px 12px">verdict pending</span>`;
@@ -1750,9 +1777,8 @@ function paintDash(){
     <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a>${unknown?'<a href="#" id="anVerify">Verify tree ↻</a>':''}<a href="#" id="anLiveAgain">↻ Read live again</a></div>
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty screen <span class="hint">the proven difficulty mechanism &mdash; recommended answers tagged ✦, you confirm or override</span></div>${difficultyScreen(r)}</div>
-    <div class="sec"><div class="seclbl">Model judgment <span class="hint">/judge via your backend &mdash; approach-wrong + invariant with code citations (model judgment, not proof)</span></div>${judgeBlock(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">recomputes live as you answer &mdash; estimate, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and determines the three levers (helpers / approach / invariant) with code citations &mdash; this IS the difficulty screen, you don't set it by hand</span></div>${judgeBlock(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}
     <div class="cfoot"><span class="hint">tier: ${repoTier(r).tier} &middot; gap: ${gapTypeFor(r)}</span><button class="btn primary" id="anToLaunch">Open in Launch →</button></div>
@@ -1763,7 +1789,8 @@ function paintDash(){
   const jli=document.getElementById('judgeLayerSel');if(jli)jli.addEventListener('change',()=>{const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),judgeLayerOverride:jli.value};});
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
   const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
-  const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
+  const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),calibrating:true};paintDash();setTimeout(()=>{const c2=extCache[k]||{};extCache[k]={...c2,calibrating:false,analysisRun:true};if(activeModule==='acquire'&&analyzeSel&&analyzeSel.toLowerCase()===k)paintDash();},1600);});
+  const dp=document.getElementById('anDropRepo');if(dp)dp.addEventListener('click',()=>dropRepo(r.fullName));
   const ra=document.getElementById('anRunAnalysis');if(ra)ra.addEventListener('click',()=>{const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),calibrating:true};paintDash();
     setTimeout(()=>{const c2=extCache[k]||{};extCache[k]={...c2,calibrating:false,analysisRun:true};if(activeModule==='acquire'&&analyzeSel&&analyzeSel.toLowerCase()===k)paintDash();},2300);});
   // live activity: start/keep polling this repo, wire manual refresh + the move-ahead re-run
@@ -1854,6 +1881,9 @@ async function fetchRepoLive(name,opts){
     if(prevLayerOv)out.judgeLayerOverride=prevLayerOv;
     extCache[key]=out;
     repaintLive();
+    // model-driven flow: as soon as the repo is read live, measure the source automatically
+    // (cheap, backend-cached) so the surface/variants populate without a manual click.
+    if(state.analyzer && !out.notRepo && (out.divergence!=null||board)) { try{ analyzeSource(name); }catch(e){} }
   }catch(e){
     const msg=(e&&e.message)?e.message:'request blocked';
     // Board repos fall back softly to stored numbers; external repos go to manual entry.
