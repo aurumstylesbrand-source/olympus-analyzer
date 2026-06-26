@@ -140,6 +140,29 @@ function readJsonBody(req){
   });
 }
 
+// Curate the next batch of candidate repos via the Anthropic API (server-side: the browser
+// can't call Anthropic directly — no CORS, and the key must not ship to the client).
+// The prompt is built server-side from {tier, used} so this can't be used as a general proxy.
+const TIER_PLAN = { olympus:{gold:3,test:2}, mars:{gold:4,test:3} };
+async function generateRepos(tier, used){
+  const plan = TIER_PLAN[tier]; const need = plan.gold + plan.test;
+  const guide = tier==='olympus'
+    ? 'OLYMPUS: prefer repos with 5+ adapters/dialects/backends each a DIFFERENT pattern AND a discovery-gap sibling code path, OR deep concurrency/type systems. Must support 700+ agent LOC across 6+ existing files.'
+    : 'MARS: clean public API, 5-15 files, clear behavioural contracts. Challenging but more solvable.';
+  const sys = `You curate GitHub repos for the ${tier} tier of an AI coding-challenge pipeline. Return ONLY a raw JSON array, no prose/fences. Exactly ${need} objects: ${plan.gold} "kind":"gold" and ${plan.test} "kind":"test". Constraints: PRIMARY language Go or TypeScript only (never JS-primary); permissive licence (MIT/Apache-2.0/BSD); 500+ stars; commit within 12 months; production-grade. Pass-rate targets are now STRICTER: Olympus <=20%, Mars <=30%. "Verify Flakiness" is a MANDATORY platform check, so strongly prefer repos with deterministic, non-flaky test suites (no time/network/order-dependent tests, no WASM-heap flakiness). ${guide} NEVER include any repo in this exclusion list: ${(used||[]).join(', ')}. Keys per object: fullName, url, lang, license, stars (e.g. "~12k"), kind, why (<=22 words)${tier==='olympus'?', path ("A"/"B"/"A+B")':''}.`;
+  const resp = await anthropicMessages({
+    model:'claude-sonnet-4-6', max_tokens:1200,
+    system: sys,
+    messages:[{ role:'user', content:`Generate the next ${tier} batch as a JSON array of ${need} repos.` }],
+  });
+  const textBlock = (resp.content||[]).find(b => b.type==='text');
+  if(!textBlock) throw new Error('no text block in Anthropic response (stop_reason='+resp.stop_reason+')');
+  const txt = textBlock.text.replace(/```json/gi,'').replace(/```/g,'').trim();
+  const arr = JSON.parse(txt);
+  if(!Array.isArray(arr)) throw new Error('model did not return a JSON array');
+  return { tier, repos: arr };
+}
+
 http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN || '*');
   if (ALLOWED_ORIGIN) res.setHeader('Vary', 'Origin');
@@ -189,6 +212,20 @@ http.createServer(async (req, res) => {
       }
       const result = await judgeViaApi(repo, ref, layer);
       fs.writeFileSync(jf, JSON.stringify(result));
+      res.writeHead(200); return res.end(JSON.stringify(result));
+    } catch (e) {
+      res.writeHead(502); return res.end(JSON.stringify({ error: String(e.message || e) }));
+    }
+  }
+
+  if (u.pathname === '/generate') {
+    const tier = (req.method === 'POST') ? null : u.searchParams.get('tier');
+    if (!ANTHROPIC_KEY) { res.writeHead(501); return res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set on the server (needed to curate batches)' })); }
+    try {
+      const body = (req.method === 'POST') ? await readJsonBody(req) : {};
+      const t = (body.tier || tier || '').toLowerCase();
+      if (t !== 'olympus' && t !== 'mars') { res.writeHead(400); return res.end(JSON.stringify({ error: 'tier must be "olympus" or "mars"' })); }
+      const result = await generateRepos(t, body.used || []);
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
       res.writeHead(502); return res.end(JSON.stringify({ error: String(e.message || e) }));

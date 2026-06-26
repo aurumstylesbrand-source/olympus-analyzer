@@ -355,11 +355,11 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
   <main class="main">
     <div class="topbar"><div class="wrap topbar-inner">
       <div class="brand"><span class="word"><em>Olympus</em> Console</span><small>repo intelligence · challenge design</small></div>
-      <div class="topstats"><span class="tchip">pass <b>&le;30%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">desc <b>496-500</b></span><span class="tchip">plagiarism <b>&lt;0.5</b></span></div>
+      <div class="topstats"><span class="tchip">Oly <b>&le;20%</b></span><span class="tchip">Mars <b>&le;30%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">flakiness <b>0</b></span></div>
     </div></div>
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass ≤30% of 10 · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 85+ — last-known guidance; the in-form criteria panel is authoritative.</p>
+      <p class="foot">Olympus pass ≤20% of 10 · Mars ≤30% · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 85+ — last-known guidance; the in-form criteria panel is authoritative.</p>
     </div>
   </main>
 </div>
@@ -549,13 +549,17 @@ const DOCTRINE = [
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li>Pass rate ≤30% of 10 runs (sweet spot 20%); Mars ≤40%.</li>
+   <li><b>Pass rate ≤20% of 10 runs for Olympus (tightened from 30%); Mars ≤30% (tightened from 40%).</b></li>
+   <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
    <li>Solution LOC 700+ (600 floor). Files 6+ (5 ok).</li>
    <li>Description up to 500 words; accepted cluster is 496-500. Plagiarism ALL below 0.5.</li>
    <li>Solving-agent MSGs 85+. Mars: no MSG target.</li></ul>
    <p><b>Authenticity law — never pad.</b> The feature must be genuine, actually work, and genuinely deserve its 700+ LOC. Comments, whitespace, duplication, reformatting and speculative defensive code are caught as padding. Raise the AGENT floor honestly (a feature above the helper layer so agents write per-variant code); never inflate the reference.</p>`},
+ {c:'gold',h:'Verify Flakiness (MANDATORY check)',body:`<p>The platform now <b>runs every suite 3x clean + 3x patched and fails the submission on ANY nondeterministic result.</b> A test that passes only sometimes sinks the whole problem regardless of difficulty.</p>
+   <p><b>Two places it bites:</b> (1) the <b>repo you pick</b> — avoid suites with known flakiness (WASM-heap pressure, real network/clock, port binding, parallel DB races, order-dependent global state); (2) the <b>tests you write</b> — no wall-clock/sleep assertions, no real network, no reliance on map/set iteration order, no shared mutable fixtures across tests, seed any randomness, and isolate each test's state. If a hard behavioural test can only be made to pass intermittently, redesign it to assert the invariant deterministically or drop it.</p>
+   <p><b>Prove it before submitting:</b> run F2P/P2P locally at least 3x each; if any run flips, it is flaky — fix it, do not submit and hope.</p>`},
  {c:'violet',h:'Check-vs-difficulty cascade',body:`<p>Every Aligned/Fairness fix LOWERS difficulty. When you document an unstated detail to pass a check, you hand Nova the answer. <b>In the SAME edit, add a paired hard behavioral test</b> (an intermediate-state or surface-shape assertion) so the documentation does not soften the gap. Track it: each "document X" must have a "+ test Y" in the same diff.</p>`},
- {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to ≤30% is forcing codebase discovery — a feature above the helper layer (agents write per-variant code) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
+ {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to the tier ceiling (Olympus ≤20%, Mars ≤30%) is forcing codebase discovery — a feature above the helper layer (agents write per-variant code) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
  {c:'gold',h:'LOC-floor law',body:`<p>The platform measures AGENT median LOC, not your reference. The only floor-raiser is a feature whose target layer has no free helpers, forcing agents to hand-roll per-variant code. Never collapse divergent variants into a shared helper — that divergence is the LOC and the difficulty.</p>`},
  {c:'violet',h:'Phase 1 — Rejection prevention (all 7 before any code)',body:`<ol>
    <li>Plagiarism: grep the repo for your API symbols. 0 hits + platform &lt;0.5 = green. ≥0.5 same repo = PIVOT.</li>
@@ -799,16 +803,13 @@ async function generateBatch(){
   const tier=activeTier,data=state[tier],plan=TIER_PLAN[tier],need=plan.gold+plan.test;
   const btn=document.getElementById('genBtn'),errEl=document.getElementById('genErr');
   errEl.style.display='none';btn.disabled=true;btn.innerHTML='<span class="spin"></span>Acquiring…';
-  const used=state.used.join(', ');
-  const guide=tier==='olympus'
-    ?"OLYMPUS: prefer repos with 5+ adapters/dialects/backends each a DIFFERENT pattern AND a discovery-gap sibling code path, OR deep concurrency/type systems. Must support 700+ agent LOC across 6+ existing files."
-    :"MARS: clean public API, 5-15 files, clear behavioural contracts. Challenging but more solvable.";
-  const sys=`You curate GitHub repos for the ${tier} tier of an AI coding-challenge pipeline. Return ONLY a raw JSON array, no prose/fences. Exactly ${need} objects: ${plan.gold} "kind":"gold" and ${plan.test} "kind":"test". Constraints: PRIMARY language Go or TypeScript only (never JS-primary); permissive licence (MIT/Apache-2.0/BSD); 500+ stars; commit within 12 months; production-grade. ${guide} NEVER include any repo in this exclusion list: ${used}. Keys per object: fullName, url, lang, license, stars (e.g. "~12k"), kind, why (<=22 words)${tier==='olympus'?', path ("A"/"B"/"A+B")':''}.`;
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:sys,messages:[{role:"user",content:`Generate the next ${tier} batch as a JSON array of ${need} repos.`}]})});
-    const j=await res.json();let txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').replace(/```json/gi,'').replace(/```/g,'').trim();
-    const arr=JSON.parse(txt);if(!Array.isArray(arr))throw new Error('bad shape');
+    if(!state.analyzer)throw new Error('set the Analyzer backend URL in Settings — batch curation runs through your backend now (a browser cannot call the model API directly)');
+    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tier,used:state.used})});
+    const j=await res.json();
+    if(j.error)throw new Error(j.error);
+    const arr=j.repos;if(!Array.isArray(arr))throw new Error('backend did not return a repos array');
     const us=new Set(state.used.map(s=>s.toLowerCase()));
     const fresh=arr.filter(r=>r&&r.fullName&&!us.has(String(r.fullName).toLowerCase()));
     if(fresh.length<need)throw new Error('only '+fresh.length+' non-duplicate repos — retry');
@@ -873,8 +874,8 @@ function repoTier(r){
   return {tier, why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
 function standardsFor(tier){return tier==='olympus'
-  ? {loc:'700+ (600 floor)', files:'6+', desc:'≤500 words (cluster 496-500)', msg:'85+ solving-agent MSGs', pass:'≤30% of 10 runs (sweet 20%)'}
-  : {loc:'450-500', files:'5-15', desc:'200-250 words (target 200)', msg:'no MSG target', pass:'20-30% ideal, ≤40% ceiling'};}
+  ? {loc:'700+ (600 floor)', files:'6+', desc:'≤500 words (cluster 496-500)', msg:'85+ solving-agent MSGs', pass:'≤20% of 10 runs (new ceiling)'}
+  : {loc:'450-500', files:'5-15', desc:'200-250 words (target 200)', msg:'no MSG target', pass:'≤30% ceiling (new)'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -982,24 +983,27 @@ function estPass(r){
   if(s.helpers==null||s.approach==null||s.invariant==null) return {lo:null,hi:null,label:'Answer the three questions to estimate',cls:'screen',tier:t.tier};
   if(s.helpers==='free') return {lo:70,hi:95,label:'Free helpers — agents solve it cheaply (too easy for either tier)',cls:'bad',tier:t.tier};
   const hard=(s.approach==='wrong'?1:0)+(s.invariant==='fails'?1:0);
-  // A Mars-tier repo can't sustain the Olympus band even if the operator picks hard answers.
+  // New ceilings: Olympus <=20%, Mars <=30%. A Mars-tier repo can't sustain the Olympus band.
   if(t.tier==='mars'){
     const over=(hard>=1);
-    return {lo:22,hi:35,label:over?'Mars-scale gap — picks exceed what this repo sustains; the hard-behaviour parts read as bolted-on':'Solid Mars structure',cls:'warn',tier:'mars',overreach:over};
+    return over
+      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the <=30% ceiling but the hard-behaviour parts read as bolted-on',cls:'warn',tier:'mars',overreach:true}
+      : {lo:18,hi:30,label:'Solid Mars structure (within the <=30% ceiling)',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:18,hi:30,label:'Proven Olympus structure (~20-30%)',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:28,hi:42,label:'Olympus-viable — add the missing factor',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:12,hi:20,label:'Proven Olympus structure (<=20% ceiling)',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:22,hi:34,label:'Above the 20% Olympus ceiling — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — too easy; drop to Mars scale',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
   const e=estPass(r),W=460,H=66,padL=8,padR=8,innerW=W-padL-padR,y=26,bh=16;
   const x=v=>padL+(v/100)*innerW;
+  const ceil=e.tier==='mars'?30:20, sweet=e.tier==='mars'?22:14;
   let body=`<rect x="${padL}" y="${y}" width="${innerW}" height="${bh}" rx="8" fill="${CHC.line}"/>`;
-  // zones: <=30 Olympus (green), 30-40 Mars (amber), >40 too easy (grey)
-  body+=`<rect x="${padL}" y="${y}" width="${(30/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
-  body+=`<rect x="${x(30)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
-  // markers at 20 (sweet) and 30 (ceiling)
-  [[20,'sweet 20%',CHC.green],[30,'ceiling 30%',CHC.warn],[40,'Mars 40%',CHC.muted]].forEach(([v,lbl,col])=>{
+  // zones (tier-aware): green up to the tier ceiling, amber just above, grey beyond
+  body+=`<rect x="${padL}" y="${y}" width="${(ceil/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
+  body+=`<rect x="${x(ceil)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
+  // markers at the sweet spot and the tier ceiling (Olympus 20%, Mars 30%)
+  [[sweet,'sweet '+sweet+'%',CHC.green],[ceil,(e.tier==='mars'?'Mars':'Olympus')+' '+ceil+'%',CHC.warn]].forEach(([v,lbl,col])=>{
     body+=`<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+bh+4}" stroke="${col}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
     body+=`<text x="${x(v)}" y="${y+bh+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${col}">${lbl}</text>`;});
   if(e.lo!=null){const bx=x(e.lo),bw=Math.max(6,x(e.hi)-x(e.lo)),col=e.cls==='ok'?CHC.green:e.cls==='warn'?CHC.warn:CHC.grey;
@@ -1038,8 +1042,8 @@ function olympusFit(r){
       ? 'MARS-worthy repo, Olympus-grade picks. '+t.why+' Forcing a wrong-obvious-approach + invariant here will read as bolted-on — submit as Mars (smaller scope) or pick an Olympus-capable repo.'
       : 'MARS-worthy — '+t.why+' No free helpers + Mars scope = a clean medium-tier challenge. Submit under Mars standards.'};
   }
-  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'OLYMPUS-worthy — '+paths+' paths, NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. The proven ~20-30% structure (small surface, hard behaviour).'};
-  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'OLYMPUS-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward 20-30%.'};
+  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'OLYMPUS-worthy — '+paths+' paths, NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. The proven structure, now targeting the tighter <=20% ceiling (small surface, hard behaviour).'};
+  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'OLYMPUS-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the <=20% ceiling.'};
   return {v:'possible',t:'OLYMPUS-capable repo but easy picks — the obvious approach works and nothing violates an invariant, so it lands at Mars scale. Make the obvious approach wrong or add an intermediate-state invariant, or submit as Mars.'};
 }
 function tierBanner(r){
@@ -1080,7 +1084,7 @@ function difficultyReadout(r){
     :e.demote?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Demote:</b> Olympus-capable repo, but the obvious approach works and nothing fails an invariant — these picks land at Mars scale. Make the obvious approach wrong / add an invariant for Olympus, or submit as Mars.</div>`:'';
   const stdline=`<div class="stdline">Read-out scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
   return `<div class="charts">
-    <div class="chartcard wide"><p class="chartttl">Estimated pass-rate band <span class="chest">estimate, not measured</span></p><p class="chartsub">${esc(e.label)}. Heuristic from the screen — only a real agent batch gives the true number. Lime zone ≤30%, amber 30-40%.</p>${chartGauge(r)}</div>
+    <div class="chartcard wide"><p class="chartttl">Estimated pass-rate band <span class="chest">estimate, not measured</span></p><p class="chartsub">${esc(e.label)}. Heuristic from the screen — only a real agent batch gives the true number. Lime zone is within the tier ceiling (Olympus ≤20%, Mars ≤30%); amber is just above.</p>${chartGauge(r)}</div>
     <div class="chartcard wide"><p class="chartttl">Difficulty factors</p><p class="chartsub">Which proven levers are satisfied for a <b>${t.tier}</b> submission.</p>${chartFactors(r)}</div>
   </div>${warn}${stdline}`;
 }
@@ -1095,6 +1099,62 @@ function wireScreen(r){
     extCache[key]={...(extCache[key]||{}),screen:{}};paintDash();});
   const pb=document.getElementById('probeBtn');if(pb)pb.addEventListener('click',()=>{const t=document.getElementById('probeTerm');ghCodeSearch(r.fullName,t?t.value:'');});
   const sr=document.getElementById('srcRead');if(sr)sr.addEventListener('click',ev=>{ev.preventDefault();analyzeSource(r.fullName);});
+}
+// ===== RUNG 3 — model judgment via the backend /judge (approach-wrong + invariant, with citations) =====
+// Needs the analyzer backend set. If the backend has no model key it returns a paste-ready prompt
+// (paste into a Claude chat, paste the JSON back) which we POST to cache; otherwise it answers directly.
+function judgeLayer(r){return (r.divKinds&&r.divKinds[0])||'';}
+function judgeBlock(r){
+  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayer(r);
+  if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
+  if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Judge the <b>${esc(layer)}</b> layer via your backend (model judgment, not proof). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run model judgment'}</button></div>`;
+  if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
+  if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
+  if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
+      <textarea class="intelta" id="judgePrompt" readonly style="min-height:90px;margin-top:8px">${esc(j.prompt)}</textarea>
+      <div class="setrow"><button class="btn" id="judgeCopy">Copy prompt</button></div>
+      <label class="hint" style="display:block;margin-top:8px">Paste Claude's JSON answer:</label>
+      <textarea class="intelta" id="judgeAnswer" placeholder='{"approachWrong":{"verdict":"likely yes","reason":"...","citations":["path:symbol"]},"invariant":{...}}' style="min-height:80px"></textarea>
+      <div class="setrow"><button class="btn primary" id="judgeSave">Save judgment</button>${j.pasteErr?'<span class="hint" style="color:var(--warn)">'+esc(j.pasteErr)+'</span>':''}</div></div>`;
+  if(j.data){
+    const d=j.data,aw=d.approachWrong||{},iv=d.invariant||{};
+    const row=(lbl,o)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
+    return head+`<div class="honest measured">✓ model judgment (${esc(d.source||'model')}${d.cached?', cached':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw)}${row('invariant',iv)}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
+  }
+  return head;
+}
+async function runJudge(name){
+  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayer(r);
+  if(!state.analyzer||!layer)return;
+  const ref=c.commit||c.defaultBranch||'HEAD';
+  extCache[key]={...c,judge:{loading:true,layer}};paintDash();
+  try{
+    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
+    const d=await res.json();
+    if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
+    if(d.needsJudgment){extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();return;}
+    extCache[key]={...extCache[key],judge:{data:d,layer}};paintDash();
+  }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
+}
+async function saveJudge(name,txt){
+  const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name);
+  const layer=(c.judge&&c.judge.layer)||judgeLayer(r),ref=c.commit||c.defaultBranch||'HEAD';
+  let body;try{body=JSON.parse(txt||'');}catch(e){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:'that is not valid JSON'}};paintDash();return;}
+  try{
+    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await res.json();
+    if(d.error){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:d.error}};paintDash();return;}
+    extCache[key]={...c,judge:{data:d.saved||body,layer}};paintDash();
+  }catch(e){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:'save failed ('+(e.message||'')+')'}};paintDash();}
+}
+function applyJudge(name){
+  const key=name.toLowerCase(),c=extCache[key]||{},d=(c.judge&&c.judge.data)||{};
+  const yes=o=>/^(likely\s*yes|yes)/i.test((o&&o.verdict)||'');
+  const sc={...(c.screen||{})};
+  if(d.approachWrong)sc.approach=yes(d.approachWrong)?'wrong':'works';
+  if(d.invariant)sc.invariant=yes(d.invariant)?'fails':'passes';
+  extCache[key]={...c,screen:sc};paintDash();
 }
 function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':'var(--muted-2)';}
 function deriveAreas(r){
@@ -1235,8 +1295,9 @@ ${tips}
   2. Your planned 1-2 symbols really do make the obvious approach wrong — write the naive impl first and confirm it fails.
   3. The intermediate-state invariant (count / ordering / lifecycle) actually exists to violate, and a fair test can assert it.
   4. Run Phase 1's 7 rejection checks yourself: plagiarism grep of your symbols, closed issues, docs scope, merged PRs, maintainer philosophy, CONTRIBUTING scale, closed-concept. (The console does none of these.)
+  5. FLAKINESS (now a mandatory platform check): the repo's existing suite is deterministic (no WASM-heap / network / clock / port / parallel-DB / order-dependent flakiness), AND every test you add is deterministic. Run F2P/P2P 3x each locally; if any run flips, fix it before submitting.
 
--> Next: confirm the four points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
+-> Next: confirm the five points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
 --- END BRIEFING ---`;
   document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Drop this in right after your STANDARDS block, above PHASE 0. It carries the proven difficulty mechanism + the screen + the cascade warning. It does NOT pick a category: the AI chooses, checking your REPEAT REPO section for overlap.</p></div>`;
   document.getElementById('lCopy').addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(txt);const b=document.getElementById('lCopy');b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1400);});
@@ -1326,7 +1387,7 @@ function chartDivBar(r){
   return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gb" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
 }
 function relevantDoctrine(r){
-  const want=['Proven difficulty mechanism','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade','Platform prechecks'];
+  const want=['Proven difficulty mechanism','Verify Flakiness','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade'];
   const seen=new Set(),out=[];
   want.forEach(k=>{const law=DOCTRINE.find(d=>d.h&&d.h.indexOf(k)>=0);if(law&&!seen.has(law.h)){seen.add(law.h);out.push(law);}});
   return out.slice(0,5);
@@ -1372,13 +1433,18 @@ function paintDash(){
       <div class="meta">${(c&&c.live)?'<span class="chip live">live</span>':''}<span class="chip"><b>${esc(r.lang)}</b></span><span class="chip">${esc(r.license)}</span><span class="chip">★ <b>${esc(r.stars)}</b></span><span class="chip">${div!=null?div+' paths':'paths ?'}</span></div></div></div>
     <div class="links"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a href="${r.url}/commits" target="_blank" rel="noopener">Commits ↗</a>${unknown?'<a href="#" id="anVerify">Verify tree ↻</a>':''}<a href="#" id="anLiveAgain">↻ Read live again</a></div>
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
-    <div class="sec"><div class="seclbl">Difficulty screen <span class="hint">the proven 30% mechanism &mdash; recommended answers tagged ✦, you confirm or override</span></div>${difficultyScreen(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty screen <span class="hint">the proven difficulty mechanism &mdash; recommended answers tagged ✦, you confirm or override</span></div>${difficultyScreen(r)}</div>
+    <div class="sec"><div class="seclbl">Model judgment <span class="hint">/judge via your backend &mdash; approach-wrong + invariant with code citations (model judgment, not proof)</span></div>${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">recomputes live as you answer &mdash; estimate, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}
     <div class="cfoot"><span class="hint">tier: ${repoTier(r).tier} &middot; gap: ${gapTypeFor(r)}</span><button class="btn primary" id="anToLaunch">Open in Launch →</button></div>
   </div>`;
   wireScreen(r);
+  const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
+  const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
+  const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
+  const jap=document.getElementById('judgeApply');if(jap)jap.addEventListener('click',()=>applyJudge(r.fullName));
   const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();fetchRepoLive(r.fullName,{board:!isExternal(r)});});
   const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
   const ed=document.getElementById('anEditDiv');if(ed)ed.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
