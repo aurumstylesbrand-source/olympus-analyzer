@@ -1110,7 +1110,6 @@ function difficultyScreen(r){
     return `<div class="scrow"><div class="scq"><b>${Q.q}</b><span class="hint"> — ${Q.sub}</span></div><div class="scopts">`+
       Q.opts.map(o=>{const isRec=o[0]===rc.rec;return `<button class="scbtn ${cur===o[0]?'on':''} ${isRec?'rec':''}" data-sc="${Q.k}" data-scv="${o[0]}">${esc(o[1])}${isRec?'<span class="recbadge">✦ rec</span>':''}</button>`;}).join('')+
       `</div><div class="scwhy ${rc.feasible===false?'thin':''}">✦ recommended: <b>${esc(Q.opts.find(o=>o[0]===rc.rec)[1])}</b> — ${esc(rc.why)}</div>`+
-      (Q.k==='helpers'?`<div class="probe"><span class="hint">Verify live (code search):</span><input id="probeTerm" placeholder="a helper symbol, e.g. createQueryBuilder" value="${pr&&pr.term?esc(pr.term):''}"><button class="btn" id="probeBtn">Probe</button>${pr?(pr.loading?'<span class="hint">searching…</span>':pr.error?'<span class="hint" style="color:var(--warn)">'+esc(pr.error)+'</span>':'<span class="hint"><b style="color:var(--green)">'+pr.count+'</b> match'+(pr.count===1?'':'es')+' for <span class="mono">'+esc(pr.term)+'</span> — a signal, not proof (code search is fuzzy)</span>'):''}</div>`:'')+
       `</div>`;}).join('');
   return pre+honest+`<div class="screenbox">${rows}</div>${bar}`;
 }
@@ -1118,9 +1117,18 @@ function difficultyReadout(r){
   const e=estPass(r),t=repoTier(r),std=standardsFor(t.tier);
   const warn=e.overreach?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Over-reach:</b> these picks exceed what a Mars-tier repo sustains — the rich/stateful parts will read as bolted-on. Submit as Mars (smaller scope), or pick an Olympus-capable repo.</div>`
     :e.demote?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Demote:</b> Olympus-capable repo, but the obvious approach works and nothing fails an invariant — these picks land at Mars scale. Make the obvious approach wrong / add an invariant for Olympus, or submit as Mars.</div>`:'';
-  const stdline=`<div class="stdline">Read-out scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
-  return `<div class="charts">
-    <div class="chartcard wide"><p class="chartttl">Estimated pass-rate band <span class="chest">estimate, not measured</span></p><p class="chartsub">${esc(e.label)}. Heuristic from the screen — only a real agent batch gives the true number. Lime zone is within the tier ceiling (Olympus ≤20%, Mars ≤30%); amber is just above.</p>${chartGauge(r)}</div>
+  const stdline=`<div class="stdline">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
+  // Honest readiness readout: which hard levers are satisfied, whether the model judgment EVIDENCED
+  // each, and a qualitative verdict. NO fabricated pass-rate number — only an agent batch measures that.
+  const sc=r.screen||{},paths=repoDiv(r),pathsOk=(paths!=null&&paths>=5)||(paths==null&&t.curated);
+  const key=(r.fullName||'').toLowerCase(),jd=((extCache[key]||{}).judge||{}).data;
+  const levers=[['No free helpers at your target layer',sc.helpers==='none',jd&&jd.freeHelpers],['Obvious approach is wrong',sc.approach==='wrong',jd&&jd.approachWrong],['Naive impl fails an intermediate-state invariant',sc.invariant==='fails',jd&&jd.invariant]];
+  const got=levers.filter(l=>l[1]).length;
+  const evTag=o=>{if(!jd||!o||!o.verdict)return '';const z=String(o.verdict).toLowerCase();return /unclear|\?/.test(z)?' <span class="chip unver">judge unclear</span>':' <span class="chip ver">judge-evidenced</span>';};
+  const verdictTxt=!pathsOk?'Precondition unmet — needs 5+ variant paths the feature writes from scratch.':got===3?'Matches the proven structure that lands AT or under the tier ceiling. Build it — only a real agent batch measures the actual pass rate.':got===2?'One hard lever short of the proven shape — add the missing lever (below) before building.':got===1?'Reads as too easy for this tier — add the missing hard levers, or route to Mars.':'No hard levers yet — a Mars-scale pick as it stands.';
+  const leverRows=levers.map(l=>`<div class="checkrow"><span class="lamp ${l[1]?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l[1]?'✓':'—'} ${esc(l[0])}${evTag(l[2])}</div></div></div>`).join('');
+  const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">no % — only an agent batch measures real pass rate</span></p><p class="chartsub"><b>${got}/3 hard levers</b> ${jd?'— answers evidenced by the model judgment':'— self-reported; run the judgment to evidence them'}. ${esc(verdictTxt)}</p>${leverRows}</div>`;
+  return `<div class="charts">${readinessCard}
     <div class="chartcard wide"><p class="chartttl">Difficulty factors</p><p class="chartsub">Which proven levers are satisfied for a <b>${t.tier}</b> submission.</p>${chartFactors(r)}</div>
   </div>${warn}${stdline}`;
 }
@@ -1133,7 +1141,6 @@ function wireScreen(r){
     extCache[key]={...(extCache[key]||{}),screen:sc};paintDash();});
   const cl=document.getElementById('scClear');if(cl)cl.addEventListener('click',()=>{
     extCache[key]={...(extCache[key]||{}),screen:{}};paintDash();});
-  const pb=document.getElementById('probeBtn');if(pb)pb.addEventListener('click',()=>{const t=document.getElementById('probeTerm');ghCodeSearch(r.fullName,t?t.value:'');});
   const sr=document.getElementById('srcRead');if(sr)sr.addEventListener('click',ev=>{ev.preventDefault();analyzeSource(r.fullName);});
 }
 // ===== RUNG 3 — model judgment via the backend /judge (approach-wrong + invariant, with citations) =====
@@ -1157,14 +1164,14 @@ function judgeBlock(r){
       <textarea class="intelta" id="judgeAnswer" placeholder='{"approachWrong":{"verdict":"likely yes","reason":"...","citations":["path:symbol"]},"invariant":{...}}' style="min-height:80px"></textarea>
       <div class="setrow"><button class="btn primary" id="judgeSave">Save judgment</button>${j.pasteErr?'<span class="hint" style="color:var(--warn)">'+esc(j.pasteErr)+'</span>':''}</div></div>`;
   if(j.data){
-    const d=j.data,aw=d.approachWrong||{},iv=d.invariant||{};
+    const d=j.data,fh=d.freeHelpers||{},aw=d.approachWrong||{},iv=d.invariant||{};
     const src=String(d.source||'');
     const isHeur=src.indexOf('heuristic')>=0, isEns=src.indexOf('ensemble')>=0;
     const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':isEns?'✓ centralized model consensus':'✓ model judgment';
     const agBadge=k=>{const a=d.agreement&&d.agreement[k];return a?` <span class="chip ${a==='full'?'ver':'unver'}">${a==='full'?'all agree':a==='split'?'models disagree':'split'}</span>`:'';};
     const row=(lbl,o,k)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${agBadge(k)} ${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
-    const members=(d.members&&d.members.length)?`<details class="disc"><summary>Per-model verdicts (${d.members.map(m=>esc(m.label)).join(' + ')})</summary>`+d.members.map(m=>`<div class="hint" style="margin:6px 0"><b>${esc(m.label)}</b> &mdash; approach: ${esc((m.approachWrong||{}).verdict||'?')} &middot; invariant: ${esc((m.invariant||{}).verdict||'?')}</div>`).join('')+`</details>`:'';
-    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="setrow"><button class="btn primary" id="judgeApply">Apply as screen suggestion</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
+    const members=(d.members&&d.members.length)?`<details class="disc"><summary>Per-model verdicts (${d.members.map(m=>esc(m.label)).join(' + ')})</summary>`+d.members.map(m=>`<div class="hint" style="margin:6px 0"><b>${esc(m.label)}</b> &mdash; helpers: ${esc((m.freeHelpers||{}).verdict||'?')} &middot; approach: ${esc((m.approachWrong||{}).verdict||'?')} &middot; invariant: ${esc((m.invariant||{}).verdict||'?')}</div>`).join('')+`</details>`:'';
+    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('helpers',fh,'freeHelpers')}${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="setrow"><button class="btn primary" id="judgeApply">Apply all 3 to the screen</button></div><div class="hint" style="margin-top:6px">${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
   }
   return head;
 }
@@ -1177,7 +1184,7 @@ async function runJudge(name){
     const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
     if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
     if(d.needsJudgment){extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();return;}
-    extCache[key]={...extCache[key],judge:{data:d,layer}};paintDash();
+    extCache[key]={...extCache[key],judge:{data:d,layer}};applyJudge(name);
   }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
 }
 // Deeper (optional, still free): fetch the paste-ready prompt for a Claude chat instead of the heuristic.
@@ -1204,9 +1211,12 @@ async function saveJudge(name,txt){
 }
 function applyJudge(name){
   const key=name.toLowerCase(),c=extCache[key]||{},d=(c.judge&&c.judge.data)||{};
-  // Map verdict -> yes/no/null; only apply confident verdicts (an 'unclear' must NOT become the EASY answer).
+  // Map each verdict to a screen answer; only apply CONFIDENT verdicts (an 'unclear' stays the
+  // operator's call, never silently becomes the EASY answer).
   const v=o=>{const z=((o&&o.verdict)||'').toLowerCase();return /^(likely\s*yes|yes)/.test(z)?'yes':/^(likely\s*no|no)/.test(z)?'no':null;};
+  const fhmap=o=>{const z=((o&&o.verdict)||'').toLowerCase();return /free helpers present|helpers present|reusable/.test(z)?'free':/no (free )?helpers|hand-?roll|per-variant code/.test(z)?'none':null;};
   const sc={...(c.screen||{})};
+  const h=fhmap(d.freeHelpers); if(h)sc.helpers=h;
   const a=v(d.approachWrong); if(a==='yes')sc.approach='wrong'; else if(a==='no')sc.approach='works';
   const i=v(d.invariant); if(i==='yes')sc.invariant='fails'; else if(i==='no')sc.invariant='passes';
   extCache[key]={...c,screen:sc};paintDash();
@@ -1483,9 +1493,23 @@ function paintDash(){
   const unknown=r.lang==='?'&&div==null;
   const s=r.screen||{},scDone=!!(s.helpers&&s.approach&&s.invariant);
   const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
-  const gated=scDone
-    ? `<div class="genbar"><span class="hint">↓ Results below are generated from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers.</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div)
-    : `<div class="genwait"><b>Answer the difficulty screen above to generate the results.</b><span class="hint">The best-fit angles, escalation combinations, strong areas and the tier standards are all built from this repo's live paths / kinds + your three answers — nothing is pre-filled.</span></div>`;
+  // Run-analysis flow: dormant until the LIVE REPORT is gathered (model judgment run), then the
+  // operator runs the analysis, which is generated from that evidence (helpers/approach/invariant
+  // + source measurements + code paths) — not from folder names alone.
+  const hasReport=!!(c&&c.judge&&c.judge.data), srcRead=!!(c&&c.source&&!c.source.error&&!c.source.loading), analysisRun=!!(c&&c.analysisRun);
+  const judgedLayer=(c&&c.judge&&c.judge.layer)||'';
+  let gated;
+  if(!state.analyzer){
+    gated=scDone
+      ? `<div class="genbar"><span class="hint">↓ Built from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers. <b>Set the Analyzer backend</b> in Settings for the evidence-first flow (a model judgment grounds every answer).</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div)
+      : `<div class="genwait"><b>Answer the difficulty screen above to generate the results</b><span class="hint">— or set the Analyzer backend in Settings so the analysis is generated from a real model judgment instead of folder names + toggles.</span></div>`;
+  } else if(!hasReport){
+    gated=`<div class="genwait"><b>Run the live report first to activate the analysis.</b><span class="hint">The analysis is generated from EVIDENCE, not folder names: ${srcRead?'✓ source read':'• read source'} &middot; ${'• run the free model judgment (the Model judgment section above)'}. Once the judgment has run, "Run analysis" lights up and generates report-specific results.</span><button class="btn" disabled style="opacity:.45;margin-top:10px;cursor:not-allowed">Run analysis — gather the live report first</button></div>`;
+  } else if(!analysisRun){
+    gated=`<div class="genwait"><b>Live report ready — judged the ${esc(judgedLayer||'variant')} layer${srcRead?', source measured':''}, ${div} code paths.</b><span class="hint">Generate the report-specific analysis (best-fit angles, escalation combinations, strong areas, insights, standards) from this evidence + your screen answers.</span><button class="btn primary" id="anRunAnalysis" style="margin-top:10px">Run analysis →</button></div>`;
+  } else {
+    gated=`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'variant')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + your screen answers.</span><a href="#" id="anRerun">↻ Re-run from live</a></div>`+analysisResults(r,div);
+  }
   document.getElementById('anDash').innerHTML=`<div class="panel">
     <div class="dhead"><div><h3 class="reponame">${esc(r.fullName)}</h3>
       <div class="meta">${(c&&c.live)?'<span class="chip live">live</span>':''}<span class="chip"><b>${esc(r.lang)}</b></span><span class="chip">${esc(r.license)}</span><span class="chip">★ <b>${esc(r.stars)}</b></span><span class="chip">${div!=null?div+' paths':'paths ?'}</span></div></div></div>
@@ -1506,6 +1530,7 @@ function paintDash(){
   const jsv=document.getElementById('judgeSave');if(jsv)jsv.addEventListener('click',()=>{const a=document.getElementById('judgeAnswer');saveJudge(r.fullName,a?a.value:'');});
   const jap=document.getElementById('judgeApply');if(jap)jap.addEventListener('click',()=>applyJudge(r.fullName));
   const rr=document.getElementById('anRerun');if(rr)rr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
+  const ra=document.getElementById('anRunAnalysis');if(ra)ra.addEventListener('click',()=>{const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),analysisRun:true};paintDash();});
   const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
   const ed=document.getElementById('anEditDiv');if(ed)ed.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
   const ed2=document.getElementById('anEditDiv2');if(ed2)ed2.addEventListener('click',ev=>{ev.preventDefault();const k=(r.fullName||'').toLowerCase();extCache[k]={...(extCache[k]||{}),editingDiv:true};paintDash();});
