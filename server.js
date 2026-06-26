@@ -179,6 +179,7 @@ function openaiChat(provider, payload){
     const req = https.request(provider.baseUrl + '/chat/completions', {
       method:'POST',
       headers:{ 'content-type':'application/json', 'authorization':'Bearer '+provider.key, 'content-length':Buffer.byteLength(body) },
+      timeout: 40000,
     }, res=>{
       const chunks=[]; res.on('data',c=>chunks.push(c));
       res.on('end',()=>{
@@ -187,6 +188,7 @@ function openaiChat(provider, payload){
         try { resolve(JSON.parse(txt)); } catch(e){ reject(new Error('bad JSON from '+provider.label+': '+txt.slice(0,160))); }
       });
     });
+    req.on('timeout', () => req.destroy(new Error(provider.label+' request timeout (40s)')));
     req.on('error', reject); req.write(body); req.end();
   });
 }
@@ -210,6 +212,9 @@ async function withRetry(fn, tries){
   }
   throw lastErr;
 }
+// Hard cap on a single async op so one slow/hung provider can never block the whole ensemble.
+const withDeadline = (promise, ms, label) => Promise.race([ promise,
+  new Promise((_, rej) => setTimeout(() => rej(new Error((label||'op') + ' deadline ' + ms + 'ms exceeded')), ms)) ]);
 // Ask ONE provider the judge question; return its per-model verdict object.
 async function judgeOneModel(provider, prompt){
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
@@ -253,7 +258,7 @@ Where the models agree, give the strongest shared reasoning. Where they disagree
 // FREE ensemble judge: run every configured provider in parallel, fuse into one centralized verdict.
 async function judgeViaEnsemble(repo, ref, layer){
   const ctx = await buildJudgeContext(repo, ref, layer);
-  const settled = await Promise.allSettled(PROVIDERS.map(p => judgeOneModel(p, p.small ? ctx.promptSmall : ctx.prompt)));
+  const settled = await Promise.allSettled(PROVIDERS.map(p => withDeadline(judgeOneModel(p, p.small ? ctx.promptSmall : ctx.prompt), 55000, p.label)));
   const members = []; const errors = [];
   settled.forEach((s,i) => s.status==='fulfilled' ? members.push(s.value) : errors.push(PROVIDERS[i].label+': '+String(s.reason&&s.reason.message||s.reason)));
   if(!members.length) throw new Error('all judge providers failed -> '+errors.join(' | '));
@@ -273,7 +278,7 @@ async function judgeViaEnsemble(repo, ref, layer){
   if(SYNTH !== 'off'){
     try {
       const synthProvider = PROVIDERS.find(p => p.label.toLowerCase()===SYNTH) || members[0] && PROVIDERS.find(p=>p.label===members[0].label) || PROVIDERS[0];
-      const s = await judgeSynthesize(synthProvider, repo, layer, members);
+      const s = await withDeadline(judgeSynthesize(synthProvider, repo, layer, members), 35000, 'synthesis');
       // Synthesis writes the centralized reason+verdict, BUT a hard split is never papered over: force unclear.
       if(s.approachWrong) aw = { verdict: fa.agreement==='split' ? 'unclear' : (s.approachWrong.verdict||fa.verdict),
         reason: (fa.agreement==='split'?'[models disagreed] ':'')+(s.approachWrong.reason||fa.reason),

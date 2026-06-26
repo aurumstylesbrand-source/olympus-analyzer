@@ -807,6 +807,30 @@ viewEl.addEventListener('change',async e=>{
   if(cs){const i=+cs.dataset.rc,j=+cs.dataset.jc;if(!state[activeTier].repos[i].slotCat)state[activeTier].repos[i].slotCat=['feature','feature','feature'];state[activeTier].repos[i].slotCat[j]=cs.value;await persistTier(activeTier);return;}
 });
 
+// Resilient backend call: a free host (e.g. Render) spins down when idle, so the first heavy
+// request can return a gateway 502 while it wakes. bfetch pings /health and retries cold-start /
+// gateway / non-JSON responses, then returns parsed JSON (throws after 3 tries).
+async function bfetch(url, opts){
+  const base=(state.analyzer||'').replace(/\/$/,'');
+  let lastErr;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const res=await fetch(url, opts||{});
+      const txt=await res.text();
+      if(!/^\s*[\[{]/.test(txt) || res.status===502 || res.status===503 || res.status===504){
+        if(attempt<2){ try{ if(base) await fetch(base+'/health'); }catch(e){} await new Promise(r=>setTimeout(r,1800*(attempt+1))); continue; }
+        throw new Error('backend not ready (HTTP '+res.status+') — a free host may be waking up; try again in a moment');
+      }
+      return JSON.parse(txt);
+    }catch(e){
+      lastErr=e;
+      if(attempt<2){ try{ if(base) await fetch(base+'/health'); }catch(_){} await new Promise(r=>setTimeout(r,1800*(attempt+1))); continue; }
+      throw lastErr;
+    }
+  }
+  throw lastErr;
+}
+
 /* ---------- generate next batch (board) ---------- */
 async function generateBatch(){
   const tier=activeTier,data=state[tier],plan=TIER_PLAN[tier],need=plan.gold+plan.test;
@@ -814,9 +838,8 @@ async function generateBatch(){
   errEl.style.display='none';btn.disabled=true;btn.innerHTML='<span class="spin"></span>Acquiring…';
   try{
     if(!state.analyzer)throw new Error('set the Analyzer backend URL in Settings — batch curation runs through your backend now (a browser cannot call the model API directly)');
-    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+    const j=await bfetch(state.analyzer.replace(/\/$/,'')+'/generate',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({tier,used:state.used})});
-    const j=await res.json();
     if(j.error)throw new Error(j.error);
     const arr=j.repos;if(!Array.isArray(arr))throw new Error('backend did not return a repos array');
     const us=new Set(state.used.map(s=>s.toLowerCase()));
@@ -955,8 +978,7 @@ async function analyzeSource(name){
   if(state.analyzer){
     extCache[key]={...c,source:{loading:true,backend:true}};paintDash();
     try{
-      const res=await fetch(state.analyzer.replace(/\/$/,'')+'/analyze?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(branch||'HEAD'));
-      const d=await res.json();
+      const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/analyze?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(branch||'HEAD'));
       if(d.error){extCache[key]={...extCache[key],source:{error:'backend: '+d.error}};paintDash();return;}
       extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,freeHelperSignal:d.freeHelperSignal,at:Date.now()}};paintDash();return;
     }catch(e){extCache[key]={...extCache[key],source:{error:'backend unreachable ('+(e.message||'failed')+') — check the URL / CORS / that it runs outside the sandbox'}};paintDash();return;}
@@ -1149,8 +1171,7 @@ async function runJudge(name){
   const ref=c.commit||c.defaultBranch||'HEAD';
   extCache[key]={...c,judge:{loading:true,layer}};paintDash();
   try{
-    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
-    const d=await res.json();
+    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
     if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
     if(d.needsJudgment){extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();return;}
     extCache[key]={...extCache[key],judge:{data:d,layer}};paintDash();
@@ -1163,8 +1184,7 @@ async function runJudgePrompt(name){
   const ref=c.commit||c.defaultBranch||'HEAD';
   extCache[key]={...c,judge:{loading:true,layer}};paintDash();
   try{
-    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?mode=prompt&repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
-    const d=await res.json();
+    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?mode=prompt&repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
     if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
     extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();
   }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
@@ -1174,8 +1194,7 @@ async function saveJudge(name,txt){
   const layer=(c.judge&&c.judge.layer)||judgeLayer(r),ref=c.commit||c.defaultBranch||'HEAD';
   let body;try{body=JSON.parse(txt||'');}catch(e){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:'that is not valid JSON'}};paintDash();return;}
   try{
-    const res=await fetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await res.json();
+    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(d.error){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:d.error}};paintDash();return;}
     extCache[key]={...c,judge:{data:d.saved||body,layer}};paintDash();
   }catch(e){extCache[key]={...c,judge:{...(c.judge||{}),pasteErr:'save failed ('+(e.message||'')+')'}};paintDash();}
