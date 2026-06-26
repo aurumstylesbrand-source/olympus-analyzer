@@ -198,9 +198,21 @@ function parseModelJson(content){
   return JSON.parse(content);
 }
 function contentOf(resp){ return resp && resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content; }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Transient upstream conditions worth a retry (rate limit, overload, gateway/timeout, reset).
+function isTransient(msg){ const st = parseInt((String(msg).match(/HTTP (\d{3})/)||[])[1], 10);
+  return [408,425,429,500,502,503,504,529].includes(st) || /timeout|socket hang up|ECONNRESET|ECONNREFUSED|EAI_AGAIN|network/i.test(String(msg)); }
+async function withRetry(fn, tries){
+  tries = tries || 3; let lastErr;
+  for(let i=0;i<tries;i++){
+    try { return await fn(); }
+    catch(e){ lastErr = e; if(i<tries-1 && isTransient(e&&e.message)){ await sleep(500*(i+1)); continue; } throw e; }
+  }
+  throw lastErr;
+}
 // Ask ONE provider the judge question; return its per-model verdict object.
 async function judgeOneModel(provider, prompt){
-  const resp = await openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{}));
+  const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
   const raw = parseModelJson(contentOf(resp));
   return { label: provider.label, model: provider.model, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {} };
 }
@@ -235,7 +247,7 @@ async function judgeSynthesize(provider, repo, layer, members){
 Questions: (1) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (2) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
 Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
 {"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from 2 models; not proof."}`;
-  const resp = await openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{}));
+  const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{})));
   return parseModelJson(contentOf(resp));
 }
 // FREE ensemble judge: run every configured provider in parallel, fuse into one centralized verdict.
