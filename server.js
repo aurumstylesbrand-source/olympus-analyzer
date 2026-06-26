@@ -98,8 +98,10 @@ function blob(files, maxFiles, perFile){
 
 const JUDGE_SCHEMA = {
   type:'object', additionalProperties:false,
-  required:['approachWrong','invariant','disclaimer'],
+  required:['freeHelpers','approachWrong','invariant','disclaimer'],
   properties:{
+    freeHelpers:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
+      properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     approachWrong:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
       properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     invariant:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
@@ -112,11 +114,12 @@ function judgeKey(repo, ref, layer){ return 'judge_' + (repo+'@'+ref+'__'+layer)
 
 // The exact instruction a Claude judgment must follow — shared by the API path and the manual paste path.
 const JUDGE_TASK =
-`Answer two BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
-1. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
-2. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
+`Answer three BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
+1. freeHelpers: Does THIS layer already expose FREE per-variant helper methods a new feature could simply call (so the feature is transcribable = EASY), or would a new feature have to hand-roll per-variant code from scratch (HARD)? Answer "free helpers present" (easy) | "no free helpers" (hard) | "unclear".
+2. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
+3. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
 Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
-{"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
+{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"... with code citations","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
 
 // Assemble the paste-ready prompt at a given size profile (so small-context providers get less).
 function assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, sz){
@@ -153,7 +156,7 @@ async function buildJudgeContext(repo, ref, layer){
 // Normalize any judgment object (from the API or pasted by a human) into the response shape.
 function shapeJudgment(repo, ref, layer, ctx, raw, source){
   const out = { repo, ref, layer, variantFiles:ctx&&ctx.variantFiles, aboveFiles:ctx&&ctx.aboveFiles, source,
-    approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
+    freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
     disclaimer: raw.disclaimer || 'Model judgment, not proof. No call-graph or runtime analysis was performed.' };
   return out;
 }
@@ -208,7 +211,7 @@ async function withRetry(fn, tries){
   tries = tries || 3; let lastErr;
   for(let i=0;i<tries;i++){
     try { return await fn(); }
-    catch(e){ lastErr = e; if(i<tries-1 && isTransient(e&&e.message)){ await sleep(500*(i+1)); continue; } throw e; }
+    catch(e){ lastErr = e; if(i<tries-1 && isTransient(e&&e.message)){ await sleep((/HTTP 429/.test(String(e&&e.message))?1500:600)*(i+1)); continue; } throw e; }
   }
   throw lastErr;
 }
@@ -219,15 +222,19 @@ const withDeadline = (promise, ms, label) => Promise.race([ promise,
 async function judgeOneModel(provider, prompt){
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
   const raw = parseModelJson(contentOf(resp));
-  return { label: provider.label, model: provider.model, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {} };
+  return { label: provider.label, model: provider.model, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {} };
 }
-// Normalize any verdict phrasing to one of yes|no|unclear.
+// Normalize any verdict phrasing to one of yes|no|unclear (handles the freeHelpers vocabulary too).
 function normVerdict(v){ const z = String(v||'').toLowerCase().trim();
+  if(/free helpers present|helpers present|has (free )?helpers|reusable helpers/.test(z)) return 'yes';
+  if(/no (free )?helpers|hand-?roll|per-variant code/.test(z)) return 'no';
   if(/^(likely\s*yes|yes\b|probably|definitely)/.test(z)) return 'yes';
   if(/^(likely\s*no|no\b|unlikely|none)/.test(z)) return 'no';
   return 'unclear'; }
 // Deterministically fuse one dimension across members: centralized verdict + agreement + merged cites.
-function fuseDimension(members, dim){
+// dispMap maps the normalized yes/no/unclear back to the dimension's own wording.
+function fuseDimension(members, dim, dispMap){
+  dispMap = dispMap || { yes:'likely yes', no:'no', unclear:'unclear' };
   const items = members.map(m => ({ label:m.label, v:(m[dim]&&m[dim].verdict)||'?', n:normVerdict(m[dim]&&m[dim].verdict),
     reason:(m[dim]&&m[dim].reason)||'', cites:(m[dim]&&m[dim].citations)||[] }));
   const counts = { yes:0, no:0, unclear:0 }; items.forEach(i => counts[i.n]++);
@@ -237,7 +244,7 @@ function fuseDimension(members, dim){
   if(distinct.size===1) cn = items[0].n;
   else if(counts.yes && counts.no) cn = 'unclear';            // hard disagreement -> conservative
   else cn = counts.yes >= counts.no ? (counts.yes>=counts.unclear?'yes':'unclear') : (counts.no>=counts.unclear?'no':'unclear');
-  const disp = { yes:'likely yes', no:'no', unclear:'unclear' }[cn];
+  const disp = dispMap[cn];
   const cites = [...new Set(items.flatMap(i => i.cites))];
   const reason = (agreement==='full' ? 'All models agree. ' : agreement==='split' ? 'Models DISAGREE -> centralized to unclear. ' : 'Models partially agree. ')
     + items.map(i => i.label+' ('+i.v+'): '+i.reason).join('  |  ');
@@ -247,11 +254,11 @@ function fuseDimension(members, dim){
 async function judgeSynthesize(provider, repo, layer, members){
   const prompt = `Two independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
 
-`+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
+`+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
 
-Questions: (1) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (2) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
+Questions: (1) freeHelpers - does this layer expose FREE per-variant helpers a new feature could reuse (easy) or must it hand-roll per-variant code (hard)? (2) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (3) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
 Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
-{"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from 2 models; not proof."}`;
+{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"...","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from the models; not proof."}`;
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{})));
   return parseModelJson(contentOf(resp));
 }
@@ -265,21 +272,31 @@ async function judgeViaEnsemble(repo, ref, layer){
   // Single model available (one configured, or the other failed): return it directly.
   if(members.length===1){
     const m = members[0];
-    const out = shapeJudgment(repo, ref, layer, ctx, { approachWrong:m.approachWrong, invariant:m.invariant,
+    const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant,
       disclaimer:'Single model ('+m.label+'). Not proof.'+(errors.length?' (other provider failed: '+errors.join('; ')+')':'') }, 'llm:'+m.model);
     if(errors.length) out.providerErrors = errors;
     return out;
   }
   // >=2 members: deterministic fusion + optional synthesis pass.
-  const fa = fuseDimension(members,'approachWrong'), fi = fuseDimension(members,'invariant');
+  const fh = fuseDimension(members,'freeHelpers',{yes:'free helpers present',no:'no free helpers',unclear:'unclear'}), fa = fuseDimension(members,'approachWrong'), fi = fuseDimension(members,'invariant');
+  let fhv = { verdict:fh.verdict, reason:fh.reason, citations:fh.citations };
   let aw = { verdict:fa.verdict, reason:fa.reason, citations:fa.citations };
   let iv = { verdict:fi.verdict, reason:fi.reason, citations:fi.citations };
   let synthesized = false;
   if(SYNTH !== 'off'){
     try {
-      const synthProvider = PROVIDERS.find(p => p.label.toLowerCase()===SYNTH) || members[0] && PROVIDERS.find(p=>p.label===members[0].label) || PROVIDERS[0];
+      // Pick the synthesis model: the configured SYNTH label, else prefer a high-rate-limit member
+      // (Gemini) and avoid GLM/bigmodel so we don't spend a 2nd call on its tight free RPM.
+      const memberProviders = members.map(m => PROVIDERS.find(p => p.label===m.label)).filter(Boolean);
+      const synthProvider = PROVIDERS.find(p => p.label.toLowerCase()===SYNTH)
+        || memberProviders.find(p => /gemini/i.test(p.label) || /generativelanguage/i.test(p.baseUrl))
+        || memberProviders.find(p => !/glm|bigmodel/i.test(p.label+' '+p.baseUrl))
+        || memberProviders[0] || PROVIDERS[0];
       const s = await withDeadline(judgeSynthesize(synthProvider, repo, layer, members), 35000, 'synthesis');
       // Synthesis writes the centralized reason+verdict, BUT a hard split is never papered over: force unclear.
+      if(s.freeHelpers) fhv = { verdict: fh.agreement==='split' ? 'unclear' : (s.freeHelpers.verdict||fh.verdict),
+        reason: (fh.agreement==='split'?'[models disagreed] ':'')+(s.freeHelpers.reason||fh.reason),
+        citations: [...new Set([...(s.freeHelpers.citations||[]), ...fh.citations])] };
       if(s.approachWrong) aw = { verdict: fa.agreement==='split' ? 'unclear' : (s.approachWrong.verdict||fa.verdict),
         reason: (fa.agreement==='split'?'[models disagreed] ':'')+(s.approachWrong.reason||fa.reason),
         citations: [...new Set([...(s.approachWrong.citations||[]), ...fa.citations])] };
@@ -290,11 +307,11 @@ async function judgeViaEnsemble(repo, ref, layer){
     } catch(e){ /* keep deterministic fusion */ }
   }
   const labels = members.map(m => m.label).join('+');
-  const out = shapeJudgment(repo, ref, layer, ctx, { approachWrong:aw, invariant:iv,
+  const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv,
     disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
-      +'. Agreement: approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
-  out.members = members.map(m => ({ label:m.label, model:m.model, approachWrong:m.approachWrong, invariant:m.invariant }));
-  out.agreement = { approachWrong:fa.agreement, invariant:fi.agreement };
+      +'. Agreement: helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
+  out.members = members.map(m => ({ label:m.label, model:m.model, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant }));
+  out.agreement = { freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
   out.synthesized = synthesized;
   if(errors.length) out.providerErrors = errors;
   return out;
@@ -339,10 +356,13 @@ async function judgeHeuristic(repo, ref, layer){
   const aHits = scanSignals(scope, APPROACH_SIGNALS);
   const iHits = scanSignals(scope, INVARIANT_SIGNALS);
   if(new Set(variant.map(f => f.path.split('/')[0])).size >= 3) aHits.push({ name:'cross-package / cross-module wiring', file:'(3+ top-level dirs)' });
+  // free-helpers heuristic: a shared base/abstract class with reusable methods inside the layer.
+  const helperHit = scope.find(f => /\b(abstract\s+class|class\s+\w*Base\w*\b|extends\s+\w*Base|implements\s+\w+Helper)/.test(f.text));
   const cite = h => h.map(x => x.file + ' [' + x.name + ']');
   const reason = (h, kind) => h.length ? ('matched ' + h.length + ' ' + kind + ' signals from the rubric: ' + h.map(x => x.name).join('; ')) : 'no ' + kind + ' signals detected by the rubric scan';
   return {
     repo, ref, layer, source:'heuristic', variantFiles:variant.length, aboveFiles:above.length,
+    freeHelpers:{ verdict: helperHit ? 'free helpers present' : 'unclear', reason: helperHit ? 'a shared base/abstract class with reusable methods is present in this layer ('+helperHit.path+') -- a feature built here could reuse it (EASY); aim a layer ABOVE it' : 'no obvious shared base/abstract helper class detected by the scan (cannot confirm without a code read)', citations: helperHit ? [helperHit.path] : [] },
     approachWrong:{ verdict: aHits.length>=3 ? 'likely yes' : aHits.length>=1 ? 'unclear' : 'no', reason: reason(aHits,'approach-wrong'), citations: cite(aHits) },
     invariant:{ verdict: iHits.length>=2 ? 'likely yes' : iHits.length>=1 ? 'unclear' : 'no', reason: reason(iHits,'invariant'), citations: cite(iHits) },
     disclaimer: 'Heuristic rubric-signal scan (regex over the layer) — NOT a model judgment and NOT proof. For a deeper read, use the paste-a-Claude-chat mode (mode=prompt). Always confirm in-editor.',
