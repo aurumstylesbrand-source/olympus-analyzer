@@ -431,6 +431,18 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .calstep.pend::before{content:"· ";color:var(--muted-2)}
 .judgesel{font-family:var(--mono);font-size:11px;color:var(--green);background:var(--surface-3);border:1px solid var(--line);border-radius:7px;padding:4px 8px;cursor:pointer}
 .judgesel:focus{outline:none;border-color:var(--green-deep)}
+/* ---------- premium polish (bento dashboard feel) ---------- */
+.panel{border-radius:20px}
+.bcard{transition:border-color .18s,transform .18s,box-shadow .18s}
+.bcard:hover{border-color:var(--line-2);transform:translateY(-2px)}
+.bcard.accent:hover{border-color:var(--green-deep)}
+.chartcard{border-radius:18px}
+.bcard .csvg,.chartcard .csvg{margin-top:2px}
+.ahero h2{background:linear-gradient(180deg,var(--text),var(--text-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.ahero h2 em{-webkit-text-fill-color:var(--green);background:none}
+.verdictchip{box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
+.verdictchip.go{box-shadow:0 8px 22px -10px rgba(166,232,77,.5)}
+.bento .bcard{display:flex;flex-direction:column}
 </style>
 
 <div id="app">
@@ -1227,7 +1239,7 @@ function difficultyReadout(r){
   const leverRows=levers.map(l=>`<div class="checkrow"><span class="lamp ${l[1]?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l[1]?'✓':'—'} ${esc(l[0])}${evTag(l[2])}</div></div></div>`).join('');
   const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">no % — only an agent batch measures real pass rate</span></p><p class="chartsub"><b>${got}/3 hard levers</b> ${jd?'— answers evidenced by the model judgment':'— self-reported; run the judgment to evidence them'}. ${esc(verdictTxt)}</p>${leverRows}</div>`;
   return `<div class="charts">${readinessCard}
-    <div class="chartcard wide"><p class="chartttl">Difficulty factors</p><p class="chartsub">Which proven levers are satisfied for a <b>${t.tier}</b> submission.</p>${chartFactors(r)}</div>
+    <div class="chartcard wide"><p class="chartttl">Structural levers</p><p class="chartsub">The 3 levers the verdict checks &mdash; a full triangle is Olympus-shaped (<b>${t.tier}</b>).</p><div style="display:flex;justify-content:center">${chartLeverRadar(r)}</div></div>
   </div>${warn}${stdline}`;
 }
 function wireScreen(r){
@@ -1660,6 +1672,42 @@ function chartVariants(src){
     b+=`<text x="${(padL+bw+6).toFixed(1)}" y="${y+14}" font-family="JetBrains Mono, monospace" font-size="8.5" fill="${CHC.muted}">${x.sym} sym · ${x.files}f</text>`;});
   return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gv" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
 }
+// Divergence NUMBER-LINE: where this repo sits on the path scale vs the 5-floor and the board.
+function chartDivLine(r){
+  const repos=allRepos().map(x=>({n:(x.fullName.split('/')[1]||x.fullName),d:repoDiv(x)||0,me:x.fullName===r.fullName})).filter(x=>x.d>0);
+  const meD=repoDiv(r)||0; if(meD&&!repos.some(x=>x.me))repos.push({n:(r.fullName.split('/')[1]||r.fullName),d:meD,me:true});
+  if(!repos.length)return '<div class="hint">read the repo live to place it on the scale</div>';
+  const max=Math.max(40,...repos.map(x=>x.d)),W=460,H=96,padL=16,padR=16,innerW=W-padL-padR,axisY=52,x=v=>padL+(v/max)*innerW;
+  let b=`<line x1="${padL}" y1="${axisY}" x2="${padL+innerW}" y2="${axisY}" stroke="${CHC.line2}" stroke-width="2" stroke-linecap="round"/>`;
+  b+=`<line x1="${x(5)}" y1="${axisY-15}" x2="${x(5)}" y2="${axisY+15}" stroke="${CHC.warn}" stroke-width="1.4" stroke-dasharray="3 3"/><text x="${x(5)}" y="${axisY+30}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.warn}">5-path floor</text>`;
+  repos.filter(z=>!z.me).forEach(p=>{b+=`<circle cx="${x(p.d).toFixed(1)}" cy="${axisY}" r="3.5" fill="${CHC.grey}"><title>${esc(p.n)}: ${p.d}</title></circle>`;});
+  const me=repos.find(z=>z.me);
+  if(me){const mx=x(me.d);b+=`<circle cx="${mx.toFixed(1)}" cy="${axisY}" r="7.5" fill="${CHC.green}" filter="url(#gln)"/><text x="${mx.toFixed(1)}" y="${axisY-14}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" font-weight="700" fill="${CHC.light}">${esc(me.n.slice(0,14))} · ${me.d}</text>`;}
+  b+=`<text x="${padL}" y="${axisY+30}" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.muted}">0</text><text x="${padL+innerW}" y="${axisY+30}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="8" fill="${CHC.muted}">${max}</text>`;
+  return `<svg class="csvg" viewBox="0 0 ${W} ${H}"><defs><filter id="gln" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="x"/><feMerge><feMergeNode in="x"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${b}</svg>`;
+}
+// Variant-weight DONUT: per-variant symbol share (where the per-variant code weight sits).
+function chartVariantDonut(src){
+  const v=src&&src.variants; if(!v||typeof v!=='object')return '';
+  const rows=Object.keys(v).map(k=>({k,val:(v[k]&&v[k].symbols)||0,files:(v[k]&&v[k].files)||0})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val).slice(0,6);
+  if(!rows.length)return '';
+  const total=rows.reduce((a,b)=>a+b.val,0)||1,pal=[CHC.green,CHC.greend,'#5EC8E5',CHC.warn,'#8B7FF0',CHC.muted];
+  const cx=72,cy=74,r=52,sw=21,C=2*Math.PI*r;let off=0,arcs='';
+  rows.forEach((row,i)=>{const len=(row.val/total)*C;arcs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${pal[i%pal.length]}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;off+=len;});
+  const legend=rows.map((row,i)=>`<div style="display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;color:var(--muted)"><i style="width:9px;height:9px;border-radius:3px;background:${pal[i%pal.length]};display:inline-block;flex:none"></i><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(row.k)}</span><b style="color:var(--text)">${row.val}</b></div>`).join('');
+  return `<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><svg class="csvg" style="width:150px;flex:none" viewBox="0 0 144 150">${arcs}<text x="${cx}" y="${cy-1}" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="21" fill="${CHC.light}">${rows.length}</text><text x="${cx}" y="${cy+15}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7.5" fill="${CHC.muted}">variant kinds</text></svg><div style="display:flex;flex-direction:column;gap:7px;min-width:150px;flex:1">${legend}</div></div>`;
+}
+// Readiness RADAR: the 3 structural levers as a triangle, coloured by the verdict.
+function chartLeverRadar(r){
+  const v=finalVerdict(r),axes=[['paths',v.high[0].ok],['gap',v.high[1].ok],['invariant',v.high[2].ok]];
+  const cx=84,cy=92,R=58,n=3,ang=i=>(-Math.PI/2)+i*2*Math.PI/n;
+  let rings='';[.5,1].forEach(tt=>{rings+=`<polygon points="${axes.map((_,i)=>_pt(cx,cy,R*tt,ang(i)).map(z=>z.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${CHC.line}" stroke-width="1"/>`;});
+  let axL='',labels='';axes.forEach((a,i)=>{const[x,y]=_pt(cx,cy,R,ang(i));axL+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${CHC.line}" stroke-width="1"/>`;const[lx,ly]=_pt(cx,cy,R+18,ang(i));labels+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="${a[1]?CHC.light:CHC.muted}">${a[0]}</text>`;});
+  const col=v.vclass==='go'?CHC.green:v.vclass==='refine'?CHC.warn:v.vclass==='nogo'?'#E8765B':CHC.grey;
+  const dp=axes.map((a,i)=>_pt(cx,cy,R*(a[1]?1:0.2),ang(i)).map(z=>z.toFixed(1)).join(',')).join(' ');
+  const dots=axes.map((a,i)=>{const[x,y]=_pt(cx,cy,R*(a[1]?1:0.2),ang(i));return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}"/>`;}).join('');
+  return `<svg class="csvg" viewBox="0 0 168 184">${rings}${axL}<polygon points="${dp}" fill="${col}" fill-opacity="0.26" stroke="${col}" stroke-width="1.8"/>${dots}${labels}</svg>`;
+}
 function relevantDoctrine(r){
   const want=['Proven difficulty mechanism','Verify Flakiness','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade'];
   const seen=new Set(),out=[];
@@ -1747,9 +1795,9 @@ function paintDash(){
   const lowDivWarn=(div!=null&&div<=2)?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>Low path count (${div}).</b> The counter only sees paths expressed as sibling <i>folders</i>. If this repo branches <i>in code</i> (a switch / registry over variants — like ni over package managers) the true count is higher; <a href="#" id="anEditDiv2" style="color:var(--green)">set count</a>. If it is genuinely flat, route to Mars.</div>`:'';
   const srcBanner=licWarn+extBanner+liveBanner+liveErr+lowDivWarn;
   const srcObj=(c&&c.source&&!c.source.error&&!c.source.loading)?c.source:null;
-  const vChart=srcObj?chartVariants(srcObj):'';
-  const variantCard=vChart?`<div class="chartcard wide"><p class="chartttl">Where the per-variant code weight sits</p><p class="chartsub">Symbol count per variant kind, measured by the full-repo scan. The biggest bars are the layers a feature must write the most <b>new per-variant code</b> into — that divergence is the LOC and the difficulty (never collapse it into a shared helper).</p>${vChart}</div>`:'';
-  const chartsHtml=`<div class="charts"><div class="chartcard wide"><p class="chartttl">Code paths vs the field</p><p class="chartsub">5+ variant paths is the <b>precondition</b> (not the difficulty). This repo (lime) against the board; the marker is the 5-path minimum.</p>${chartDivBar(r)}</div>${variantCard}</div>`;
+  const vChart=srcObj?chartVariantDonut(srcObj):'';
+  const variantCard=vChart?`<div class="bcard bcol-6"><div class="blabel">Per-variant code weight</div><p class="chartsub" style="margin:0 0 10px">Symbol share per divergent layer (full-repo scan). The biggest slices are where a feature writes the most <b>new per-variant code</b> — that divergence is the LOC and the difficulty.</p>${vChart}</div>`:'';
+  const chartsHtml=`<div class="bento"><div class="bcard ${vChart?'bcol-6':'bcol-12'}"><div class="blabel">Divergence vs the field</div><p class="chartsub" style="margin:0 0 6px">Where this repo sits on the path scale &mdash; 5+ is the <b>precondition</b>, not the difficulty.</p>${chartDivLine(r)}</div>${variantCard}</div>`;
   const unknown=r.lang==='?'&&div==null;
   const s=r.screen||{},scDone=!!(s.helpers&&s.approach&&s.invariant);
   const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
