@@ -1244,7 +1244,12 @@ function wireScreen(r){
 // ===== RUNG 3 — model judgment via the backend /judge (approach-wrong + invariant, with citations) =====
 // Needs the analyzer backend set. If the backend has no model key it returns a paste-ready prompt
 // (paste into a Claude chat, paste the JSON back) which we POST to cache; otherwise it answers directly.
-function judgeLayer(r){return (r.divKinds&&r.divKinds[0])||'';}
+// Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
+// effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
+// utility folder. These point the judge at the layer that actually carries the divergence.
+const CURATED_JUDGE_LAYERS={'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'effect-ts/effect':['sql','platform'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider']};
+function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
+function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];return (r.divKinds&&r.divKinds[0])||'';}
 // The layer the judge actually analyzes: the operator's override (needed for monorepos where the
 // real variant layer is not a folder the tree-walk detects) else the auto-detected top divergent kind.
 function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};return (c.judgeLayerOverride&&String(c.judgeLayerOverride).trim())||judgeLayer(r);}
@@ -1253,7 +1258,7 @@ function judgeBlock(r){
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
   if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
   const _srcV=(c.source&&!c.source.error&&c.source.variants)?Object.keys(c.source.variants):[];
-  const _layers=[...new Set([..._srcV,...(r.divKinds||[]),layer].filter(Boolean))];
+  const _layers=[...new Set([...curatedLayers(r),..._srcV,...(r.divKinds||[]),layer].filter(Boolean))];
   const _opts=_layers.map(L=>`<option value="${esc(L)}" ${L===layer?'selected':''}>${esc(L)}</option>`).join('')||`<option>${esc(layer||'(none detected)')}</option>`;
   const head=`<div class="hint" style="margin:0 0 8px">Judge layer <select id="judgeLayerSel" class="judgesel">${_opts}</select> &mdash; <b>free</b> (2-3 model consensus when the backend has provider keys, else a rubric scan). <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">Pick which <b>divergent layer</b> the consensus reads &mdash; these are the variant paths the feature would span, auto-detected from the repo. It is not free text: this is about whether THIS repo's divergent layers can host an Olympus-hard feature.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
