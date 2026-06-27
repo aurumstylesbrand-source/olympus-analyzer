@@ -1247,22 +1247,28 @@ function difficultyScreen(r){
       `</div>`;}).join('');
   return pre+honest+`<div class="screenbox">${rows}</div>${bar}`;
 }
+// Live source-read indicator — confirms the backend read the FULL repo source at the pinned commit
+// and shows what it measured (surface, concrete methods, free-helper signal). Auto-runs on analyze.
+function sourceReadBanner(r){
+  const c=extCache[(r.fullName||'').toLowerCase()]||{},src=c.source;
+  if(src&&src.loading) return `<div class="honest"><span class="spin"></span>Reading the full source live at the pinned commit…</div>`;
+  if(src&&src.error) return `<div class="honest" style="color:var(--warn)">⚠ Source read failed: ${esc(src.error)} <a href="#" id="srcRead" style="color:var(--green)">retry</a></div>`;
+  if(src){
+    const helperSig=(src.freeHelperSignal!=null?src.freeHelperSignal:(src.concrete>=8))?'free per-variant helpers likely present':'no obvious free helpers (heuristic)';
+    return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> (backend, full repo) — <b>${src.filesRead}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${src.surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${src.concrete}</b> concrete methods &rarr; ${helperSig}. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
+  }
+  return `<div class="honest">Source not measured yet ${state.analyzer?'(auto-runs on analyze)':'— set the Analyzer backend in Settings'}. <a href="#" id="srcRead" style="color:var(--green)">Read source live</a> to measure the surface + variant layers.</div>`;
+}
 function difficultyReadout(r){
-  const e=estPass(r),t=repoTier(r),std=standardsFor(t.tier);
-  const warn=e.overreach?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Over-reach:</b> these picks exceed what a Mars-tier repo sustains — the rich/stateful parts will read as bolted-on. Submit as Mars (smaller scope), or pick an Olympus-capable repo.</div>`
-    :e.demote?`<div class="fit possible" style="margin:10px 0 0"><span class="fitdot"></span><b>Demote:</b> Olympus-capable repo, but the obvious approach works and nothing fails an invariant — these picks land at Mars scale. Make the obvious approach wrong / add an invariant for Olympus, or submit as Mars.</div>`:'';
+  // SAME levers + count as the final verdict (one source of truth) — no more 1/3-vs-2/3 mismatch.
+  const t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r);
   const stdline=`<div class="stdline">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
-  // Honest readiness readout: which hard levers are satisfied, whether the model judgment EVIDENCED
-  // each, and a qualitative verdict. NO fabricated pass-rate number — only an agent batch measures that.
-  const sc=r.screen||{},paths=repoDiv(r),pathsOk=(paths!=null&&paths>=5)||(paths==null&&t.curated);
-  const key=(r.fullName||'').toLowerCase(),jd=((extCache[key]||{}).judge||{}).data;
-  const levers=[['No free helpers at your target layer',sc.helpers==='none',jd&&jd.freeHelpers],['Obvious approach is wrong',sc.approach==='wrong',jd&&jd.approachWrong],['Naive impl fails an intermediate-state invariant',sc.invariant==='fails',jd&&jd.invariant]];
-  const got=levers.filter(l=>l[1]).length;
-  const evTag=o=>{if(!jd||!o||!o.verdict)return '';const z=String(o.verdict).toLowerCase();return /unclear|\?/.test(z)?' <span class="chip unver">judge unclear</span>':' <span class="chip ver">judge-evidenced</span>';};
-  const verdictTxt=!pathsOk?'Precondition unmet — needs 5+ variant paths the feature writes from scratch.':got===3?'Matches the proven structure that lands AT or under the tier ceiling. Build it — only a real agent batch measures the actual pass rate.':got===2?'One hard lever short of the proven shape — add the missing lever (below) before building.':got===1?'Reads as too easy for this tier — add the missing hard levers, or route to Mars.':'No hard levers yet — a Mars-scale pick as it stands.';
-  const leverRows=levers.map(l=>`<div class="checkrow"><span class="lamp ${l[1]?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l[1]?'✓':'—'} ${esc(l[0])}${evTag(l[2])}</div></div></div>`).join('');
-  const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">no % — only an agent batch measures real pass rate</span></p><p class="chartsub"><b>${got}/3 hard levers</b> ${jd?'— answers evidenced by the model judgment':'— self-reported; run the judgment to evidence them'}. ${esc(verdictTxt)}</p>${leverRows}</div>`;
-  return `${readinessCard}${warn}${stdline}`;
+  const jd=((extCache[(r.fullName||'').toLowerCase()]||{}).judge||{}).data;
+  const evTag=i=>{ if(!jd)return ''; const o=i===1?jd.approachWrong:i===2?jd.invariant:null; if(!o||!o.verdict)return '';
+    const z=String(o.verdict).toLowerCase(); return /unclear|\?/.test(z)?' <span class="chip unver">models split</span>':' <span class="chip ver">judge-evidenced</span>'; };
+  const leverRows=v.high.map((l,i)=>`<div class="checkrow"><span class="lamp ${l.ok?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l.ok?'✓':'—'} ${esc(l.k)}${evTag(i)}</div><div class="checkdetail">${esc(l.d)}</div></div></div>`).join('');
+  const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">the same 3 levers as the final verdict</span></p><p class="chartsub"><b>${v.highPass}/3 structural levers</b> ${jd?'— evidenced by the model assessment':'— run the assessment to evidence them'}. ${esc(v.line.slice(0,150))}</p>${leverRows}</div>`;
+  return `${readinessCard}${stdline}`;
 }
 function wireScreen(r){
   const key=(r.fullName||'').toLowerCase(),rec=recommendScreen(r);
@@ -1872,7 +1878,7 @@ function paintDash(){
   document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and determines the three levers (helpers / approach / invariant) with code citations &mdash; this IS the difficulty screen, you don't set it by hand</span></div>${judgeBlock(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and determines the three levers (helpers / approach / invariant) with code citations &mdash; this IS the difficulty screen, you don't set it by hand</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}

@@ -240,10 +240,14 @@ function fuseDimension(members, dim, dispMap){
   const counts = { yes:0, no:0, unclear:0 }; items.forEach(i => counts[i.n]++);
   const distinct = new Set(items.map(i => i.n));
   const agreement = distinct.size===1 ? 'full' : (counts.yes && counts.no ? 'split' : 'partial');
-  let cn; // centralized normalized verdict
+  // MAJORITY rules: a clear plurality wins (2-of-3 is a real consensus, not "unclear"). Only a
+  // true tie with no plurality collapses to unclear. This stops one dissenting model from
+  // throwing away a 2/3 agreement and dropping the verdict a tier.
+  let cn;
   if(distinct.size===1) cn = items[0].n;
-  else if(counts.yes && counts.no) cn = 'unclear';            // hard disagreement -> conservative
-  else cn = counts.yes >= counts.no ? (counts.yes>=counts.unclear?'yes':'unclear') : (counts.no>=counts.unclear?'no':'unclear');
+  else { const mx = Math.max(counts.yes, counts.no, counts.unclear);
+    const top = ['yes','no','unclear'].filter(k => counts[k]===mx);
+    cn = top.length===1 ? top[0] : 'unclear'; }
   const disp = dispMap[cn];
   const cites = [...new Set(items.flatMap(i => i.cites))];
   const reason = (agreement==='full' ? 'All models agree. ' : agreement==='split' ? 'Models DISAGREE -> centralized to unclear. ' : 'Models partially agree. ')
@@ -293,15 +297,14 @@ async function judgeViaEnsemble(repo, ref, layer){
         || memberProviders.find(p => !/glm|bigmodel/i.test(p.label+' '+p.baseUrl))
         || memberProviders[0] || PROVIDERS[0];
       const s = await withDeadline(judgeSynthesize(synthProvider, repo, layer, members), 35000, 'synthesis');
-      // Synthesis writes the centralized reason+verdict, BUT a hard split is never papered over: force unclear.
-      if(s.freeHelpers) fhv = { verdict: fh.agreement==='split' ? 'unclear' : (s.freeHelpers.verdict||fh.verdict),
-        reason: (fh.agreement==='split'?'[models disagreed] ':'')+(s.freeHelpers.reason||fh.reason),
+      // The MAJORITY-fused verdict (fh/fa/fi.verdict) is authoritative; synthesis only supplies the
+      // reason. A split keeps the majority verdict but is flagged, instead of being forced to unclear.
+      const flag = ag => ag==='full' ? '' : ag==='split' ? '[majority, 1 dissented] ' : '[partial agreement] ';
+      if(s.freeHelpers) fhv = { verdict: fh.verdict, reason: flag(fh.agreement)+(s.freeHelpers.reason||fh.reason),
         citations: [...new Set([...(s.freeHelpers.citations||[]), ...fh.citations])] };
-      if(s.approachWrong) aw = { verdict: fa.agreement==='split' ? 'unclear' : (s.approachWrong.verdict||fa.verdict),
-        reason: (fa.agreement==='split'?'[models disagreed] ':'')+(s.approachWrong.reason||fa.reason),
+      if(s.approachWrong) aw = { verdict: fa.verdict, reason: flag(fa.agreement)+(s.approachWrong.reason||fa.reason),
         citations: [...new Set([...(s.approachWrong.citations||[]), ...fa.citations])] };
-      if(s.invariant) iv = { verdict: fi.agreement==='split' ? 'unclear' : (s.invariant.verdict||fi.verdict),
-        reason: (fi.agreement==='split'?'[models disagreed] ':'')+(s.invariant.reason||fi.reason),
+      if(s.invariant) iv = { verdict: fi.verdict, reason: flag(fi.agreement)+(s.invariant.reason||fi.reason),
         citations: [...new Set([...(s.invariant.citations||[]), ...fi.citations])] };
       synthesized = true;
     } catch(e){ /* keep deterministic fusion */ }
