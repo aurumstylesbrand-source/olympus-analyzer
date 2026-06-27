@@ -62,16 +62,33 @@ function scanSymbols(text,path){
 
 const CONTAINER=/(^|\/)(adapters?|drivers?|dialects?|providers?|backends?|handlers?|transports?|protocols?|plugins?|modules?|exporters?|connectors?|codecs?|stores?|engines?|strategies|policies|parsers?|serializers?|formatters?|balancers?|resolvers?)(\/|$)/i;
 
+// Source-file gate shared by the surface scan and the judge file-loader. Excludes:
+//  - non-source extensions;
+//  - VENDORED / dependency / build / asset / docs / example dirs (these polluted variantKinds:
+//    distribution counted vendor/ deps as variants, traefik counted webui/ React assets, redis
+//    counted modules/vector-sets/examples demo scripts);
+//  - TEST files in EVERY language (the old regex was JS/TS-only, so Go *_test.go, Rust *_test.rs,
+//    Python test_*.py/conftest.py leaked into the surface AND the judge context).
+const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/;
+const SKIP_DIR=/(^|\/)(vendor|node_modules|third[_-]?party|deps|dist|build|out|target|\.venv|venv|site-packages|bower_components|webui|web-ui|frontend|docs?|website|examples?|samples?|fixtures?|testdata|test-data|benchmarks?|coverage|\.git|\.github)(\/)/i;
+const TEST_FILE=/(\.(test|spec)\.|_test\.(go|rs|py)$|(^|\/)test_[^/]*\.py$|(^|\/)conftest\.py$|(^|\/)__tests__(\/)|(^|\/)tests?(\/)|\.d\.ts$)/i;
+function skipPath(rel){ return !SRC.test(rel) || SKIP_DIR.test('/'+rel) || TEST_FILE.test(rel); }
+// Language-scope guard: detect a repo dominated by an UNSUPPORTED language (e.g. redis = C) so the
+// console can warn instead of scoring stray scripts as a real surface.
+const SUPPORTED=new Set(['ts','tsx','js','jsx','mjs','cjs','mts','cts','go','rs','py']);
+const CODE_EXT=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|c|cc|cpp|cxx|h|hh|hpp|hxx|java|cs|rb|php|swift|kt|kts|scala|mm|ex|exs|erl|clj|hs|ml|dart|lua)$/i;
+
 async function analyzeRepo(repo, ref, token){
   const url='https://codeload.github.com/'+repo+'/tar.gz/'+ref;
   const gz=await fetchBuf(url, token);
   const tar=zlib.gunzipSync(gz);
   const surface=new Set(); let methods=0,barrel=0,concrete=0,files=0;
   const variants={}; const baseHelpers={}; // dir -> concrete methods (free-helper signal)
+  const extCount={};
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,''); // strip the top tarball dir
-    if(!/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/.test(rel)) continue;
-    if(/\.(test|spec|d)\.|__tests__|\/test\/|\/tests\//.test(rel)) continue;
+    const ce=rel.match(CODE_EXT); if(ce) { const e=ce[1].toLowerCase(); extCount[e]=(extCount[e]||0)+1; }
+    if(skipPath(rel)) continue;
     if(f.data.length>400000) continue; // skip huge generated files
     const txt=f.data.toString('utf8'); const r=scanSymbols(txt, rel);
     r.symbols.forEach(s=>surface.add(s)); methods+=r.methods; barrel+=r.barrel; concrete+=r.concrete; files++;
@@ -80,19 +97,27 @@ async function analyzeRepo(repo, ref, token){
       const kind=mm[2].toLowerCase();
       variants[kind]=variants[kind]||{files:0,symbols:0,methods:0};
       variants[kind].files++; variants[kind].symbols+=r.count; variants[kind].methods+=r.methods;
-    } else if(/abstract|base/i.test(rel)) {
-      baseHelpers[rel]=r.concrete; // base/abstract files with concrete methods = likely free helpers
+    } else if(/(^|\/)(abstract|base|default|common)/i.test(rel)) {
+      baseHelpers[rel]=r.concrete; // base/abstract/default files with concrete methods = likely free helpers
     }
   }
   const freeHelperConcrete=Object.values(baseHelpers).reduce((a,b)=>a+b,0);
   const vk=Object.keys(variants);
+  // Scope guard: if almost no supported-language source was found AND a code language we cannot scan
+  // (C/C++/Java/...) dominates the tree, this repo is out of scope -- the surface below is stray scripts.
+  const domEntry=Object.entries(extCount).sort((a,b)=>b[1]-a[1])[0];
+  const dominantExt=domEntry?domEntry[0]:null;
+  const outOfScope = files<15 && !!domEntry && !SUPPORTED.has(domEntry[0]) && domEntry[1] > Math.max(files,5)*2;
   return {
     repo, ref, filesScanned: files,
     surface: surface.size, barrelReExports: barrel, methods, concreteMethods: concrete,
     variantKinds: vk, variants,
-    freeHelperSignal: vk.length>0 && (freeHelperConcrete>=8 || concrete>=vk.length*10),
+    // freeHelperSignal now requires REAL base/abstract files with concrete methods (the global
+    // concrete>=vk.length*10 branch fired false positives, e.g. gin: 0 base methods but signal=true).
+    freeHelperSignal: vk.length>0 && freeHelperConcrete>=8,
     freeHelperConcreteMethods: freeHelperConcrete,
-    note: 'Surface/method/variant counts are real (full-repo regex scan). freeHelperSignal is a HEURISTIC, not proof — it does not do call-graph analysis or prove a helper is free for a SPECIFIC feature. Approach-wrong and invariant-fails are NOT computed here (behavioural reasoning; use an LLM pass).'
+    dominantExt, outOfScope,
+    note: (outOfScope ? 'OUT OF SCOPE: only '+files+' supported-language files found; the repo looks dominated by .'+dominantExt+' (an unsupported language for this scanner). The numbers below are stray scripts, not the real codebase. ' : '')+'Surface/method/variant counts are a full-repo regex scan (vendored / test / asset dirs excluded). freeHelperSignal is a HEURISTIC, not proof. Approach-wrong and invariant-fails are NOT computed here (behavioural reasoning; use an LLM pass).'
   };
 }
 // Download + extract a repo tarball at an exact ref and return source files as
@@ -104,8 +129,7 @@ async function loadRepoFiles(repo, ref, token){
   const out=[];
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,'');
-    if(!/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/.test(rel)) continue;
-    if(/\.(test|spec|d)\.|__tests__|\/test\/|\/tests\//.test(rel)) continue;
+    if(skipPath(rel)) continue;       // excludes vendored/test/asset files in every language
     if(f.data.length>400000) continue;
     out.push({path:rel, text:f.data.toString('utf8')});
   }

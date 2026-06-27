@@ -1214,7 +1214,7 @@ async function analyzeSource(name){
     try{
       const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/analyze?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(branch||'HEAD'));
       if(d.error){extCache[key]={...extCache[key],source:{error:'backend: '+d.error}};paintDash();return;}
-      extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,freeHelperSignal:d.freeHelperSignal,at:Date.now()}};paintDash();return;
+      extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,freeHelperSignal:d.freeHelperSignal,outOfScope:d.outOfScope,dominantExt:d.dominantExt,at:Date.now()}};paintDash();return;
     }catch(e){extCache[key]={...extCache[key],source:{error:'backend unreachable ('+(e.message||'failed')+') — check the URL / CORS / that it runs outside the sandbox'}};paintDash();return;}
   }
   if(!c.treePaths||!c.treePaths.length){extCache[key]={...c,source:{error:'no tree available — read the repo live first (and run outside the sandbox)'}};paintDash();return;}
@@ -1353,9 +1353,11 @@ function sourceReadBanner(r){
   const c=extCache[(r.fullName||'').toLowerCase()]||{},src=c.source;
   if(src&&src.loading) return `<div class="honest"><span class="spin"></span>Reading the full source live at the pinned commit…</div>`;
   if(src&&src.error) return `<div class="honest" style="color:var(--warn)">⚠ Source read failed: ${esc(src.error)} <a href="#" id="srcRead" style="color:var(--green)">retry</a></div>`;
+  if(src&&src.outOfScope) return `<div class="honest" style="color:var(--warn)">⚠ <b>Out of scope:</b> the backend found almost no Go / TS / JS / Python / Rust source — this repo looks dominated by <span class="mono">.${esc(src.dominantExt||'?')}</span> (unsupported by the scanner). The measured numbers are stray scripts, not the real codebase. Pick a Go / TypeScript repo. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
   if(src){
     const helperSig=(src.freeHelperSignal!=null?src.freeHelperSignal:(src.concrete>=8))?'free per-variant helpers likely present':'no obvious free helpers (heuristic)';
-    return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> (backend, full repo) — <b>${src.filesRead}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${src.surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${src.concrete}</b> concrete methods &rarr; ${helperSig}. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
+    const concrete=src.concrete!=null?src.concrete:(src.methods!=null?src.methods:'?'), surface=src.surface!=null?src.surface:'?', files=src.filesRead!=null?src.filesRead:'?';
+    return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> (backend, full repo) — <b>${files}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${concrete}</b> concrete methods &rarr; ${helperSig}. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
   }
   return `<div class="honest">Source not measured yet ${state.analyzer?'(auto-runs on analyze)':'— set the Analyzer backend in Settings'}. <a href="#" id="srcRead" style="color:var(--green)">Read source live</a> to measure the surface + variant layers.</div>`;
 }
@@ -1483,6 +1485,13 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
 // go / refine / no-go from the structural levers, plus the checks the console can't auto-measure.
 function finalVerdict(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,t=repoTier(r),paths=repoDiv(r),s=r.screen||{};
+  // Out-of-scope guard: the backend found almost no supported-language source (the repo is dominated
+  // by an unsupported language, e.g. C). Any verdict off stray scripts would be meaningless.
+  if(c.source&&c.source.outOfScope){
+    return {verdict:'OUT OF SCOPE',vclass:'nogo',
+      line:'The scanner found almost no Go / TypeScript / JS / Python / Rust source — this repo looks dominated by an unsupported language ('+esc(c.source.dominantExt||'?')+'). The measured surface is stray scripts, not the real codebase, so no verdict is meaningful. Pick a Go / TypeScript repo (the platform also allows Python / Rust / C++ / Java, but this console scores Go/TS-shaped divergence).',
+      high:[],highPass:0,altitudeNote:'',manual:[],confidence:'',risk:''};
+  }
   const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase().trim();
     if(!z||/unclear|\?|split/.test(z))return 'unclear';
     if(/^(likely\s*no|no\b|not\b|unlikely|none|works|passes)/.test(z))return 'no';      // polarity anchored at start

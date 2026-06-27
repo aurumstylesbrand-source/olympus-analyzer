@@ -509,7 +509,11 @@ http.createServer(async (req, res) => {
       fs.writeFileSync(jf, JSON.stringify(result));
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
-      res.writeHead(502); return res.end(JSON.stringify({ error: String(e.message || e) }));
+      // "no files matched layer" is a client-input condition (wrong layer / flat repo), not a
+      // transient upstream failure -- return 400 so the console shows actionable guidance instead of
+      // retrying it as a cold-start 502.
+      const msg = String(e.message || e);
+      res.writeHead(/no files matched layer/i.test(msg) ? 400 : 502); return res.end(JSON.stringify({ error: msg }));
     }
   }
 
@@ -523,7 +527,11 @@ http.createServer(async (req, res) => {
       const result = await generateRepos(t, body.used || []);
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
-      res.writeHead(502); return res.end(JSON.stringify({ error: String(e.message || e) }));
+      // "no files matched layer" is a client-input condition (wrong layer / flat repo), not a
+      // transient upstream failure -- return 400 so the console shows actionable guidance instead of
+      // retrying it as a cold-start 502.
+      const msg = String(e.message || e);
+      res.writeHead(/no files matched layer/i.test(msg) ? 400 : 502); return res.end(JSON.stringify({ error: msg }));
     }
   }
 
