@@ -562,6 +562,9 @@ const ACCEPTED_INTEL = {
   ],
   // Proven mechanisms, gated by repo shape -> bestFitAngle recommends the ones that apply.
   mechanisms:[
+    {key:'small-surface',when:()=>true,name:'Small surface, hard BEHAVIOUR (1-2 new symbols, NOT a big API)',
+     act:'Add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR -- from one or more of: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read, course-correct); (2) SCATTERED CONTEXT across 5-10 files where components must AGREE on data formats; (3) an INTERMEDIATE-STATE INVARIANT the naive impl violates while passing value checks. A large API inventory (15-20+ symbols) is NOT difficulty -- it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality check cascade.',
+     anchor:'all 6 accepted = 1-2 symbols + hard behaviour; the old 15-20-symbol "Nova misses a shape detail" approach hit 30% on TypeORM but cost 30+ check iterations.'},
     {key:'path-a',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'The Path A signature (multi-variant)',
      act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the MSG floor; the invariants are the gap.',
      anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
@@ -752,6 +755,12 @@ const DOCTRINE = [
    ACCEPTED_INTEL.projects.map(p=>'<li><b>'+p.repo+'</b> ('+p.lang+' &middot; '+p.pass+' &middot; '+p.arch+') &mdash; '+p.feat+'. <i>'+p.lesson+'</i></li>').join('')+'</ul>'+
    '<p><b>Recurring checks to gate pre-submit:</b></p><ul>'+
    ACCEPTED_INTEL.checks.map(c=>'<li>'+c+'</li>').join('')+'</ul>'},
+ {c:'gold',h:'The small-surface shift (1-2 symbols, hard BEHAVIOUR)',body:`<p><b>OLD way (works but expensive):</b> design a feature with 15-20+ public symbols and rely on Nova missing 1-2 shape details (a property implemented as a method, a hardcoded counter). This hit 30% on TypeORM but cost <b>30+ check iterations</b> -- every symbol had to be named in the 500-word description, making it PRESCRIPTIVE and triggering Aligned / Fairness / Description-Quality failures in a loop.</p>
+   <p><b>NEW way (the better path):</b> add only <b>1-2 new public symbols</b> and put the difficulty in the BEHAVIOUR. It comes from one or more of:</p><ol>
+     <li>The <b>obvious implementation approach is WRONG</b> -- agents try it, fail, re-read, course-correct.</li>
+     <li><b>Scattered context across 5-10 files</b> where components must AGREE on data formats (cross-file format agreement).</li>
+     <li>An <b>intermediate-state invariant</b> the naive impl violates while still passing every value check.</li></ol>
+   <p>This keeps the description behavioural (WHAT not HOW), gives agents maximum implementation freedom (so it is FAIR), and avoids the iteration cascade. <b>A large API inventory is NOT difficulty.</b> Proof from 6 accepted projects: difficulty always came from a discovery gap or genuine breadth -- never edge-case volume on a known surface, never a big API.</p>`},
  {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> that 30% was under the OLD bar; the current Olympus ceiling is &le;20%, so this exact shape would need MORE difficulty today (a 2nd discovery layer).</p>
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
@@ -1700,7 +1709,7 @@ ${comboTxt}
 
 **Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'}):** pass ${std.pass} · LOC ${std.loc} · files ${std.files} · description ${std.desc} · ${std.msg} · Flakiness MANDATORY · plagiarism all <0.5.
 
-**THE DIFFICULTY MECHANISM:** build a feature that (1) sits ABOVE the helper layer (NO free per-variant helpers), (2) adds only 1-2 new public symbols but the obvious first approach is WRONG, (3) the wrongness is not visible from the signature, (4) is pinned by an intermediate-state invariant (count / ordering / lifecycle) a naive impl violates while passing every value check. CASCADE WARNING: documenting an unstated detail to pass Aligned/Fairness LOWERS difficulty — in the SAME edit add a paired hard behavioural test.
+**THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR, from one or more of: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read, course-correct), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files where components must AGREE on data formats; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer (no free per-variant helpers). WARNING: a large API inventory (15-20+ symbols) is NOT difficulty — it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality check cascade. CASCADE WARNING: documenting an unstated detail to pass a check LOWERS difficulty — in the SAME edit add a paired hard behavioural test.
 
 **VERIFY MANUALLY (Phase 1 — the console cannot check these):**
   1. Plagiarism: grep your planned API symbols in the repo (0 hits + platform <0.5 = green). Do this FIRST.
