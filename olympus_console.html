@@ -499,7 +499,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 16;
+const SEED_VERSION = 17;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme'};
 const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
 const MAX_FEATURES = 3;
@@ -628,8 +628,8 @@ Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/Sing
 ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
 Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
 ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
-const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'kysely-org/kysely':8,'caddyserver/caddy':12,'apollographql/apollo-server':26,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
-const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','sequelize/sequelize':'SQL dialects','kysely-org/kysely':'dialect/driver/parser/plugin layers','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
+const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'honojs/hono':9,'golang-migrate/migrate':24,'kysely-org/kysely':5,'sequelize/sequelize':27,'expr-lang/expr':14,'knadh/koanf':9,'caddyserver/caddy':12,'apollographql/apollo-server':26,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
+const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','honojs/hono':'runtime adapters','golang-migrate/migrate':'database drivers','kysely-org/kysely':'dialects','sequelize/sequelize':'SQL dialects','expr-lang/expr':'optimizer passes','knadh/koanf':'format parsers','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
 function topAngles(r,n){
@@ -759,41 +759,50 @@ const SEED_OLYMPUS={batch:1,repos:[
    A('The provider layer (~18 discovery providers)','Service Discovery','feature across providers where config reconciliation must hold on each = Path A'),
    A('Middleware chain ordering + dynamic config reload','Ordered Execution','a cross-cutting ordering / reload invariant the naive impl fails'),
    A('Load-balancer / health-check state','Health-aware LB','per-backend health-state contract')]),
- repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30k',true,'gold',
-  '9 dialect packages (db2, ibmi, mariadb, mssql, mysql, oracle, postgres, snowflake, sqlite3), each its own SQL generation + query interface, over an association / eager-loading engine. The dialect SQL genuinely diverges; the live container-scan sees only the shared parsers (monorepo), so the path count is a manual one.','A',[
-   A('The dialect layer (9 dialect packages, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
-   A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
-   A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
+ repo('honojs/hono','https://github.com/honojs/hono','TypeScript','MIT','31k',true,'gold',
+  '9 runtime adapters (aws-lambda, cloudflare-workers, cloudflare-pages, deno, bun, vercel, netlify, lambda-edge, service-worker), each hand-rolling the same request/response contract per platform, plus 5 router variants (linear/pattern/regexp/trie/smart) implementing one Router add/match interface differently. Core suite is offline + deterministic (tsc + vitest, msw mocks; the runtime-specific test projects need live runtimes and are excludable). Judge: approach-wrong + naive-fails-invariant on FULL consensus at the adapter layer (stream-lifecycle / binary-encoding invariants that pass equality tests but break per-runtime); the free-helper leg is soft (getConnInfo) but designable-around. TS 99.5%, 31k stars.','A',[
+   A('The runtime adapters (9 platform variants)','Adapter Abstraction','a feature wired across the adapters where one stream-lifecycle / encoding invariant fails silently on a single runtime = the discovery gap; build across a representative subset, not all 9'),
+   A('The router variants (5 Router implementations)','Conflict Resolution','linear / pattern / regexp / trie / smart resolve the same add/match contract differently -- the obvious approach is wrong on one'),
+   A('Request/response stream + body lifecycle','Lifecycle Hooks Multi-Consumer','a naive impl passes value checks but violates the intermediate stream-state invariant per runtime')]),
+ repo('golang-migrate/migrate','https://github.com/golang-migrate/migrate','Go','MIT','18k',true,'gold',
+  '24 database drivers (postgres, mysql, cockroachdb, clickhouse, cassandra, mongodb, neo4j, spanner, sqlite, sqlserver, ...) each INDEPENDENTLY hand-rolling the database.Driver contract (Run / SetVersion / Version / Drop / ensureVersionTable / Lock) with no shared base impl, plus a parallel source/* driver layer. Judge: FULL-consensus PASS on the database layer -- no free helpers (each driver hand-rolls version-tracking + dirty-state), obvious approach wrong, naive impl fails an intermediate-state invariant. Upstream driver tests spin up live Docker DBs, so scope the problem to the OFFLINE driver contract (multi-statement splitting, version/dirty-state bookkeeping, migration ordering) for a deterministic suite. Go 99%, 18.6k stars.','A',[
+   A('The database driver layer (24 hand-rolled Driver impls)','Adapter Abstraction','a feature across drivers where one dirty-state / version invariant fails silently on a single driver = the discovery gap; build across a representative subset'),
+   A('Migration ordering + dirty-state recovery','Ordered Execution','version bookkeeping + partial-failure recovery is a cross-driver invariant the naive impl violates'),
+   A('Multi-statement parsing + source drivers','Conflict Resolution','statement splitting and source-driver iteration are non-obvious contracts -- the obvious approach is wrong')]),
  repo('kysely-org/kysely','https://github.com/kysely-org/kysely','TypeScript','MIT','~14k',true,'gold',
   'Type-safe SQL query builder with FOUR divergent layers -- dialects (postgres/mysql/sqlite/mssql), drivers, query-compilers and plugins. Each dialect overrides the shared compiler differently: sqlite emits ? placeholders + autoincrement + a null default-insert, mssql emits @n placeholders + OFFSET..ROWS + its own MERGE / COLLATE / multi-column ALTER, and the adapters diverge on supportsReturning / supportsTransactionalDdl / supportsOutput. A feature compiling SQL across dialects forces hand-rolled per-dialect overrides -- the cross-dialect invariant hides there. TS-first, MIT. Deterministic ONLY on the sqlite (better-sqlite3) + pglite backends; pg/mysql/mssql run against live docker DBs, so any challenge must restrict tests to those offline backends (the accepted-drizzle constraint). A strong dialect-divergence candidate in a fresh, non-ORM repo.','A',[
    A('The dialect compilers -- per-dialect SQL overrides','Adapter Abstraction','each dialect overrides the shared compiler differently (placeholders / OFFSET / MERGE / default-insert); a feature compiling one operation across dialects where one override is silently wrong = the discovery gap'),
    A('Dialect adapters -- capability flags + DDL','Conflict Resolution','supportsReturning / supportsTransactionalDdl / supportsOutput diverge per dialect; the obvious approach assumes one shared behaviour and is wrong'),
    A('Driver / connection lifecycle per dialect','Two-phase Commit','paired acquire/release + transaction handling differ per driver; a naive impl violates the lifecycle invariant silently')])
 ]};
+// All 6 audited 2026-06-27 against live GitHub + determinism: Go/TS-primary, permissive, active,
+// deterministic (or scopeable to an offline core). Replaces the prior unvalidated set (dropped
+// ky = network/HTTP-flaky, zerolog = unvalidated, casbin = unvalidated).
 const SEED_MARS={batch:1,repos:[
- repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','3.9k',true,'gold',
-  'Providers + parsers + merge; clean API, multi-file, fully behavioural. Confirmed active.','',[
-   A('Change-diffing on reload','Diff/Merge/Patch','which keys added/changed/removed'),
-   A('Strict-mode Unmarshal (required keys, types)','Config Validation','clear behavioural contract')]),
- repo('rs/zerolog','https://github.com/rs/zerolog','Go','MIT','12.4k',true,'gold',
-  'Formatters + hooks + sampling, composable and testable through public output.','',[
-   A('Hook ordering / sampling strategy','Tracing Hooks','composable, clear input→output')]),
- repo('sindresorhus/ky','https://github.com/sindresorhus/ky','TypeScript','MIT','~13k',true,'gold',
-  'Fetch client with retry / hooks / timeout lifecycle — genuine TypeScript reliability contracts.','',[
-   A('Retry / backoff policy + hook ordering','Retry','clean behavioural surface across request stages')]),
- repo('tidwall/gjson','https://github.com/tidwall/gjson','Go','MIT','13k',true,'gold',
-  'JSON path-query parser — input string in, value out. Clean, fully behavioural.','',[
-   A('Path-syntax extension / projection','Projections','string in → value out, easy to pin')]),
- repo('apache/casbin','https://github.com/apache/casbin','Go','Apache-2.0','~18k',true,'test',
-  'Reclassified to Mars — config-driven enforce pipeline, not 5+ distinct paths. Solid Mars surface.','',[
-   A('Incremental role-manager consistency','Access Control','behavioural contract at Mars scale'),
-   A('Priority-based conflict resolution','Rule Engines','matcher + effector behaviour')]),
- repo('gvergnaud/ts-pattern','https://github.com/gvergnaud/ts-pattern','TypeScript','MIT','~13k',true,'test',
-  'Exhaustive matching with deep type inference; runtime match() output is behavioural.','',[
-   A('New pattern combinator','Rule Engines','runtime output is pinnable')]),
- repo('flightcontrolhq/superjson','https://github.com/flightcontrolhq/superjson','TypeScript','MIT','~3k',true,'test',
-  'Serialize/deserialize Dates, BigInts, Maps, Sets and custom types — clear round-trip contract.','',[
-   A('Custom-type registration / round-trip','Serialization','clear round-trip contract')])
+ repo('expr-lang/expr','https://github.com/expr-lang/expr','Go','MIT','7.9k',true,'gold',
+  'Expression language with a compiler + bytecode VM and 14+ optimizer AST-rewrite passes (fold, inArray, inRange, filterMap/Len/First/Last, sumRange/Array/Map, ...), each hand-rolling the same Visitor Visit(*Node) contract. ZERO external deps; go test fully offline + deterministic. Behavioural invariants: operator semantics, type-checking, constant-folding correctness. Go 99.9%, 7.9k stars.','',[
+   A('A new optimizer rewrite pass','Rule Engines','each pass transforms the AST under one Visitor contract; the correctness invariant is pinnable'),
+   A('Compile-time type checking / operator semantics','Type Safety','non-obvious contract -- naive impl wrong on edge operators')]),
+ repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','4k',true,'gold',
+  '9 format parsers (json/yaml/toml/hcl/hjson/huml/kdl/dotenv/nestedtext) each hand-rolling the koanf.Parser Unmarshal/Marshal contract, over a deep-merge + flatten/unflatten engine (Merge / MergeStrict / Flatten / Unflatten / Delete / Search). Deterministic + offline on the parsers + maps core (table-driven go test, no services); exclude the remote providers/* layer. Go 99.6%.','',[
+   A('Nested deep-merge + flatten/unflatten round-trip','Diff/Merge/Patch','structural merge with intermediate-state type-conflict invariants -- obvious approach wrong on nesting'),
+   A('Strict-mode merge (type-mismatch detection)','Config Validation','clear behavioural contract at Mars scale')]),
+ repo('itchyny/gojq','https://github.com/itchyny/gojq','Go','MIT','3.8k',true,'gold',
+  'Pure-Go jq implementation: lexer + goyacc parser + bytecode compiler + VM + builtins. Deterministic offline (go test -race; 192KB golden program->output corpus). Rich invariants: backtracking generators, path-expression assignment, operator precedence, structural sharing -- avoid the clock/locale builtins (now/localtime). Go 93.2%.','',[
+   A('A new builtin / operator with backtracking semantics','Rule Engines','generator + path-expression invariants pinnable against the golden corpus'),
+   A('Path-expression assignment / update','Projections','structural update is a non-obvious contract -- obvious approach wrong')]),
+ repo('tidwall/gjson','https://github.com/tidwall/gjson','Go','MIT','15.5k',true,'gold',
+  'GJSON path-syntax query/extraction over JSON -- string in, value out. Library logic is pure + offline (no net/clock); write your OWN deterministic tests (the upstream suite has random fuzz tests to exclude). Clean behavioural surface: path syntax, modifiers, multipaths. Go 100%, 15.5k stars.','',[
+   A('Path-syntax extension / modifier / projection','Projections','string in -> value out, easy to pin deterministically'),
+   A('Multipath / query-filter evaluation','Rule Engines','non-obvious matching contract')]),
+ repo('gvergnaud/ts-pattern','https://github.com/gvergnaud/ts-pattern','TypeScript','MIT','15k',true,'gold',
+  'Exhaustive pattern matching with deep type inference; both runtime match() output AND type-level exhaustiveness are behavioural. Deterministic offline (jest, no net/clock/random). TS 99.8%, 15k stars.','',[
+   A('A new pattern combinator (runtime + type-level)','Rule Engines','runtime output is pinnable; exhaustiveness is a type invariant'),
+   A('Match resolution ordering / guard semantics','Conflict Resolution','first-match + guard interaction is a non-obvious contract')]),
+ repo('flightcontrolhq/superjson','https://github.com/flightcontrolhq/superjson','TypeScript','MIT','5.3k',true,'gold',
+  'Serialize/deserialize Dates, BigInts, Maps, Sets, RegExp, Errors, URLs + custom types via a transformer rule registry (10 simple + 4 composite rules) and a referential-equality-preserving walker. Deterministic offline (vitest, no net/random; exclude the one wall-clock perf test). Invariants: round-trip fidelity, referential-equality + dedup correctness. TS 97.4%.','',[
+   A('Custom-type transformer registration / round-trip','Serialization','clear round-trip contract with referential-equality invariants'),
+   A('Referential-equality + circular-ref dedup','Diff/Merge/Patch','naive impl breaks the dedup intermediate-state invariant')])
 ]};
 
 /* ---------- state + storage ---------- */
@@ -832,10 +841,18 @@ function seedWithState(seed,prev){
     }
     return f;
   });
-  // Carry forward any promoted/custom repos present on the persisted board but not in the seed
-  // list, so a SEED_VERSION bump never silently deletes them and their logged work.
+  // Carry forward a persisted repo that is NOT in the new seed ONLY if it carries real work
+  // (logged intelligence or a filled feature slot) or was user-added (source !== 'seed'). This
+  // preserves promoted repos + logged work across a SEED_VERSION bump, while letting an
+  // intentionally-removed seed repo (with no work on it) actually drop off the board.
   const seedNames=new Set(seed.repos.map(s=>String(s.fullName).toLowerCase()));
-  Object.keys(prev).forEach(k=>{if(!seedNames.has(k)){repos.push(normalizeRepo(clone(prev[k])));}});
+  Object.keys(prev).forEach(k=>{
+    if(seedNames.has(k))return;
+    const pr=prev[k];if(!pr)return;
+    const hasWork=(pr.intelligence&&String(pr.intelligence).trim())||(Array.isArray(pr.slots)&&pr.slots.some(x=>x&&String(x).trim()));
+    const userAdded=pr.source&&pr.source!=='seed';
+    if(hasWork||userAdded){repos.push(normalizeRepo(clone(pr)));}
+  });
   return {batch:seed.batch,repos};
 }
 async function load(){
@@ -1288,7 +1305,7 @@ function wireScreen(r){
 // Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
 // effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
 // utility folder. These point the judge at the layer that actually carries the divergence.
-const CURATED_JUDGE_LAYERS={'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'kysely-org/kysely':['dialect','driver','parser'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider']};
+const CURATED_JUDGE_LAYERS={'honojs/hono':['adapter','router'],'golang-migrate/migrate':['database','source'],'kysely-org/kysely':['dialect','driver','parser'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider'],'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'expr-lang/expr':['optimizer'],'knadh/koanf':['parsers']};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
 function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
   // auto-pick the HEAVIEST divergent layer (most per-variant code) — the one most likely to host
@@ -1302,7 +1319,14 @@ function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};re
 function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
-  if(!layer) return `<div class="honest">No variant layer detected yet — read the repo live first. The model judgment targets a container kind (adapters / drivers / dialects).</div>`;
+  if(!layer){
+    const readLive=!!(c.live||(c.source&&!c.source.error));
+    return `<div class="honest"><b>No divergent layer auto-detected.</b> The judge points the model at a <b>container layer</b> — a folder of sibling variants (adapters / drivers / dialects / providers / parsers). `+
+      (readLive
+        ? `This repo was read live and none was found in its tree, so either its variants are not folder-based (monorepo packages or in-code branching — a known repo would carry a curated layer hint), or it genuinely lacks divergence. <b>A repo with no 5+ sibling variant paths is a weak Olympus candidate</b> (a known surface can't be made hard with edge cases) — this is a signal to prefer a repo with a clear variant folder, not a dead end you must judge.`
+        : `Open the repo above to <b>read it live</b> first so the tree can be scanned for that layer.`)+
+      `</div>`;
+  }
   const head=`<div class="hint" style="margin:0 0 8px">Reading the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> layer &mdash; the heaviest divergent layer, auto-picked by the console. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">The model reads that layer's real code and decides the three levers (helpers / approach / invariant) with citations. You don't choose the layer or set the answers — the console narrows to the layer most likely to host an Olympus-hard feature.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
@@ -1619,7 +1643,14 @@ function permissive(lic){return /MIT|Apache|BSD|ISC|MPL-2/i.test(lic||'');}
 function renderAcquire(){
   const repos=allRepos();
   if(!analyzeSel&&repos.length)analyzeSel=repos[0].fullName;
-  const boardOpts=repos.map(x=>`<option value="${x.fullName}" ${analyzeSel===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
+  let boardOpts=repos.map(x=>`<option value="${x.fullName}" ${analyzeSel===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
+  // If the current selection is a pasted/external repo (not on either board), surface it as a
+  // selected option so the dropdown reflects what is actually being analyzed, and so picking a
+  // board repo afterwards still fires a change event.
+  if(analyzeSel&&!repos.some(x=>x.fullName.toLowerCase()===analyzeSel.toLowerCase())){
+    const er=resolveRepo(analyzeSel);
+    boardOpts=`<option value="${esc(analyzeSel)}" selected>${esc(analyzeSel)} · external${repoDiv(er)!=null?' · '+repoDiv(er)+'p':''}</option>`+boardOpts;
+  }
   viewEl.innerHTML=`<h2 class="mh">Repo <em>analysis</em></h2>
    <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live (metadata, commit, variant code-paths), measures the source, then the model assesses it. <b>Code-path count is only the precondition</b> — then the model reads the heaviest divergent layer and assesses the difficulty for you (no toggles to set). Divergence does not predict difficulty; whether the obvious approach is wrong and a naive impl fails an invariant does.</p>
    <div class="panel">
