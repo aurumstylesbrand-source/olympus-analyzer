@@ -372,6 +372,20 @@ async function judgeViaEnsemble(repo, ref, layer){
       synthesized = true;
     } catch(e){ /* keep deterministic fusion */ }
   }
+  // Cross-model corroboration: a cited FILE backed by >=2 members is "corroborated". An AFFIRMATIVE
+  // verdict whose claim no second model can cite to the same file is a single-source signal -- flag it
+  // (the majority verdict still stands; this surfaces the typeorm/mikro-orm pattern where one model
+  // "saw" a base class the other cited to a different file).
+  const fileOf = c => String(c||'').split(':')[0].replace(/\s*\([^)]*\)\s*$/,'').trim();
+  const corro = (dim, fused, agreement) => {
+    const cnt = {};
+    members.forEach(m => { new Set((((m[dim]||{}).citations)||[]).map(fileOf).filter(Boolean)).forEach(f => { cnt[f] = (cnt[f]||0)+1; }); });
+    fused.corroboratedCitations = Object.keys(cnt).filter(f => cnt[f] >= 2);
+    const affirmative = /free helpers present|likely yes|^yes\b|\b(fails|wrong|violat)/i.test(fused.verdict||'');
+    if(affirmative && fused.corroboratedCitations.length === 0 && agreement !== 'full' && members.length >= 2)
+      fused.reason = '[single-source: no file cited by 2+ models] ' + (fused.reason||'');
+  };
+  corro('freeHelpers', fhv, fh.agreement); corro('approachWrong', aw, fa.agreement); corro('invariant', iv, fi.agreement);
   const labels = members.map(m => m.label).join('+');
   const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv,
     disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
