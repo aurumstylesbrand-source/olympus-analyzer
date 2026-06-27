@@ -1504,16 +1504,22 @@ function renderLaunch(){
   const loadingNote=(c&&c.loading)?`<p class="hint" style="margin-top:6px"><span class="spin"></span>Reading ${esc(launchSel.repo)} live from GitHub…</p>`:'';
   const liveNote=(c&&c.live)?`<p class="hint" style="margin-top:6px;color:var(--green)">✓ Read live — divergence ${repoDiv(r)}${c.commit?', commit '+String(c.commit).slice(0,10):''}.</p>`:'';
   const angSel=ANGLES.map(a=>`<span class="angle ${launchSel.angles.includes(a)?'sel':''}" data-ang="${a}">${a}</span>`).join('');
-  viewEl.innerHTML=`<h2 class="mh">Launch <em>briefing</em></h2>
-    <p class="lede">Pick a repo. The console assembles the briefing — repo, commit, code-path count, the proven difficulty mechanism (helper-layer / surface / instance-state), the difficulty screen, the cascade warning, the repo-derived angles, combos, strong areas and insights. It does <b>not</b> pick a category. Drop it into your main startup prompt.</p>
-    <div class="panel">
-      <div class="field"><label>Repo</label><select id="lRepo">${opts}</select>${loadingNote}${liveNote}</div>
-      <div class="field"><label>Angles <span class="hint">(top 10 ranked, pre-selected — tap to adjust)</span></label><div class="angles" id="lAngles">${angSel}</div></div>
-      <button class="btn primary" id="lGen">Assemble briefing</button>
+  const _hasJudge=!!(c&&c.judge&&c.judge.data),_v=_hasJudge?finalVerdict(r):null;
+  const statusCard=_v
+    ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px"><span class="verdictchip ${_v.vclass}" style="font-size:13px">${esc(_v.verdict)}</span><span class="hint">${_v.highPass}/3 levers · analysed — the briefing will carry the model's findings + citations</span></div>`
+    : `<div class="honest" style="margin-top:12px">⚠ <b>${esc(r?r.fullName:'this repo')}</b> hasn't been analysed yet, so the briefing will be thin. <a href="#" id="lToAnalyze" style="color:var(--green);font-weight:600">Analyse it first →</a> (read source + run the free judgment) so the briefing carries the verdict, the model's gap + invariant, and the file citations.</div>`;
+  viewEl.innerHTML=`<h2 class="ahero" style="display:block"><span style="font-weight:800;font-size:29px;letter-spacing:-.035em">Launch <em style="font-style:normal;color:var(--green)">briefing</em></span></h2>
+    <p class="lede">Assembles a paste-ready briefing from this repo's <b>analysis</b> — the final verdict + levers, the model's findings &amp; file citations, the feature to build, the ranked angles and the standards. Analyse the repo first so the briefing carries real evidence, not folder-name guesses.</p>
+    <div class="bcard" style="margin-bottom:14px">
+      <div class="field" style="margin-bottom:0"><label>Repo</label><select id="lRepo">${opts}</select>${loadingNote}${liveNote}</div>
+      ${statusCard}
     </div>
-    <div id="lOut"></div>`;
+    <details class="disc"><summary>Adjust angles — ${launchSel.angles.length} selected, pre-filled from the analysis</summary><div class="angles" id="lAngles" style="margin-top:10px">${angSel}</div></details>
+    <button class="btn primary" id="lGen" style="margin-top:8px">Assemble briefing →</button>
+    <div id="lOut" style="margin-top:16px"></div>`;
   document.getElementById('lRepo').addEventListener('change',e=>{launchSel.repo=e.target.value;lastLaunchRepo=null;if(state.gh)selectLaunchLive(e.target.value);renderLaunch();});
-  document.getElementById('lAngles').addEventListener('click',e=>{const a=e.target.closest('.angle');if(!a)return;const v=a.dataset.ang;launchSel.angles.includes(v)?launchSel.angles=launchSel.angles.filter(x=>x!==v):launchSel.angles.push(v);renderLaunch();});
+  const la=document.getElementById('lAngles');if(la)la.addEventListener('click',e=>{const a=e.target.closest('.angle');if(!a)return;const v=a.dataset.ang;launchSel.angles.includes(v)?launchSel.angles=launchSel.angles.filter(x=>x!==v):launchSel.angles.push(v);renderLaunch();});
+  const lta=document.getElementById('lToAnalyze');if(lta)lta.addEventListener('click',ev=>{ev.preventDefault();analyzeSel=launchSel.repo;activeModule='acquire';render();if(state.gh||state.analyzer)fetchRepoLive(launchSel.repo,{board:!isExternal(r)});});
   document.getElementById('lGen').addEventListener('click',genLaunch);
 }
 function selectLaunchLive(name){const k=name.toLowerCase();if(extCache[k]){delete extCache[k].live;delete extCache[k].liveError;}}
