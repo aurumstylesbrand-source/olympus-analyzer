@@ -764,11 +764,11 @@ const SEED_OLYMPUS={batch:1,repos:[
    A('The dialect layer (9 dialect packages, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
    A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
    A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
- repo('kysely-org/kysely','https://github.com/kysely-org/kysely','TypeScript','MIT','~11k',true,'gold',
-  'Type-safe SQL query builder with FOUR divergent layers — dialects (postgres/mysql/sqlite/mssql), drivers, query-compilers/parsers and plugins. Per-dialect SQL generation with NO free helpers at the dialect layer: a feature compiling SQL across dialects forces hand-rolled per-dialect code (the proven emulation-invariant shape — native vs emulated per dialect, e.g. NULLS LAST). TS-first, MIT, deterministic suite. The single best-vouched candidate: it matches the accepted drizzle SQL-dialect shape in a fresh, non-ORM repo.','A',[
-   A('The dialect layer — per-dialect SQL generation','Adapter Abstraction','a SQL feature wired across dialects where the emulation diverges (native vs hand-rolled) and one cross-dialect invariant fails silently on one dialect = the discovery gap'),
-   A('Query compiler / parser per dialect','Conflict Resolution','how each dialect compiles the same operation is a non-obvious contract — the obvious approach is wrong'),
-   A('Driver / connection lifecycle per dialect','Two-phase Commit','paired acquire/release + transaction-depth invariants the naive impl violates silently')])
+ repo('kysely-org/kysely','https://github.com/kysely-org/kysely','TypeScript','MIT','~14k',true,'gold',
+  'Type-safe SQL query builder with FOUR divergent layers -- dialects (postgres/mysql/sqlite/mssql), drivers, query-compilers and plugins. Each dialect overrides the shared compiler differently: sqlite emits ? placeholders + autoincrement + a null default-insert, mssql emits @n placeholders + OFFSET..ROWS + its own MERGE / COLLATE / multi-column ALTER, and the adapters diverge on supportsReturning / supportsTransactionalDdl / supportsOutput. A feature compiling SQL across dialects forces hand-rolled per-dialect overrides -- the cross-dialect invariant hides there. TS-first, MIT. Deterministic ONLY on the sqlite (better-sqlite3) + pglite backends; pg/mysql/mssql run against live docker DBs, so any challenge must restrict tests to those offline backends (the accepted-drizzle constraint). A strong dialect-divergence candidate in a fresh, non-ORM repo.','A',[
+   A('The dialect compilers -- per-dialect SQL overrides','Adapter Abstraction','each dialect overrides the shared compiler differently (placeholders / OFFSET / MERGE / default-insert); a feature compiling one operation across dialects where one override is silently wrong = the discovery gap'),
+   A('Dialect adapters -- capability flags + DDL','Conflict Resolution','supportsReturning / supportsTransactionalDdl / supportsOutput diverge per dialect; the obvious approach assumes one shared behaviour and is wrong'),
+   A('Driver / connection lifecycle per dialect','Two-phase Commit','paired acquire/release + transaction handling differ per driver; a naive impl violates the lifecycle invariant silently')])
 ]};
 const SEED_MARS={batch:1,repos:[
  repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','3.9k',true,'gold',
@@ -784,7 +784,7 @@ const SEED_MARS={batch:1,repos:[
  repo('tidwall/gjson','https://github.com/tidwall/gjson','Go','MIT','13k',true,'gold',
   'JSON path-query parser — input string in, value out. Clean, fully behavioural.','',[
    A('Path-syntax extension / projection','Projections','string in → value out, easy to pin')]),
- repo('casbin/casbin','https://github.com/casbin/casbin','Go','Apache-2.0','~20k',true,'test',
+ repo('apache/casbin','https://github.com/apache/casbin','Go','Apache-2.0','~18k',true,'test',
   'Reclassified to Mars — config-driven enforce pipeline, not 5+ distinct paths. Solid Mars surface.','',[
    A('Incremental role-manager consistency','Access Control','behavioural contract at Mars scale'),
    A('Priority-based conflict resolution','Rule Engines','matcher + effector behaviour')]),
@@ -1264,9 +1264,10 @@ function difficultyReadout(r){
   const t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r);
   const stdline=`<div class="stdline">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
   const jd=((extCache[(r.fullName||'').toLowerCase()]||{}).judge||{}).data;
-  const evTag=i=>{ if(!jd)return ''; const o=i===1?jd.approachWrong:i===2?jd.invariant:null; if(!o||!o.verdict)return '';
-    const z=String(o.verdict).toLowerCase(); return /unclear|\?/.test(z)?' <span class="chip unver">models split</span>':' <span class="chip ver">judge-evidenced</span>'; };
-  const leverRows=v.high.map((l,i)=>`<div class="checkrow"><span class="lamp ${l.ok?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l.ok?'✓':'—'} ${esc(l.k)}${evTag(i)}</div><div class="checkdetail">${esc(l.d)}</div></div></div>`).join('');
+  // chip polarity must agree with the lever lamp: green only when the lever is satisfied.
+  const evTag=(i,ok)=>{ if(!jd)return ''; const o=i===1?jd.approachWrong:i===2?jd.invariant:null; if(!o||!o.verdict)return '';
+    const z=String(o.verdict).toLowerCase(); return /unclear|\?|split/.test(z)?' <span class="chip unver">models split</span>':ok?' <span class="chip ver">judge-evidenced</span>':' <span class="chip unver">model: not found</span>'; };
+  const leverRows=v.high.map((l,i)=>`<div class="checkrow"><span class="lamp ${l.ok?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l.ok?'✓':'—'} ${esc(l.k)}${evTag(i,l.ok)}</div><div class="checkdetail">${esc(l.d)}</div></div></div>`).join('');
   const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">the same 3 levers as the final verdict</span></p><p class="chartsub"><b>${v.highPass}/3 structural levers</b> ${jd?'— evidenced by the model assessment':'— run the assessment to evidence them'}. ${esc(v.line.slice(0,150))}</p>${leverRows}</div>`;
   return `${readinessCard}${stdline}`;
 }
@@ -1375,7 +1376,11 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
 // go / refine / no-go from the structural levers, plus the checks the console can't auto-measure.
 function finalVerdict(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,t=repoTier(r),paths=repoDiv(r),s=r.screen||{};
-  const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase();return /unclear|\?/.test(z)?'unclear':/likely yes|^yes|present|wrong|fails/.test(z)?'yes':/likely no|^no\b|works|passes/.test(z)?'no':'unclear';};
+  const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase().trim();
+    if(!z||/unclear|\?|split/.test(z))return 'unclear';
+    if(/^(likely\s*no|no\b|not\b|unlikely|none|works|passes)/.test(z))return 'no';      // polarity anchored at start
+    if(/^(likely\s*yes|yes\b|probably|definitely)/.test(z)||/\b(wrong|fails|violat)\b/.test(z))return 'yes';
+    return 'unclear';};
   const fhV=jd?((jd.freeHelpers||{}).verdict||'').toLowerCase():'';
   const altitudeFree = jd ? /free helpers present|helpers present|reusable/.test(fhV) : false; // helpers AT the judged layer
   const gapOk = jd ? (nv(jd.approachWrong)==='yes') : (s.approach==='wrong');
@@ -1391,9 +1396,14 @@ function finalVerdict(r){
   ];
   const highPass=high.filter(x=>x.ok).length;
   const layerName = (c.judge&&c.judge.layer)||'this';
-  const altitudeNote = !jd ? '' : altitudeFree
-    ? 'Altitude, how to act on it: the model found free per-variant helpers INSIDE the "'+layerName+'" layer. To stay hard, design a feature that ORCHESTRATES across all '+layerName+' variants from the layer ABOVE them (the DataSource / manager / registry that owns them, where there are no per-variant helpers) — not a feature that plugs into one '+layerName+'. The verdict already accounts for this; this is just where to aim the feature.'
-    : 'Altitude, good: no free per-variant helpers at the "'+layerName+'" layer, so a feature here already forces hand-rolled per-variant code (that IS the LOC and the difficulty).';
+  const fhState = !jd ? '' : (altitudeFree ? 'present' : (/unclear|\?|split/.test(fhV) ? 'unclear' : 'none'));
+  const altitudeNote = fhState==='present'
+    ? 'Altitude, how to act on it: the model found free per-variant helpers INSIDE the "'+layerName+'" layer. To stay hard, design a feature that ORCHESTRATES across all '+layerName+' variants from the layer ABOVE them (the DataSource / manager / registry that owns them, where there are no per-variant helpers) -- not a feature that plugs into one '+layerName+'. The verdict already accounts for this; this is just where to aim the feature.'
+    : fhState==='unclear'
+    ? 'Altitude (model unsure): the models split on whether the "'+layerName+'" layer exposes free helpers. To be safe, aim the feature ABOVE the helper layer (orchestrate across variants, not plug into one), or re-run the judgment for a firmer read.'
+    : fhState==='none'
+    ? 'Altitude, good: no free per-variant helpers at the "'+layerName+'" layer, so a feature here already forces hand-rolled per-variant code (that IS the LOC and the difficulty).'
+    : '';
   let verdict,vclass,line;
   if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model assessment + the accepted-project rubric. Run the assessment first (the model reads the layer).'; }
   else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
@@ -1537,8 +1547,11 @@ function genLaunch(){
   const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
   const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
   const modelBlock=jd?('**WHAT THE MODEL READ — the "'+judgedLayer+'" layer\'s real code (the evidence the verdict is built on):**\n'+fline('Free helpers',jd.freeHelpers)+'\n'+fline('Obvious approach wrong',jd.approachWrong)+'\n'+fline('Naive fails an invariant',jd.invariant)+'\n  Source: '+(jd.source||'model')+(jd.synthesized?', synthesis-reconciled':'')+'.'+(src?(' Surface '+src.surface+' symbols across '+src.filesRead+' files at '+String(src.commit||commit).slice(0,10)+'.'):'')):('**WHAT THE MODEL READ:** not run yet — open '+r.fullName+' in Analyze and Run the free judgment so the briefing carries the model findings + citations.');
-  const leverLines=v.high.map(x=>'  - ['+(x.ok?'PASS':'MISS')+'] '+x.k+': '+x.d).join('\n');
-  const featureBlock=jd?('**THE FEATURE TO BUILD (engineered from the model findings, not folder names):**\n  - The discovery gap: '+clean(jd.approachWrong&&jd.approachWrong.reason)+((jd.approachWrong&&jd.approachWrong.citations&&jd.approachWrong.citations.length)?(' (start in '+jd.approachWrong.citations[0]+')'):'')+'\n  - The invariant to pin: '+clean(jd.invariant&&jd.invariant.reason)+((jd.invariant&&jd.invariant.citations&&jd.invariant.citations.length)?(' (assert around '+jd.invariant.citations[0]+')'):'')+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
+  const leverLines=v.high.map((x,i)=>{const jv=jd?String((i===1?(jd.approachWrong||{}).verdict:i===2?(jd.invariant||{}).verdict:'')||'').toLowerCase():'';const note=/unclear|\?|split/.test(jv)?' [models split -- re-run for a firmer read]':'';return '  - ['+(x.ok?'PASS':'MISS')+'] '+x.k+': '+x.d+note;}).join('\n');
+  const _cite=(o,verb)=>(o&&o.citations&&o.citations.length)?(' ('+verb+' '+o.citations[0]+')'):'';
+  const _gapLine=v.high[1].ok?('  - The discovery gap (confirmed): '+clean(jd&&jd.approachWrong&&jd.approachWrong.reason)+_cite(jd&&jd.approachWrong,'start in')):('  - Discovery gap: NOT confirmed on the "'+judgedLayer+'" layer (model said "'+((jd&&jd.approachWrong||{}).verdict||'?')+'") -- engineer one, or re-run the judgment / judge a deeper layer.');
+  const _invLine=v.high[2].ok?('  - The invariant to pin (confirmed): '+clean(jd&&jd.invariant&&jd.invariant.reason)+_cite(jd&&jd.invariant,'assert around')):('  - Invariant: NOT confirmed (model said "'+((jd&&jd.invariant||{}).verdict||'?')+'") -- design a feature whose naive impl violates an intermediate-state invariant.');
+  const featureBlock=jd?('**THE FEATURE TO BUILD (from the model findings — only confirmed levers are stated as fact):**\n'+_gapLine+'\n'+_invLine+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
   const tips=TIPS.slice(0,5).map((tp,i)=>'  '+(i+1)+'. '+tp.h+' -- '+tp.b).join('\n');
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
