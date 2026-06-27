@@ -499,7 +499,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 15;
+const SEED_VERSION = 16;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme'};
 const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
 const MAX_FEATURES = 3;
@@ -628,8 +628,8 @@ Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/Sing
 ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
 Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
 ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
-const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'effect-ts/effect':18,'caddyserver/caddy':12,'apollographql/apollo-server':26,'kysely-org/kysely':7,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
-const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','sequelize/sequelize':'SQL dialects','effect-ts/effect':'platform/sql backends','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','kysely-org/kysely':'dialects','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
+const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'sequelize/sequelize':27,'kysely-org/kysely':8,'caddyserver/caddy':12,'apollographql/apollo-server':26,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
+const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','sequelize/sequelize':'SQL dialects','kysely-org/kysely':'dialect/driver/parser/plugin layers','caddyserver/caddy':'modules','apollographql/apollo-server':'plugins','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
 function topAngles(r,n){
@@ -764,11 +764,11 @@ const SEED_OLYMPUS={batch:1,repos:[
    A('The dialect layer (9 dialect packages, divergent SQL)','Adapter Abstraction','feature across dialects where a cross-dialect invariant hides in the divergent SQL = discovery gap'),
    A('Association / eager-loading compilation','Conflict Resolution','how includes compile to SQL is a non-obvious contract — obvious approach wrong'),
    A('Transaction / isolation handling per dialect','Two-phase Commit','divergent transaction semantics per dialect')]),
- repo('Effect-TS/effect','https://github.com/Effect-TS/effect','TypeScript','MIT','15k',true,'gold',
-  '~4 platform variants + ~14 @effect/sql backends (breadth) over fibers, STM, Stream, Schedule, Pool (depth). The backend scan measures freeHelperSignal=false (no free per-variant helpers) -- the real reason it earns Olympus, not the path count. Variants are top-level packages, so the live container-scan reads 0; the count is manual.','A',[
-   A('@effect/sql feature across backends','Adapter Abstraction','each backend a different client wiring = Path A'),
-   A('Stream operator with back-pressure semantics','Backpressure','subtle async-orchestration invariant the naive impl fails'),
-   A('Schedule combinator (retry / backoff policy)','Retry','interpretation-depth contract')])
+ repo('kysely-org/kysely','https://github.com/kysely-org/kysely','TypeScript','MIT','~11k',true,'gold',
+  'Type-safe SQL query builder with FOUR divergent layers — dialects (postgres/mysql/sqlite/mssql), drivers, query-compilers/parsers and plugins. Per-dialect SQL generation with NO free helpers at the dialect layer: a feature compiling SQL across dialects forces hand-rolled per-dialect code (the proven emulation-invariant shape — native vs emulated per dialect, e.g. NULLS LAST). TS-first, MIT, deterministic suite. The single best-vouched candidate: it matches the accepted drizzle SQL-dialect shape in a fresh, non-ORM repo.','A',[
+   A('The dialect layer — per-dialect SQL generation','Adapter Abstraction','a SQL feature wired across dialects where the emulation diverges (native vs hand-rolled) and one cross-dialect invariant fails silently on one dialect = the discovery gap'),
+   A('Query compiler / parser per dialect','Conflict Resolution','how each dialect compiles the same operation is a non-obvious contract — the obvious approach is wrong'),
+   A('Driver / connection lifecycle per dialect','Two-phase Commit','paired acquire/release + transaction-depth invariants the naive impl violates silently')])
 ]};
 const SEED_MARS={batch:1,repos:[
  repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','3.9k',true,'gold',
@@ -1287,7 +1287,7 @@ function wireScreen(r){
 // Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
 // effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
 // utility folder. These point the judge at the layer that actually carries the divergence.
-const CURATED_JUDGE_LAYERS={'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'effect-ts/effect':['sql','platform'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider']};
+const CURATED_JUDGE_LAYERS={'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'kysely-org/kysely':['dialect','driver','parser'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider']};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
 function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
   // auto-pick the HEAVIEST divergent layer (most per-variant code) — the one most likely to host
@@ -1520,28 +1520,20 @@ function selectLaunchLive(name){const k=name.toLowerCase();if(extCache[k]){delet
 function genLaunch(){
   const r=resolveRepo(launchSel.repo);if(!r)return;
   const commit=r.commit||'<pin an immutable commit from Commits>';
+  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,src=(c.source&&!c.source.error&&!c.source.loading)?c.source:null;
   const liveRead=!!(r.live&&r.commit);
-  const prov=liveRead?('Pre-filled live from the repo tree (commit '+String(r.commit).slice(0,10)+'). Treat structural claims as leads to verify in-editor -- do NOT assume LOC or pass-rate.'):('Assembled from curated / last-known data -- NOT read live this session (open in Analyze with a token to refresh). Structural claims are leads to verify in-editor, never measurements.');
-  const div=repoDiv(r),unit=repoUnit(r),fit=olympusFit(r),s=r.screen||{},t=repoTier(r),std=standardsFor(t.tier);
-  const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'none at directory level — verify whether variants branch in-code';
-  const _areas=deriveAreas(r);
-  const open=_areas.filter(a=>!a.avoid).map(a=>'  - '+a.area+'  ['+(a.angle||'—')+'] -- '+a.why).join('\n')||'  (run a structural pass first)';
-  const avoid=_areas.filter(a=>a.avoid).map(a=>a.area).join('; ');
-  const ranked=topAngles(r,10);
-  const tmpl=anglesAreTemplate(r);
+  const div=repoDiv(r),unit=repoUnit(r),t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r),judgedLayer=(c.judge&&c.judge.layer)||'';
+  const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'the heaviest divergent layer';
+  const ranked=topAngles(r,8);
   const angList=ranked.map((a,i)=>'  '+(i+1)+'. '+a+'   ['+(ANGLE_FAM[a]||'—')+']').join('\n');
-  const comboTxt=comboFor(r).map((c,i)=>'  '+(i+1)+'. '+c.angles.join(' + ')).join('\n');
-  const doctrineNames=relevantDoctrine(r).map(d=>d.h).join('; ');
+  const comboTxt=comboFor(r).slice(0,3).map((cc,i)=>'  '+(i+1)+'. '+cc.angles.join(' + ')).join('\n');
   const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0) — likely DISQUALIFIED. Confirm before any work.\n`:'';
-  const divNote=(div!=null&&div<=2)?`\n**PATH-COUNT CHECK:** only ${div} variant paths at directory level. If variants branch in-code (a switch/registry), the true count is higher — verify and re-set. If genuinely flat, route to Mars.\n`:'';
-  const screenLine=(s.helpers||s.approach||s.invariant)
-    ? `  - target-layer helpers: ${s.helpers==='free'?'FREE (easy — move the feature one layer above them)':s.helpers==='none'?'NONE (hard — agents write per-variant)':'not screened'}\n  - obvious approach: ${s.approach==='wrong'?'WRONG (1-2 symbols, hard behaviour)':s.approach==='works'?'works (too easy)':'not screened'}\n  - intermediate-state invariant: ${s.invariant==='fails'?'naive impl FAILS it':s.invariant==='passes'?'naive impl passes':'not screened'}`
-    : '  - NOT SCREENED — answer the three questions in Analyze before building (divergence alone does not predict difficulty).';
-  const profile=`${div!=null?div+' '+unit:'paths ?'}  -  gap: ${gapTypeFor(r)}${avoid?'  -  closed: '+avoid:''}`;
-  const insightTxt=(r.intelligence&&r.intelligence.trim())
-    ? r.intelligence.trim().split('\n').map(l=>'  '+l).join('\n')
-    : '  '+profile+'\n  (No accepted submissions logged here yet — captured after the first acceptance.)';
-  const tips=TIPS.slice(0,5).map((t,i)=>'  '+(i+1)+'. '+t.h+' -- '+t.b).join('\n');
+  const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
+  const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
+  const modelBlock=jd?('**WHAT THE MODEL READ — the "'+judgedLayer+'" layer\'s real code (the evidence the verdict is built on):**\n'+fline('Free helpers',jd.freeHelpers)+'\n'+fline('Obvious approach wrong',jd.approachWrong)+'\n'+fline('Naive fails an invariant',jd.invariant)+'\n  Source: '+(jd.source||'model')+(jd.synthesized?', synthesis-reconciled':'')+'.'+(src?(' Surface '+src.surface+' symbols across '+src.filesRead+' files at '+String(src.commit||commit).slice(0,10)+'.'):'')):('**WHAT THE MODEL READ:** not run yet — open '+r.fullName+' in Analyze and Run the free judgment so the briefing carries the model findings + citations.');
+  const leverLines=v.high.map(x=>'  - ['+(x.ok?'PASS':'MISS')+'] '+x.k+': '+x.d).join('\n');
+  const featureBlock=jd?('**THE FEATURE TO BUILD (engineered from the model findings, not folder names):**\n  - The discovery gap: '+clean(jd.approachWrong&&jd.approachWrong.reason)+((jd.approachWrong&&jd.approachWrong.citations&&jd.approachWrong.citations.length)?(' (start in '+jd.approachWrong.citations[0]+')'):'')+'\n  - The invariant to pin: '+clean(jd.invariant&&jd.invariant.reason)+((jd.invariant&&jd.invariant.citations&&jd.invariant.citations.length)?(' (assert around '+jd.invariant.citations[0]+')'):'')+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
+  const tips=TIPS.slice(0,5).map((tp,i)=>'  '+(i+1)+'. '+tp.h+' -- '+tp.b).join('\n');
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
 
@@ -1549,54 +1541,42 @@ function genLaunch(){
 
 ## REPO BRIEFING — ${r.fullName}
 
-> ${prov}
+> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data — open in Analyze to refresh.'} The verdict + model findings below are from the analysis; treat structural claims as leads to verify in-editor.
+${licLine}
+**FINAL VERDICT: ${v.verdict}** (${v.highPass}/3 structural levers) — ${v.line}
+${leverLines}
 
-**TIER VERDICT: ${t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY'}** ${t.curated?'(curated)':'(name-heuristic, unverified -- read source to confirm)'} — ${t.why}
-**Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.**
+${modelBlock}
 
-**Phase 0 screening:** ${fit.v==='strong'?'VIABLE':fit.v==='weak'?'NOT VIABLE as-is':fit.v==='screen'?'NEEDS SCREENING':'BORDERLINE'}  |  **Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty)
-${fit.t}
-${licLine}**Variant surface (${(r.divKinds&&r.divKinds.length)?'divergent folder kinds, pattern-matched from the tree':'no divergent folders detected by name -- variants may branch in-code'}):** ${kindsTxt}.
-${divNote}
-**THE DIFFICULTY MECHANISM (proven across builds):** difficulty is NOT divergence and NOT surface size. It is whether Nova can transcribe the spec without reading deep. Build a feature that: (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers (TreeRepository had them = 100% pass; DataSource/EntityManager did not = 30%); (2) adds only 1-2 new public symbols but makes the behaviour hard — design it so the obvious first approach is WRONG (more symbols = more prescriptive = easier); (3) makes the obvious implementation wrong in a way not visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) the naive impl violates while passing every value check.
+${featureBlock}
 
-**Difficulty screen for this repo:**
-${screenLine}
+**TIER: ${t.tier==='olympus'?'OLYMPUS':'MARS'}** ${t.curated?'(curated)':'(assessed)'} — ${t.why} Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.
 
-**Discovery gap to engineer:** ${gapTypeFor(r)}.
+**Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty). **Variant layers:** ${kindsTxt}.
 
-**CASCADE WARNING:** every time you document an unstated detail to pass Aligned/Fairness, you LOWER difficulty. In the SAME edit, add a paired hard behavioral test (an intermediate-state / surface-shape assertion) so the fix does not soften the gap.
-
-**Best-fit angles — top 10${tmpl?' (TEMPLATE-derived — no variant folders detected; brainstorm only)':' (from this repo\'s variant surface)'}:**
+**Best-fit angles (ranked — tie each to one of the model findings above before committing):**
 ${angList}
 
-**Escalation combinations — use ONLY if the feature looks transcribable; fuse angles so the extras become cross-cutting invariants:**
+**Escalation combinations (fuse only to ADD a silently-failing invariant to a transcribable angle):**
 ${comboTxt}
 
-**Strong areas to analyse:**
-${open}${avoid?'\n**Avoid (accepted / overlapping):** '+avoid:''}
+**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'}):** pass ${std.pass} · LOC ${std.loc} · files ${std.files} · description ${std.desc} · ${std.msg} · Flakiness MANDATORY · plagiarism all <0.5.
 
-**Doctrine in play:** ${doctrineNames}.
+**THE DIFFICULTY MECHANISM:** build a feature that (1) sits ABOVE the helper layer (NO free per-variant helpers), (2) adds only 1-2 new public symbols but the obvious first approach is WRONG, (3) the wrongness is not visible from the signature, (4) is pinned by an intermediate-state invariant (count / ordering / lifecycle) a naive impl violates while passing every value check. CASCADE WARNING: documenting an unstated detail to pass Aligned/Fairness LOWERS difficulty — in the SAME edit add a paired hard behavioural test.
 
-**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'} tier):** pass ${std.pass}. Solution LOC ${std.loc}. Files ${std.files}. Description ${std.desc}. ${std.msg}. Plagiarism all <0.5.${t.tier==='mars'?' Do NOT pad to Olympus scale — keep the feature focused with real cross-file coupling.':' The feature must sit above the helper layer with only 1-2 new public symbols, a wrong obvious approach, and an intermediate-state invariant — hard behaviour earns the LOC, not surface size.'}
-
-**Repo insights** (reuse working Dockerfile + test.sh; re-grep at the pinned commit):
-${insightTxt}
+**VERIFY MANUALLY (Phase 1 — the console cannot check these):**
+  1. Plagiarism: grep your planned API symbols in the repo (0 hits + platform <0.5 = green). Do this FIRST.
+  2. Closed issues / merged PRs / docs scope / maintainer philosophy / CONTRIBUTING scale — discard if any block it.
+  3. Write the naive impl first and confirm it FAILS the invariant above (prove the gap is load-bearing).
+  4. Flakiness (MANDATORY): deterministic suite; run F2P/P2P 3x each; fix any flip before submitting.
+  5. Coherence: one feature spanning 3+ subsystems reaching ${std.loc.split(' ')[0]} LOC and ${std.files} files without padding.
 
 **Field notes:**
 ${tips}
 
-**VERIFY MANUALLY (the console pattern-matches folder names — it does NOT read code, so confirm each in-editor before building):**
-  1. Target layer truly has NO free per-variant helper for your feature (grep the layer above the ${kindsTxt.split(',')[0]||'variant'} dir).
-  2. Your planned 1-2 symbols really do make the obvious approach wrong — write the naive impl first and confirm it fails.
-  3. The intermediate-state invariant (count / ordering / lifecycle) actually exists to violate, and a fair test can assert it.
-  4. Run Phase 1's 7 rejection checks yourself: plagiarism grep of your symbols, closed issues, docs scope, merged PRs, maintainer philosophy, CONTRIBUTING scale, closed-concept. (The console does none of these.)
-  5. FLAKINESS (now a mandatory platform check): the repo's existing suite is deterministic (no WASM-heap / network / clock / port / parallel-DB / order-dependent flakiness), AND every test you add is deterministic. Run F2P/P2P 3x each locally; if any run flips, fix it before submitting.
-  6. GROUND TRUTH the console already has: with a backend set, run /analyze + /judge on this repo (Analyze tab) and fold the measured per-variant surface + the approach-wrong / invariant verdicts (with citations; "model judgment, not proof") into the design -- they beat the folder-name heuristics above.
-
--> Next: confirm the points above in-editor, then build the Phase 2 claim-to-test matrix before any code.
+-> Next: take the feature from the model's gap + invariant above, build the Phase 2 claim-to-test matrix, then code.
 --- END BRIEFING ---`;
-  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Drop this in right after your STANDARDS block, above PHASE 0. It carries the proven difficulty mechanism + the screen + the cascade warning. It does NOT pick a category: the AI chooses, checking your REPEAT REPO section for overlap.</p></div>`;
+  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Carries the final verdict + the model's findings &amp; citations + the angles from this repo's analysis. Drop it in after your STANDARDS block. It does NOT pick a category — the AI chooses, checking overlap.</p></div>`;
   document.getElementById('lCopy').addEventListener('click',()=>{let ok=false;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);ok=true;}else{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}}catch(e){ok=false;}const b=document.getElementById('lCopy');b.textContent=ok?'Copied ✓':'Copy failed';setTimeout(()=>b.textContent='Copy',1400);});
 }
 
