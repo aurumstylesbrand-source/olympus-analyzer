@@ -168,7 +168,28 @@ async function buildJudgeContext(repo, ref, layer){
   const aboveAll = above.concat(baseLike);
   const prompt = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_FULL);
   const promptSmall = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_SMALL);
-  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:aboveAll.length };
+  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:aboveAll.length, allPaths: files.map(f => f.path) };
+}
+
+// Deterministic citation grounding: verify every model citation against the REAL repo file list.
+// Keep verified paths; auto-repair a near-miss (a unique basename / suffix match, e.g. "lib/fastify.js"
+// -> "fastify.js"); flag the rest "(unverified path)". This kills LLM-hallucinated file paths without
+// needing a smarter model. A citation is "path" or "path:symbol".
+function verifyCitations(obj, allPaths){
+  if(!obj || !Array.isArray(obj.citations) || !allPaths || !allPaths.length) return obj;
+  const pathSet = new Set(allPaths), byBase = {};
+  allPaths.forEach(p => { const b = p.split('/').pop(); (byBase[b] = byBase[b] || []).push(p); });
+  obj.citations = obj.citations.map(c => {
+    const s = String(c||''); const ci = s.indexOf(':'); const file = (ci>=0 ? s.slice(0,ci) : s).trim(); const rest = ci>=0 ? s.slice(ci) : '';
+    if(!file) return s;
+    if(pathSet.has(file)) return s;                                   // already real
+    const suffix = allPaths.filter(p => p === file || p.endsWith('/'+file));
+    if(suffix.length === 1) return suffix[0] + rest;                  // unique suffix match
+    const base = file.split('/').pop(), bm = byBase[base];
+    if(bm && bm.length === 1) return bm[0] + rest;                    // unique basename match
+    return file + rest + ' (unverified path)';                       // could not ground it
+  });
+  return obj;
 }
 
 // Normalize any judgment object (from the API or pasted by a human) into the response shape.
@@ -176,6 +197,16 @@ function shapeJudgment(repo, ref, layer, ctx, raw, source){
   const out = { repo, ref, layer, variantFiles:ctx&&ctx.variantFiles, aboveFiles:ctx&&ctx.aboveFiles, source,
     freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
     disclaimer: raw.disclaimer || 'Model judgment, not proof. No call-graph or runtime analysis was performed.' };
+  // Ground every citation against the real repo file list (drops/repairs hallucinated paths).
+  if(ctx && ctx.allPaths){
+    let unverified = 0;
+    ['freeHelpers','approachWrong','invariant'].forEach(k => {
+      verifyCitations(out[k], ctx.allPaths);
+      (out[k].citations||[]).forEach(c => { if(/\(unverified path\)/.test(c)) unverified++; });
+    });
+    out.citationsGrounded = true;
+    if(unverified) out.unverifiedCitations = unverified;
+  }
   return out;
 }
 
