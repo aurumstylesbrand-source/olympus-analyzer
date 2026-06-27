@@ -413,7 +413,14 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .verdictchip.go{color:var(--bg);background:var(--green)}
 .verdictchip.refine{color:var(--warn);background:var(--warn-bg);border:1px solid rgba(226,181,71,.45)}
 .verdictchip.nogo{color:var(--bad);background:var(--bad-bg);border:1px solid rgba(232,118,91,.45)}
+.verdictchip.risky{color:#f0a637;background:rgba(240,166,55,.12);border:1px solid rgba(240,166,55,.5)}
 .verdictchip.pending{color:var(--muted);background:var(--surface-3);border:1px solid var(--line)}
+.confpill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em;text-transform:none}
+.confpill.high{color:var(--green);background:rgba(166,232,77,.13);border:1px solid rgba(166,232,77,.35)}
+.confpill.medium{color:#f0a637;background:rgba(240,166,55,.12);border:1px solid rgba(240,166,55,.4)}
+.confpill.low{color:var(--bad);background:var(--bad-bg);border:1px solid rgba(232,118,91,.4)}
+.riskbox{font-size:12.5px;line-height:1.55;color:var(--text-2);background:rgba(240,166,55,.08);border:1px solid rgba(240,166,55,.32);border-radius:11px;padding:11px 13px;margin-bottom:12px}
+.riskbox b{color:#f0a637}
 .vcrit{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
 .vcrit:last-child{border-bottom:0}
 .vcrit .vlamp{width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px}
@@ -1407,10 +1414,17 @@ function finalVerdict(r){
     return 'unclear';};
   const fhV=jd?((jd.freeHelpers||{}).verdict||'').toLowerCase():'';
   const altitudeFree = jd ? /free helpers present|helpers present|reusable/.test(fhV) : false; // helpers AT the judged layer
+  // Free helpers is the #1 WEAKNESS signal, NOT just guidance: 'present' => a shared base likely does
+  // the work, so the gap/invariant may be transcribe-once; 'contested' (models split / unclear) => treat
+  // as RISK, never round it up to clean. confidence = how much to trust the verdict.
+  const fhState = !jd ? 'na' : (altitudeFree ? 'present' : (/unclear|\?|split/.test(fhV) ? 'contested' : 'none'));
+  const splitOf=o=>/unclear|\?|split/.test(((o||{}).verdict||'').toLowerCase());
+  const legSplit = jd ? (splitOf(jd.approachWrong)||splitOf(jd.invariant)) : false;
   const gapOk = jd ? (nv(jd.approachWrong)==='yes') : (s.approach==='wrong');
   const invOk = jd ? (nv(jd.invariant)==='yes') : (s.invariant==='fails');
   const pathsOk = (paths!=null&&paths>=5)||(paths==null&&t.curated);
   const layers=(gapOk?1:0)+(invOk?1:0);
+  const confidence = !jd ? '' : (fhState==='present' ? 'low' : ((fhState==='contested'||legSplit) ? 'medium' : 'high'));
   // The 3 STRUCTURAL levers (auto-checkable). Altitude is GUIDANCE, not a pass/fail lever:
   // mature repos legitimately have helpers; the point is to build a feature ABOVE them.
   const high=[
@@ -1420,10 +1434,9 @@ function finalVerdict(r){
   ];
   const highPass=high.filter(x=>x.ok).length;
   const layerName = (c.judge&&c.judge.layer)||'this';
-  const fhState = !jd ? '' : (altitudeFree ? 'present' : (/unclear|\?|split/.test(fhV) ? 'unclear' : 'none'));
   const altitudeNote = fhState==='present'
     ? 'Altitude, how to act on it: the model found free per-variant helpers INSIDE the "'+layerName+'" layer. To stay hard, design a feature that ORCHESTRATES across all '+layerName+' variants from the layer ABOVE them (the DataSource / manager / registry that owns them, where there are no per-variant helpers) -- not a feature that plugs into one '+layerName+'. The verdict already accounts for this; this is just where to aim the feature.'
-    : fhState==='unclear'
+    : fhState==='contested'
     ? 'Altitude (model unsure): the models split on whether the "'+layerName+'" layer exposes free helpers. To be safe, aim the feature ABOVE the helper layer (orchestrate across variants, not plug into one), or re-run the judgment for a firmer read.'
     : fhState==='none'
     ? 'Altitude, good: no free per-variant helpers at the "'+layerName+'" layer, so a feature here already forces hand-rolled per-variant code (that IS the LOC and the difficulty).'
@@ -1432,9 +1445,14 @@ function finalVerdict(r){
   if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model assessment + the accepted-project rubric. Run the assessment first (the model reads the layer).'; }
   else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
   else if(!gapOk && !invOk && altitudeFree){ verdict='NO-GO'; vclass='nogo'; line='No discoverable difficulty on this layer: the model found neither a wrong obvious approach nor a naive-failing invariant, and the layer hands agents free helpers — a feature here is a thin transcribe. Judge a DEEPER layer, or drop and replace.'; }
-  else if(gapOk && invOk){ verdict='PASS'; vclass='go'; line='Olympus-shaped: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with TWO discovery layers — the obvious approach is wrong AND a naive impl violates an intermediate-state invariant. This is the profile of the recently-accepted projects. Build the feature above the helper layer; only a real agent batch measures the true pass rate.'; }
-  else if(layers===1){ verdict='REFINE'; vclass='refine'; line='Workable: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with ONE discovery layer ('+(gapOk?'the obvious approach is wrong':'a naive-failing invariant')+') — one short of the proven <=20% shape. Engineer the missing '+(gapOk?'intermediate-state invariant':'wrong-obvious-approach')+' (a 2nd layer) and it clears.'; }
+  else if(gapOk && invOk && fhState==='present'){ verdict='RISKY'; vclass='risky'; line='Looks two-layer on the model read — the obvious approach is wrong AND a naive impl fails an invariant — BUT the model also flags FREE per-variant helpers at the "'+layerName+'" layer. A shared base may already implement the contract, which would make that gap and invariant transcribe-once (this is exactly how a repo looks PASS but builds EASY). Risky for Olympus: before building, open the base / abstract / default class and confirm each variant hand-rolls the contract itself. If a base does the work it is a NO-GO; otherwise aim the feature ABOVE the helpers.'; }
+  else if(gapOk && invOk){ verdict='PASS'; vclass='go'; line='Olympus-shaped: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with TWO discovery layers — the obvious approach is wrong AND a naive impl violates an intermediate-state invariant. This is the profile of the recently-accepted projects. Build the feature above the helper layer; only a real agent batch measures the true pass rate.'+((fhState==='contested'||legSplit)?' NOTE: the models were NOT unanimous ('+(fhState==='contested'?'split on whether a shared base hands out free helpers':'split on a discovery leg')+') — treat this as provisional and verify before committing (see Verify below).':''); }
+  else if(layers===1){ verdict='REFINE'; vclass='refine'; line='Workable: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with ONE discovery layer ('+(gapOk?'the obvious approach is wrong':'a naive-failing invariant')+') — one short of the proven <=20% shape. Engineer the missing '+(gapOk?'intermediate-state invariant':'wrong-obvious-approach')+' (a 2nd layer) and it clears.'+(fhState==='present'?' Also: the layer hands out free helpers, so verify a shared base is not doing the work (else NO-GO).':''); }
   else { verdict='REFINE'; vclass='refine'; line='Workable structure ('+(paths!=null?paths+' divergent paths':'curated multi-path')+') but the judged layer showed no discovery gap. Judge a deeper / different layer, or design a feature that makes the obvious approach wrong AND violates an invariant.'; }
+  const risk = !jd ? '' :
+    fhState==='present' ? 'A shared base may implement the contract (free per-variant helpers), so the model\'s gap + invariant could be transcribe-once. VERIFY before building: open the base / abstract / default class + 2 variants and confirm each variant hand-rolls the contract ITSELF (no base doing the work). If a base does the work, drop the repo or judge a deeper layer.' :
+    fhState==='contested' ? 'The models SPLIT on whether a shared base hands out free helpers — the console is not sure. VERIFY: open the base / abstract class + 2 variants before committing; if a base does the work, this drops toward NO-GO.' :
+    legSplit ? 'The models were not unanimous on the discovery gap / invariant. Treat the verdict as provisional: re-run the judgment, or confirm by reading the layer.' : '';
   const manual=[
     'Coherence / system-level: one feature spanning 3+ subsystems reaching 700+ LOC and 6+ files without padding (the newest accepted shape: a feature that REQUIRES a cross-subsystem fix as prerequisite).',
     'Plagiarism: grep your API symbols in the repo; below 0.5, or similar_idea only with a REAL discriminant. Do this check FIRST.',
@@ -1442,19 +1460,22 @@ function finalVerdict(r){
     'Spec: 490-500 words, ASCII, behavioural, name every callable signature once, state silent directional choices — but leave the mechanism as the discovery gap.',
     'Flakiness (MANDATORY now): deterministic suite, no time / network / order / JIT nondeterminism; prove F2P/P2P stable across 3+ runs.'
   ];
-  return {verdict,vclass,line,high,highPass,altitudeNote,manual};
+  return {verdict,vclass,line,high,highPass,altitudeNote,manual,confidence,risk};
 }
 function verdictCard(r){
   const v=finalVerdict(r);
   const crit=v.high.map(x=>`<div class="vcrit"><span class="vlamp ${x.ok?'pass':'fail'}"></span><div><div class="vk">${x.ok?'✓':'✕'} ${esc(x.k)}</div><div class="vd">${esc(x.d)}</div></div></div>`).join('');
   const altit=v.altitudeNote?`<div class="vcrit"><span class="vlamp idle"></span><div><div class="vk" style="color:var(--text-2)">↕ ${esc(v.altitudeNote.split(':')[0])}</div><div class="vd">${esc(v.altitudeNote.split(':').slice(1).join(':').trim())}</div></div></div>`:'';
   const manual=v.manual.map(m=>`<div class="vmanual">• ${esc(m)}</div>`).join('');
-  const drop=v.vclass==='nogo'?`<button class="btn warn" id="anDropRepo" style="margin-left:auto">Drop repo &amp; find a replacement →</button>`:'';
-  const meaning={go:'PASS = Olympus-shaped (two discovery layers). Build the feature.',refine:'REFINE = the repo works, but the assessed layer is one lever short — the line above says exactly what to engineer or which deeper layer to judge.',nogo:'NO-GO = no discoverable difficulty here (too few paths, or a thin transcribe). Drop it and pick a stronger repo.',pending:''}[v.vclass]||'';
+  const drop=(v.vclass==='nogo'||v.vclass==='risky')?`<button class="btn warn" id="anDropRepo" style="margin-left:auto">${v.vclass==='risky'?'Verify failed? Drop &amp; replace':'Drop repo &amp; find a replacement'} →</button>`:'';
+  const confChip=v.confidence?`<span class="confpill ${v.confidence}">confidence: ${v.confidence}</span>`:'';
+  const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
+  const meaning={go:'PASS = Olympus-shaped (two discovery layers). Build the feature.',risky:'RISKY = the levers look right BUT the layer hands out free helpers, so the difficulty may be illusory (a shared base may do the work). It is buildable IF you verify the variants hand-roll the contract — otherwise it is a NO-GO. This is the "looks PASS, builds easy" trap.',refine:'REFINE = the repo works, but the assessed layer is one lever short — the line above says exactly what to engineer or which deeper layer to judge.',nogo:'NO-GO = no discoverable difficulty here (too few paths, or a thin transcribe). Drop it and pick a stronger repo.',pending:''}[v.vclass]||'';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
     <div class="blabel">Final verdict <span class="hint">model assessment + accepted-project rubric (Jun 2026)</span></div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${drop}</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${confChip}${drop}</div>
     <div style="font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px">${esc(v.line)}</div>
+    ${riskBox}
     ${crit}${altit}
     ${meaning?`<div class="vmanual" style="margin-top:11px;color:var(--muted)">${esc(meaning)}</div>`:''}
     <div class="vmanual" style="margin-top:13px"><b>Cannot be auto-checked (depends on the feature + tests you write) — verify before building:</b></div>${manual}
@@ -1586,9 +1607,9 @@ function genLaunch(){
 
 > ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data — open in Analyze to refresh.'} The verdict + model findings below are from the analysis; treat structural claims as leads to verify in-editor.
 ${licLine}
-**FINAL VERDICT: ${v.verdict}** (${v.highPass}/3 structural levers) — ${v.line}
+**FINAL VERDICT: ${v.verdict}** (${v.highPass}/3 structural levers${v.confidence?', confidence: '+v.confidence:''}) — ${v.line}
 ${leverLines}
-
+${v.risk?'  ! VERIFY BEFORE BUILDING: '+v.risk+'\n':''}
 ${modelBlock}
 
 ${featureBlock}

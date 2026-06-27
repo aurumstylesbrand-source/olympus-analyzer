@@ -115,7 +115,7 @@ function judgeKey(repo, ref, layer){ return 'judge_' + (repo+'@'+ref+'__'+layer)
 // The exact instruction a Claude judgment must follow — shared by the API path and the manual paste path.
 const JUDGE_TASK =
 `Answer three BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
-1. freeHelpers: Does THIS layer already expose FREE per-variant helper methods a new feature could simply call (so the feature is transcribable = EASY), or would a new feature have to hand-roll per-variant code from scratch (HARD)? Answer "free helpers present" (easy) | "no free helpers" (hard) | "unclear".
+1. freeHelpers (THE #1 DIFFICULTY SIGNAL — inspect the base/abstract/default files shown, not just the variants): Is there a SHARED BASE / ABSTRACT / DEFAULT class (e.g. a DefaultXCompiler / AbstractDialect / BaseDriver) that ALREADY IMPLEMENTS the variants' contract, so each variant is only a THIN override calling into shared implemented methods? If so, a new feature is transcribe-once = EASY = "free helpers present". OR does EACH variant INDEPENDENTLY hand-roll the full contract with NO shared base doing the work (each variant implements the methods itself from scratch)? Then HARD = "no free helpers". Decide by checking whether the variants CALL shared implemented logic or implement everything themselves. If you cannot see a base file to judge this, answer "unclear" (do NOT assume "no free helpers"). Answer "free helpers present" (a base/shared code does the work) | "no free helpers" (each variant hand-rolls it) | "unclear".
 2. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
 3. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
 Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
@@ -128,7 +128,7 @@ function assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, sz){
 THE VARIANT LAYER (${variant.length} files, ${variantDirs.size} dirs):
 ${blob(variant, sz.mv, sz.mvc)}
 
-THE LAYER DIRECTLY ABOVE (${above.length} files):
+THE LAYER ABOVE + ANY BASE / ABSTRACT / DEFAULT FILES (${above.length} files -- check these for a shared base that implements the contract):
 ${blob(above, sz.ma, sz.mac)}
 ${JUDGE_RUBRIC ? `
 Ground your judgment in this general, language-agnostic rubric of code signals (applies to ANY repo). Map what you see in the code above to these signals, then apply the verdict-calibration lines:
@@ -148,9 +148,21 @@ async function buildJudgeContext(repo, ref, layer){
   const variantPaths = new Set(variant.map(f => f.path));
   const aboveDirs = new Set([...variantDirs].map(d => dirOf(d)));
   const above = files.filter(f => !variantPaths.has(f.path) && aboveDirs.has(dirOf(f.path)));
-  const prompt = assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, PROMPT_FULL);
-  const promptSmall = assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, PROMPT_SMALL);
-  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:above.length };
+  // Also surface likely BASE/ABSTRACT/DEFAULT files (the contract impl that may do the work) even when
+  // they live in a SIBLING directory -- this is the #1 thing the freeHelpers question needs to see (e.g.
+  // kysely's src/query-compiler/default-query-compiler.ts sits outside src/dialect/*). Match base-ish
+  // basenames sharing the variant root's first path segment; nearest-to-root first, capped.
+  const baseName = p => (p.split('/').pop() || '');
+  const root1 = ([...variantDirs][0] || '').split('/')[0];
+  const inAbove = new Set(above.map(f => f.path));
+  const baseLike = files.filter(f => !variantPaths.has(f.path) && !inAbove.has(f.path)
+      && f.path.split('/')[0] === root1
+      && /(^|[._-])(base|abstract|default|common|shared)/i.test(baseName(f.path).replace(/\.[a-z]+$/i, '')))
+    .sort((a,b) => a.path.length - b.path.length).slice(0, 6);
+  const aboveAll = above.concat(baseLike);
+  const prompt = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_FULL);
+  const promptSmall = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_SMALL);
+  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:aboveAll.length };
 }
 
 // Normalize any judgment object (from the API or pasted by a human) into the response shape.
@@ -260,8 +272,8 @@ async function judgeSynthesize(provider, repo, layer, members){
 
 `+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
 
-Questions: (1) freeHelpers - does this layer expose FREE per-variant helpers a new feature could reuse (easy) or must it hand-roll per-variant code (hard)? (2) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (3) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
-Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
+Questions: (1) freeHelpers (#1 signal) - is there a SHARED BASE / ABSTRACT / DEFAULT class implementing the variants' contract so each variant is a THIN override (= free helpers present = easy), or does each variant INDEPENDENTLY hand-roll the full contract with no base doing the work (= no free helpers = hard)? (2) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (3) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
+Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. For freeHelpers specifically: if EITHER model found a shared base doing the work, lean "free helpers present" (the easy/risky reading), since a missed base is the costly error. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
 {"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"...","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from the models; not proof."}`;
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{})));
   return parseModelJson(contentOf(resp));
