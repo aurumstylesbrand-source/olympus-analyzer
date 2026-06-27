@@ -54,6 +54,7 @@ html[data-theme="light"] .pa{--c:#1C8AB0;}
 .rail-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
 .rail-foot{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;margin-top:auto}
 .navbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;padding:12px 0;border:0;background:transparent;border-radius:14px;color:var(--muted);cursor:pointer;transition:.16s;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.navbadge{position:absolute;top:6px;right:12px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--green);color:var(--bg);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono);box-shadow:0 2px 8px -2px rgba(166,232,77,.6)}
 .navbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .navbtn:hover{color:var(--text);background:var(--surface)}
 .navbtn.active{color:var(--green);background:var(--green-tint)}
@@ -486,6 +487,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
     </nav>
     <div class="rail-foot">
       <button class="navbtn" id="themeBtn" title="Toggle light / dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg><span class="nlabel">Theme</span></button>
+      <button class="navbtn" id="acceptedBtn" title="Accepted-project experience files (new-file watcher)"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span class="nlabel">Accepted</span><span class="navbadge" id="expBadge" style="display:none">0</span></button>
       <button class="navbtn" id="doctrineBtn"><svg viewBox="0 0 24 24"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z"/><path d="M5 17h13M9 8h5"/></svg><span class="nlabel">Doctrine</span></button>
       <button class="navbtn" id="resetBtn"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6M4 19v-4h4"/></svg><span class="nlabel">Reset</span></button>
     </div>
@@ -507,7 +509,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 
 <script>
 const SEED_VERSION = 19;
-const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme'};
+const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
 const MAX_FEATURES = 3;
 
@@ -530,7 +532,7 @@ ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=
 function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
 // General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
 const TIPS=[
- {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to <=30%. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is <=20% NOW (30% was the OLD bar) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
  {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
  {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
  {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
@@ -545,6 +547,60 @@ const TIPS=[
  {h:'Match the selected category',b:'The platform checks that the description fits the chosen category. A feature must read as a feature, a bug-fix as a bug-fix — the opener and verbs carry it. A category mismatch fails the precheck before anything runs.'},
  {h:'Dockerfile + test.sh hygiene',b:'olympus-base image, WORKDIR /app, pinned deps, model:1000 user, interactive entrypoint. Never run tests or reinstall preinstalled tools in the image. test.sh ships in test.patch at 100755 with distinct base/new modes, no installs, no solution code. Hash-suffix test files; never use the markers shipd / datacurve.'}
 ];
+/* ---------- Accepted-project intelligence (calibration anchors) ----------
+   Distilled from the 6 ACCEPTED projects in /Users/mac/Desktop/olympus-experience/
+   (experience-intelligence-extraction.md + cross-project-calibration.md, Jun 2026, adversarially
+   audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED -- the Olympus bar is <=20% NOW
+   (was 30%), so any <=30% precedent below needs MORE difficulty today. This drives bestFitAngle(). */
+const ACCEPTED_INTEL = {
+  bar:'Olympus <=20% of 10 (tightened from 30%) - Mars <=30% - Flakiness MANDATORY - >=1 solver with a hard ceiling.',
+  envelope:'400-1380 LOC (700+ target, 600 floor) - 9-29 files (6+ min) - description 490-500 words, pure ASCII, behavioural (name WHAT not HOW).',
+  // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
+  archetypes:[
+    {key:'discovery-gap',name:'Discovery gap',what:'an unfamiliar code path or a non-guessable invariant agents get WRONG BY DEFAULT',proven:'trpc, drizzle (keyset/chunked/relation-agg), mangum',rule:'pick something agents must DISCOVER, not just implement.'},
+    {key:'breadth',name:'Breadth',what:'a legitimately broad public API where correct COMPOSITION across many groups holds the rate down with no single trick',proven:'gorm (19 test groups), mangum',rule:'lean in ONLY when the API is genuinely broad; never manufacture breadth.'}
+  ],
+  // Proven mechanisms, gated by repo shape -> bestFitAngle recommends the ones that apply.
+  mechanisms:[
+    {key:'path-a',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'The Path A signature (multi-variant)',
+     act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the MSG floor; the invariants are the gap.',
+     anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
+    {key:'census',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'Discovery-layer census (if the algorithm is known)',
+     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely clears <=20%; budget 2 batches.',
+     anchor:'drizzle-chunked: offset->seek only moved 75->60%; a 2nd layer (non-unique column forcing PK auto-discovery) was needed for 20%.'},
+    {key:'composes',when:()=>true,name:'"Composes with X" is a full-lifecycle contract',
+     act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
+     anchor:'gorm burned 4 review rounds finding composition-lifecycle gaps one at a time.'},
+    {key:'bugfix',when:()=>true,name:'Bug-fix-unlocks-feature (if the gap is too small)',
+     act:'If the genuine gap is a small bug-fix (below the 700-LOC floor), build the coherent cross-subsystem feature the fix is a PREREQUISITE for.',
+     anchor:'relation-agg: a ~120-LOC JSON-precision codec fix became the prerequisite for RQB relation aggregations (718 LOC, 29 files).'}
+  ],
+  projects:[
+    {repo:'trpc/trpc',lang:'TS',feat:'request-scoped context factories across 7 adapters',pass:'20% (2/10)',arch:'discovery-gap',lesson:'5+ different-pattern paths + silent cross-cutting invariants; put core in src/contextFactory/, NOT adapters/.'},
+    {repo:'go-gorm/gorm',lang:'Go',feat:'bidirectional keyset pagination on *gorm.DB',pass:'9-25%',arch:'breadth',lesson:'19 behavioural groups of correct-composition, built ABOVE the helper layer; no single gotcha.'},
+    {repo:'drizzle-team/drizzle-orm',lang:'TS',feat:'keyset / chunked / relation-aggregations (RQB)',pass:'~20%',arch:'discovery-gap',lesson:'expand a KNOWN algorithm into the unfamiliar RQB sibling path; count + strip every derivable simplification.'},
+    {repo:'Kludex/mangum',lang:'Py',feat:'Lambda response streaming (two-phase asyncio)',pass:'9% (Orion-only)',arch:'discovery-gap',lesson:'one word ("lazy") bifurcates agents into two wrong extremes; discriminating tests fail BOTH. Orion-only solves = a valid Hard equilibrium.'}
+  ],
+  checks:[
+    'Plagiarism = GATE ZERO: grep your CORE IDEA on the SAME repo before writing anything (3 of 6 forced a pivot; a duplicate central idea is DEAD).',
+    'Test Fairness: never pin author/impl choices (exact strings, split counts, SQL text, start order). Every guard test needs a positive typeof canary; never a bare .toThrow().',
+    'Solution Quality grades the public/type surface + portability + composition lifecycle, NOT just passing tests. Never collapse divergent variants into a shared helper (kills LOC and the grade).',
+    'Verify-Solution/F2P: a guard test must FAIL without the solution -- prove discrimination by neutering the helper to the naive impl.',
+    'Description: 490-500 words ASCII, name signatures for fairness but never over-spec mechanism (em-dash is the AI tell). Read solver patches between batches -- one grep pinpoints the next lever.'
+  ]
+};
+// Best-fit angle, GROUNDED in the accepted projects: classifies the repo into an archetype, the
+// proven mechanisms that apply to its shape, and the closest accepted precedent (by language).
+function bestFitAngle(r){
+  const d=repoDiv(r), multi=(d!=null&&d>=5);
+  const archetype = multi ? ACCEPTED_INTEL.archetypes[0] : ACCEPTED_INTEL.archetypes[1];
+  const mechanisms = ACCEPTED_INTEL.mechanisms.filter(m=>{try{return m.when(r);}catch(e){return false;}});
+  const lang=(r.lang||'').toLowerCase();
+  const lk = /\bgo\b|golang/.test(lang)?'Go':/python|py/.test(lang)?'Py':'TS';
+  const precedent = ACCEPTED_INTEL.projects.find(p=>p.lang===lk&&p.arch===archetype.key)
+    || ACCEPTED_INTEL.projects.find(p=>p.arch===archetype.key) || ACCEPTED_INTEL.projects[0];
+  return {multi, archetype, mechanisms, precedent};
+}
 /* ---------- analysis engine (local, no API needed) ---------- */
 const PATH_AFFINITY={
  A:['Adapter Abstraction','Protocol Support','Middleware Chains','Format Negotiation','Conflict Resolution','Failover','Connection Pooling','Health-aware LB','Service Discovery'],
@@ -686,7 +742,17 @@ function poolPanel(){
 
 /* ---------- doctrine ---------- */
 const DOCTRINE = [
- {c:'gold',h:'Proven difficulty mechanism (30% TypeORM)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep.</p>
+ {c:'gold',h:'Accepted-project precedents (6 real anchors, recalibrated to <=20%)',body:
+   '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
+   '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
+   ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
+   '<p><b>Proven mechanisms</b> (the console recommends the ones that fit each repo):</p><ul>'+
+   ACCEPTED_INTEL.mechanisms.map(m=>'<li><b>'+m.name+'</b> &mdash; '+m.act+' <span class="hint">['+m.anchor+']</span></li>').join('')+'</ul>'+
+   '<p><b>The 4 accepted projects (calibration anchors):</b></p><ul>'+
+   ACCEPTED_INTEL.projects.map(p=>'<li><b>'+p.repo+'</b> ('+p.lang+' &middot; '+p.pass+' &middot; '+p.arch+') &mdash; '+p.feat+'. <i>'+p.lesson+'</i></li>').join('')+'</ul>'+
+   '<p><b>Recurring checks to gate pre-submit:</b></p><ul>'+
+   ACCEPTED_INTEL.checks.map(c=>'<li>'+c+'</li>').join('')+'</ul>'},
+ {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> that 30% was under the OLD bar; the current Olympus ceiling is &le;20%, so this exact shape would need MORE difficulty today (a 2nd discovery layer).</p>
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
@@ -877,6 +943,7 @@ async function load(){
   state.gh=await sget(KEYS.gh)||'';
   state.analyzer=await sget(KEYS.analyzer)||'';
   state.theme=await sget(KEYS.theme)||'dark';applyTheme(state.theme);
+  expSeen=await sget(KEYS.expSeen)||{};
 }
 async function persistTier(t){await sset(t==='olympus'?KEYS.olympus:KEYS.mars,state[t]);}
 async function persistUsed(){await sset(KEYS.used,state.used);}
@@ -1588,7 +1655,12 @@ function genLaunch(){
   const ranked=topAngles(r,8);
   const angList=ranked.map((a,i)=>'  '+(i+1)+'. '+a+'   ['+(ANGLE_FAM[a]||'—')+']').join('\n');
   const comboTxt=comboFor(r).slice(0,3).map((cc,i)=>'  '+(i+1)+'. '+cc.angles.join(' + ')).join('\n');
-  const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0) — likely DISQUALIFIED. Confirm before any work.\n`:'';
+  // Proven angle, grounded in the accepted projects (drives the recommendation, not folder names).
+  const bf=bestFitAngle(r);
+  const provenAngle='**PROVEN ANGLE -- '+bf.archetype.name.toUpperCase()+' (accepted-project precedent):** '+bf.archetype.what+'. Closest accepted precedent: '+bf.precedent.repo+' ('+bf.precedent.lang+', '+bf.precedent.pass+') -- '+bf.precedent.lesson+'\n'+
+    bf.mechanisms.map(m=>'  - '+m.name+': '+m.act+' [anchor: '+m.anchor+']').join('\n')+
+    '\n  Bar: '+ACCEPTED_INTEL.bar;
+  const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is NOT on the platform allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*; NOT ISC / MPL / GPL / NOASSERTION) — likely DISQUALIFIED. Confirm before any work.\n`:'';
   const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
   const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
   const modelBlock=jd?('**WHAT THE MODEL READ — the "'+judgedLayer+'" layer\'s real code (the evidence the verdict is built on):**\n'+fline('Free helpers',jd.freeHelpers)+'\n'+fline('Obvious approach wrong',jd.approachWrong)+'\n'+fline('Naive fails an invariant',jd.invariant)+'\n  Source: '+(jd.source||'model')+(jd.synthesized?', synthesis-reconciled':'')+'.'+(src?(' Surface '+src.surface+' symbols across '+src.filesRead+' files at '+String(src.commit||commit).slice(0,10)+'.'):'')):('**WHAT THE MODEL READ:** not run yet — open '+r.fullName+' in Analyze and Run the free judgment so the briefing carries the model findings + citations.');
@@ -1618,7 +1690,9 @@ ${featureBlock}
 
 **Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty). **Variant layers:** ${kindsTxt}.
 
-**Best-fit angles (ranked — tie each to one of the model findings above before committing):**
+${provenAngle}
+
+**Best-fit angles (ranked — tie each to the proven angle + the model findings above before committing):**
 ${angList}
 
 **Escalation combinations (fuse only to ADD a silently-failing invariant to a transcribable angle):**
@@ -2118,6 +2192,46 @@ document.getElementById('doctrineBtn').addEventListener('click',()=>{
 });
 drawer.addEventListener('click',e=>{if(e.target===drawer)drawer.classList.remove('open');});
 
+/* ---------- accepted-project experience watcher ----------
+   Polls the backend /experience folder (LOCAL backend only); badges new/changed files; the drawer
+   lets you view + copy a log to paste into a Claude chat for intelligence extraction. */
+let expFiles=[], expSeen={}, expAvailable=false;
+function expNewCount(){return expFiles.filter(f=>!expSeen[f.name]||f.mtime>expSeen[f.name]).length;}
+function paintExpBadge(){const b=document.getElementById('expBadge');if(!b)return;const n=expNewCount();b.textContent=n;b.style.display=n>0?'flex':'none';}
+async function pollExperience(){
+  if(!state.analyzer){expAvailable=false;return;}
+  try{
+    const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience').then(r=>r.json());
+    expFiles=(d&&Array.isArray(d.files))?d.files:[];expAvailable=!!(d&&d.available);
+  }catch(e){expAvailable=false;} // backend offline / not reachable -- silent
+  paintExpBadge();
+}
+async function openAccepted(){
+  await pollExperience();
+  const rows=expFiles.map(f=>{const isNew=!expSeen[f.name]||f.mtime>expSeen[f.name];const dt=new Date(f.mtime).toISOString().slice(0,10);
+    return `<div class="checkrow"><span class="lamp ${isNew?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${esc(f.name)} ${isNew?'<span class="chip ver">NEW</span>':''} <span class="tag">${dt} &middot; ${(f.size/1024).toFixed(1)}kb</span></div><div style="margin-top:7px;display:flex;gap:8px"><button class="btn" data-expview="${esc(f.name)}">View</button><button class="btn" data-expcopy="${esc(f.name)}">Copy for extraction</button></div></div></div>`;}).join('');
+  const body = expAvailable
+    ? `<p class="lede" style="margin-bottom:10px">Files in your <span class="mono">olympus-experience</span> folder (where you migrate an accepted project's log). <b>NEW</b> = added or changed since you last opened this. Copy a new log, paste it into your Claude Code chat, and say <i>"extract intelligence from this accepted project"</i> -- it updates the console's precedents (the Olympus bar is &le;20% now).</p>${rows||'<div class="honest">No .md / .txt files found in the folder.</div>'}<div id="expView" style="margin-top:12px"></div>`
+    : `<div class="honest">The backend cannot reach the experience folder -- you are pointed at a remote host (Render) or the folder does not exist. To auto-watch it, run the backend LOCALLY: <span class="mono">node server.js</span> and set the Analyzer URL to <span class="mono">http://localhost:8787</span> (override the path with <span class="mono">EXPERIENCE_DIR</span>). Otherwise just paste an accepted-project log into your Claude Code chat for extraction.</div>`;
+  document.getElementById('drawerInner').innerHTML=`<h3>Accepted projects <span class="hint">experience-folder watcher</span></h3>${body}`;
+  drawer.classList.add('open');
+  // mark everything currently present as seen, persist, clear the badge
+  expFiles.forEach(f=>{expSeen[f.name]=Math.max(expSeen[f.name]||0,f.mtime);});
+  await sset(KEYS.expSeen,expSeen);paintExpBadge();
+}
+// one delegated handler (drawerInner persists) for view / copy
+document.getElementById('drawerInner').addEventListener('click',async e=>{
+  const vb=e.target.closest('[data-expview]'), cb=e.target.closest('[data-expcopy]');
+  if(vb){const n=vb.dataset.expview,ev=document.getElementById('expView');if(ev)ev.innerHTML='<div class="honest"><span class="spin"></span>Loading...</div>';
+    try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());if(ev)ev.innerHTML='<div class="outbox" style="max-height:340px;overflow:auto;white-space:pre-wrap">'+esc(d.content||d.error||'(empty)')+(d.truncated?'\n\n[...truncated]':'')+'</div>';}catch(err){if(ev)ev.innerHTML='<div class="honest">load failed</div>';}}
+  if(cb){const n=cb.dataset.expcopy;
+    try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());
+      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass bar is <=20% now (was 30%).\n\n--- '+n+' ---\n'+(d.content||'');
+      await navigator.clipboard.writeText(txt);cb.textContent='Copied for Claude ✓';setTimeout(()=>cb.textContent='Copy for extraction',1600);
+    }catch(err){cb.textContent='copy failed';}}
+});
+const accBtn=document.getElementById('acceptedBtn');if(accBtn)accBtn.addEventListener('click',openAccepted);
+
 /* ---------- settings (token + reset) ---------- */
 function openSettings(){
   const tok=state.gh||'';
@@ -2206,5 +2320,8 @@ document.getElementById('resetBtn').addEventListener('click',openSettings);
 document.getElementById('themeBtn').addEventListener('click',toggleTheme);
 
 /* ---------- boot ---------- */
-(async function(){try{await load();}catch(e){console.error('load failed',e);state.olympus=clone(SEED_OLYMPUS);state.mars=clone(SEED_MARS);state.used=dedupe([...SEED_OLYMPUS.repos,...SEED_MARS.repos].map(r=>r.fullName));}render();})();
+(async function(){try{await load();}catch(e){console.error('load failed',e);state.olympus=clone(SEED_OLYMPUS);state.mars=clone(SEED_MARS);state.used=dedupe([...SEED_OLYMPUS.repos,...SEED_MARS.repos].map(r=>r.fullName));}render();
+  // watch the accepted-project folder (local backend only): badge new files; re-check every 90s.
+  try{pollExperience();if(typeof setInterval==='function')setInterval(()=>{if(activeModule!=='__never')pollExperience();},90000);}catch(e){}
+})();
 </script>

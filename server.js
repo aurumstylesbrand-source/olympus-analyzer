@@ -50,6 +50,12 @@ const SYNTH = (process.env.JUDGE_SYNTH || 'on').toLowerCase(); // 'on' | 'off' |
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
 
+// Folder of ACCEPTED-project experience logs. Watched by the console's Accepted-projects panel so a
+// newly-migrated file shows up as a notification. Only readable when the backend runs LOCALLY (the
+// Render host has no access to this path -> the endpoint returns available:false and the console
+// falls back to manual paste). Override with EXPERIENCE_DIR.
+const EXPERIENCE_DIR = process.env.EXPERIENCE_DIR || '/Users/mac/Desktop/olympus-experience';
+
 // General, repo-agnostic judging rubric (loaded once; embedded verbatim into every /judge prompt).
 const JUDGE_RUBRIC = (() => { try { return fs.readFileSync(path.join(__dirname, 'judge_rubric.md'), 'utf8').trim(); } catch { return ''; } })();
 
@@ -427,6 +433,35 @@ http.createServer(async (req, res) => {
 
   const u = new URL(req.url, 'http://localhost');
   if (u.pathname === '/health') { res.writeHead(200); return res.end(JSON.stringify({ ok: true })); }
+
+  // Accepted-project experience folder: list files (and read one). Local-only; available:false when
+  // the dir is not reachable (e.g. the Render host) so the console can fall back to manual paste.
+  if (u.pathname === '/experience') {
+    try {
+      if (!fs.existsSync(EXPERIENCE_DIR) || !fs.statSync(EXPERIENCE_DIR).isDirectory()) {
+        res.writeHead(200); return res.end(JSON.stringify({ available: false, dir: EXPERIENCE_DIR, files: [] }));
+      }
+      const want = u.searchParams.get('file');
+      if (want) {
+        // sanitize: basename only, .md/.txt only, no traversal.
+        const safe = path.basename(want);
+        if (safe !== want || !/\.(md|txt)$/i.test(safe)) { res.writeHead(400); return res.end(JSON.stringify({ error: 'bad file name' })); }
+        const fp = path.join(EXPERIENCE_DIR, safe);
+        if (!fs.existsSync(fp) || !fs.statSync(fp).isFile()) { res.writeHead(404); return res.end(JSON.stringify({ error: 'not found' })); }
+        let content = fs.readFileSync(fp, 'utf8');
+        const truncated = content.length > 200000;
+        if (truncated) content = content.slice(0, 200000);
+        res.writeHead(200); return res.end(JSON.stringify({ available: true, name: safe, content, truncated }));
+      }
+      const files = fs.readdirSync(EXPERIENCE_DIR)
+        .filter(n => /\.(md|txt)$/i.test(n) && fs.statSync(path.join(EXPERIENCE_DIR, n)).isFile())
+        .map(n => { const st = fs.statSync(path.join(EXPERIENCE_DIR, n)); return { name: n, mtime: st.mtimeMs, size: st.size }; })
+        .sort((a, b) => b.mtime - a.mtime);
+      res.writeHead(200); return res.end(JSON.stringify({ available: true, dir: EXPERIENCE_DIR, files }));
+    } catch (e) {
+      res.writeHead(200); return res.end(JSON.stringify({ available: false, dir: EXPERIENCE_DIR, files: [], error: String(e.message || e) }));
+    }
+  }
 
   if (u.pathname === '/judge') {
     const repo = u.searchParams.get('repo');
