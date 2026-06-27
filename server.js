@@ -168,26 +168,40 @@ async function buildJudgeContext(repo, ref, layer){
   const aboveAll = above.concat(baseLike);
   const prompt = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_FULL);
   const promptSmall = assembleJudgePrompt(repo, ref, layer, variant, aboveAll, variantDirs, PROMPT_SMALL);
-  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:aboveAll.length, allPaths: files.map(f => f.path) };
+  const fileText = {}; files.forEach(f => { fileText[f.path] = f.text; });   // for symbol-level citation grounding
+  return { prompt, promptSmall, variantFiles:variant.length, aboveFiles:aboveAll.length, allPaths: files.map(f => f.path), fileText };
 }
 
 // Deterministic citation grounding: verify every model citation against the REAL repo file list.
 // Keep verified paths; auto-repair a near-miss (a unique basename / suffix match, e.g. "lib/fastify.js"
 // -> "fastify.js"); flag the rest "(unverified path)". This kills LLM-hallucinated file paths without
 // needing a smarter model. A citation is "path" or "path:symbol".
-function verifyCitations(obj, allPaths){
+function verifyCitations(obj, allPaths, fileText){
   if(!obj || !Array.isArray(obj.citations) || !allPaths || !allPaths.length) return obj;
   const pathSet = new Set(allPaths), byBase = {};
   allPaths.forEach(p => { const b = p.split('/').pop(); (byBase[b] = byBase[b] || []).push(p); });
-  obj.citations = obj.citations.map(c => {
-    const s = String(c||''); const ci = s.indexOf(':'); const file = (ci>=0 ? s.slice(0,ci) : s).trim(); const rest = ci>=0 ? s.slice(ci) : '';
-    if(!file) return s;
-    if(pathSet.has(file)) return s;                                   // already real
+  // Resolve the cited FILE against the real list (keep / repair a unique near-miss / flag).
+  const resolve = (file) => {
+    if(pathSet.has(file)) return file;
     const suffix = allPaths.filter(p => p === file || p.endsWith('/'+file));
-    if(suffix.length === 1) return suffix[0] + rest;                  // unique suffix match
-    const base = file.split('/').pop(), bm = byBase[base];
-    if(bm && bm.length === 1) return bm[0] + rest;                    // unique basename match
-    return file + rest + ' (unverified path)';                       // could not ground it
+    if(suffix.length === 1) return suffix[0];
+    const bm = byBase[file.split('/').pop()];
+    if(bm && bm.length === 1) return bm[0];
+    return null;
+  };
+  obj.citations = obj.citations.map(c => {
+    const s = String(c||''); const ci = s.indexOf(':'); const file = (ci>=0 ? s.slice(0,ci) : s).trim(); const sym = ci>=0 ? s.slice(ci+1).trim() : '';
+    if(!file) return s;
+    const real = resolve(file);
+    if(!real) return file + (ci>=0?':'+sym:'') + ' (unverified path)';
+    // Symbol-level grounding: when the symbol is a CLEAN identifier (Class.method / fn) and the
+    // file text is available, confirm it actually appears -- catches "real file, fabricated symbol".
+    if(sym && fileText && fileText[real] && /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(sym)){
+      const last = sym.split('.').pop();
+      const present = new RegExp('\\b'+last.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(fileText[real]);
+      if(!present) return real + ':' + sym + ' (symbol unverified)';
+    }
+    return real + (ci>=0 ? ':'+sym : '');
   });
   return obj;
 }
@@ -201,8 +215,8 @@ function shapeJudgment(repo, ref, layer, ctx, raw, source){
   if(ctx && ctx.allPaths){
     let unverified = 0;
     ['freeHelpers','approachWrong','invariant'].forEach(k => {
-      verifyCitations(out[k], ctx.allPaths);
-      (out[k].citations||[]).forEach(c => { if(/\(unverified path\)/.test(c)) unverified++; });
+      verifyCitations(out[k], ctx.allPaths, ctx.fileText);
+      (out[k].citations||[]).forEach(c => { if(/\((unverified path|symbol unverified)\)/.test(c)) unverified++; });
     });
     out.citationsGrounded = true;
     if(unverified) out.unverifiedCitations = unverified;
