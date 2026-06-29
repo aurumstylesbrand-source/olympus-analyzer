@@ -136,7 +136,7 @@ ${blob(variant, sz.mv, sz.mvc)}
 
 THE LAYER ABOVE + ANY BASE / ABSTRACT / DEFAULT FILES (${above.length} files -- check these for a shared base that implements the contract):
 ${blob(above, sz.ma, sz.mac)}
-${JUDGE_RUBRIC ? `
+${JUDGE_RUBRIC && !sz.noRubric ? `
 Ground your judgment in this general, language-agnostic rubric of code signals (applies to ANY repo). Map what you see in the code above to these signals, then apply the verdict-calibration lines:
 
 ${JUDGE_RUBRIC}
@@ -144,7 +144,9 @@ ${JUDGE_RUBRIC}
 ${JUDGE_TASK}`;
 }
 const PROMPT_FULL = { mv:12, mvc:12000, ma:8, mac:8000 };   // big-context models (Gemini/GLM/Claude)
-const PROMPT_SMALL = { mv:4, mvc:5000, ma:3, mac:4000 };     // tight free TPM (Groq/Cerebras) ~6-8k tokens
+// Tight free TPM (Groq gpt-oss-120b = 8000 TPM, Cerebras ~30K): trimmed files + NO rubric so the whole
+// request stays well under ~6k tokens (Groq 413s above its TPM cap otherwise).
+const PROMPT_SMALL = { mv:3, mvc:3500, ma:2, mac:2500, noRubric:true };
 // Download the repo, isolate the variant layer + the layer above, and assemble both prompt sizes.
 async function buildJudgeContext(repo, ref, layer){
   const files = await loadRepoFiles(repo, ref, TOKEN);
