@@ -38,7 +38,11 @@ function mkProvider(label, key, base, model, small){
   const isSmall = small===true || /^(1|true|yes)$/i.test(String(small||'')) || /groq\.com|cerebras\.ai/i.test(baseUrl);
   // Zhipu GLM models reason by default, which consumes the token budget and can blank the answer.
   // Disable it so tokens go to the JSON (clean output, faster). Harmless on providers that ignore it.
-  const extra = (/bigmodel\.cn/i.test(baseUrl) || /^glm/i.test(model||'')) ? { thinking:{ type:'disabled' } } : {};
+  const extra = {};
+  if(/bigmodel\.cn/i.test(baseUrl) || /^glm/i.test(model||'')) extra.thinking = { type:'disabled' };
+  // gpt-oss / reasoning models on Groq + Cerebras emit malformed JSON under the complex judge prompt;
+  // force strict JSON output (the prompt already says "Reply with ONLY a JSON object").
+  if(/groq\.com|cerebras\.ai/i.test(baseUrl) || /gpt-oss|qwen3/i.test(model||'')) extra.response_format = { type:'json_object' };
   return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra };
 }
 // Provider roster: explicit A/B/C/D slots, PLUS the legacy single-provider config as an extra
@@ -253,7 +257,7 @@ function openaiChat(provider, payload){
       res.on('end',()=>{
         const txt=Buffer.concat(chunks).toString('utf8');
         if(res.statusCode!==200) return reject(new Error(provider.label+' HTTP '+res.statusCode+': '+txt.slice(0,200)));
-        try { resolve(JSON.parse(txt)); } catch(e){ reject(new Error('bad JSON from '+provider.label+': '+txt.slice(0,160))); }
+        try { resolve(JSON.parse(txt)); } catch(e){ try { resolve(JSON.parse(txt.replace(/[\x00-\x1f]/g, " "))); } catch(e2){ reject(new Error(provider.label+" bad JSON: "+txt.slice(0,160))); } }
       });
     });
     req.on('timeout', () => req.destroy(new Error(provider.label+' request timeout (40s)')));
@@ -265,7 +269,12 @@ function parseModelJson(content){
   if(!content) throw new Error('empty model content');
   content = String(content).replace(/```json/gi,'').replace(/```/g,'').trim();
   const m = content.match(/\{[\s\S]*\}/); if(m) content = m[0];
-  return JSON.parse(content);
+  try { return JSON.parse(content); }
+  catch(e){
+    // Some models (gpt-oss on Groq/Cerebras) leak RAW control characters (literal newlines/tabs
+    // inside string values) -> invalid JSON. Sanitize control chars to spaces and retry once.
+    return JSON.parse(content.replace(/[\x00-\x1f]/g, " "));
+  }
 }
 function contentOf(resp){ return resp && resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content; }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
