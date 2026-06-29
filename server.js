@@ -30,7 +30,7 @@ const JUDGE_API_KEY = process.env.JUDGE_API_KEY || '';
 const JUDGE_BASE_URL = (process.env.JUDGE_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '');
 const JUDGE_MODEL = process.env.JUDGE_MODEL || 'gemini-flash-lite-latest';
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
-function mkProvider(label, key, base, model, small){
+function mkProvider(label, key, base, model, small, tier){
   if(!key) return null;
   const baseUrl = (base || GEMINI_BASE).replace(/\/$/, '');
   // Providers with tight free token-per-minute limits (Groq, Cerebras) get a TRIMMED prompt so
@@ -43,13 +43,17 @@ function mkProvider(label, key, base, model, small){
   // gpt-oss / reasoning models on Groq + Cerebras emit malformed JSON under the complex judge prompt;
   // force strict JSON output (the prompt already says "Reply with ONLY a JSON object").
   if(/groq\.com|cerebras\.ai/i.test(baseUrl) || /gpt-oss|qwen3/i.test(model||'')) extra.response_format = { type:'json_object' };
-  return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra };
+  // tier: 1 = top-5 heavy seat (carries the veto), 2 = lighter resilience/diversity seat.
+  const t = (String(tier)==='2') ? 2 : 1;
+  return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra, tier: t };
 }
 // Provider roster: explicit A/B/C/D slots, PLUS the legacy single-provider config as an extra
 // member, so existing deployments keep working AND extra free models can be added alongside them.
 const PROVIDERS = [];
-['A','B','C','D'].forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL']); if(p) PROVIDERS.push(p); });
-if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
+// Up to 10 panel slots (A-J). Each: JUDGE_X_KEY/_BASE_URL/_MODEL/_LABEL/_SMALL/_TIER (TIER 1=top-5
+// heavy seat that carries the veto, 2=lighter resilience seat). A missing key skips the slot.
+'ABCDEFGHIJ'.split('').forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL'], process.env['JUDGE_'+s+'_TIER']); if(p) PROVIDERS.push(p); });
+if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL, '', process.env.JUDGE_TIER||'1'); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
 const SYNTH = (process.env.JUDGE_SYNTH || 'on').toLowerCase(); // 'on' | 'off' | a provider label that does the reconciliation
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
@@ -62,6 +66,10 @@ const EXPERIENCE_DIR = process.env.EXPERIENCE_DIR || '/Users/mac/Desktop/olympus
 
 // General, repo-agnostic judging rubric (loaded once; embedded verbatim into every /judge prompt).
 const JUDGE_RUBRIC = (() => { try { return fs.readFileSync(path.join(__dirname, 'judge_rubric.md'), 'utf8').trim(); } catch { return ''; } })();
+// The OLYMPUS VIABILITY STANDARD (official platform guidelines + accepted-project intelligence).
+// This is what the panel judges a repo against -- the substance that catches structurally-divergent
+// but actually-too-easy repos (the go-cloud failure).
+const JUDGE_STANDARD = (() => { try { return fs.readFileSync(path.join(__dirname, 'olympus_standard.md'), 'utf8').trim(); } catch { return ''; } })();
 
 function cacheKey(repo, ref){ return repo.replace(/[^a-z0-9]/gi,'_') + '@' + ref.replace(/[^a-z0-9]/gi,'_') + '.json'; }
 
@@ -108,13 +116,15 @@ function blob(files, maxFiles, perFile){
 
 const JUDGE_SCHEMA = {
   type:'object', additionalProperties:false,
-  required:['freeHelpers','approachWrong','invariant','disclaimer'],
+  required:['freeHelpers','approachWrong','invariant','olympusViable','disclaimer'],
   properties:{
     freeHelpers:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
       properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     approachWrong:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
       properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     invariant:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
+      properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
+    olympusViable:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
       properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     disclaimer:{type:'string'},
   },
@@ -128,13 +138,18 @@ const JUDGE_TASK =
 1. freeHelpers (THE #1 DIFFICULTY SIGNAL — inspect the base/abstract/default files shown, not just the variants): Is there a SHARED BASE / ABSTRACT / DEFAULT class (e.g. a DefaultXCompiler / AbstractDialect / BaseDriver) that ALREADY IMPLEMENTS the variants' contract, so each variant is only a THIN override calling into shared implemented methods? If so, a new feature is transcribe-once = EASY = "free helpers present". OR does EACH variant INDEPENDENTLY hand-roll the full contract with NO shared base doing the work (each variant implements the methods itself from scratch)? Then HARD = "no free helpers". Decide by checking whether the variants CALL shared implemented logic or implement everything themselves. If you cannot see a base file to judge this, answer "unclear" (do NOT assume "no free helpers"). Answer "free helpers present" (a base/shared code does the work) | "no free helpers" (each variant hand-rolls it) | "unclear".
 2. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
 3. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
+4. olympusViable (THE OVERALL VERDICT -- judge it against the OLYMPUS VIABILITY STANDARD shown above, NOT just structure): can THIS repo host a feature that is genuinely hard for a SOTA model (a real discovery gap or genuine breadth, NOT just "implement X across N variants"), small-surface, NOT already solved, fits the project, and is DETERMINISTICALLY testable offline? Be skeptical -- structural divergence alone is NOT enough (the go-cloud lesson). When unsure between yes and risky, choose "risky". Answer "yes" | "risky" | "no" with a reason naming the strongest realistic HARD feature (or why none exists).
 Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
-{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"... with code citations","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
+{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"... with code citations","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"olympusViable":{"verdict":"yes|risky|no","reason":"... naming the strongest realistic hard feature or why none exists","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
 
 // Assemble the paste-ready prompt at a given size profile (so small-context providers get less).
 function assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, sz){
-  return `You are reviewing the "${layer}" layer of ${repo}@${ref} to assess how hard a NEW feature built on this layer would be.
-
+  return `You are an Olympus reviewer assessing whether the "${layer}" layer of ${repo}@${ref} can host a genuinely HARD, Olympus-grade coding challenge. Judge against the standard below, not just structure.
+${JUDGE_STANDARD ? `
+=== OLYMPUS VIABILITY STANDARD (judge against this) ===
+${JUDGE_STANDARD}
+=== END STANDARD ===
+` : ''}
 THE VARIANT LAYER (${variant.length} files, ${variantDirs.size} dirs):
 ${blob(variant, sz.mv, sz.mvc)}
 
@@ -216,11 +231,12 @@ function verifyCitations(obj, allPaths, fileText){
 function shapeJudgment(repo, ref, layer, ctx, raw, source){
   const out = { repo, ref, layer, variantFiles:ctx&&ctx.variantFiles, aboveFiles:ctx&&ctx.aboveFiles, source,
     freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
+    olympusViable: raw.olympusViable || {},
     disclaimer: raw.disclaimer || 'Model judgment, not proof. No call-graph or runtime analysis was performed.' };
   // Ground every citation against the real repo file list (drops/repairs hallucinated paths).
   if(ctx && ctx.allPaths){
     let unverified = 0;
-    ['freeHelpers','approachWrong','invariant'].forEach(k => {
+    ['freeHelpers','approachWrong','invariant','olympusViable'].forEach(k => {
       verifyCitations(out[k], ctx.allPaths, ctx.fileText);
       (out[k].citations||[]).forEach(c => { if(/\((unverified path|symbol unverified)\)/.test(c)) unverified++; });
     });
@@ -296,7 +312,7 @@ const withDeadline = (promise, ms, label) => Promise.race([ promise,
 async function judgeOneModel(provider, prompt){
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
   const raw = parseModelJson(contentOf(resp));
-  return { label: provider.label, model: provider.model, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {} };
+  return { label: provider.label, model: provider.model, tier: provider.tier||1, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {}, olympusViable: raw.olympusViable || {} };
 }
 // Normalize any verdict phrasing to one of yes|no|unclear (handles the freeHelpers vocabulary too).
 function normVerdict(v){ const z = String(v||'').toLowerCase().trim();
@@ -328,6 +344,39 @@ function fuseDimension(members, dim, dispMap){
     + items.map(i => i.label+' ('+i.v+'): '+i.reason).join('  |  ');
   return { verdict:disp, reason, citations:cites, agreement, members: items.map(i => ({ label:i.label, verdict:i.v })) };
 }
+// olympusViable is yes|risky|no (not yes/no/unclear). Skeptical mapping: anything not clearly yes/no
+// falls to 'risky'.
+function normViable(v){
+  const z = String(v||'').toLowerCase().trim();
+  if(/^no\b|not viable|too easy|transcrib|^risky.*no/.test(z)) return 'no';
+  if(/^risky|borderline|maybe|unclear|\?|^possib/.test(z)) return 'risky';
+  if(/^yes\b|^viable|clearly|strong/.test(z)) return 'yes';
+  if(/\bno\b/.test(z) && !/\byes\b/.test(z)) return 'no';
+  if(/\byes\b/.test(z) && !/\bno\b/.test(z)) return 'yes';
+  return 'risky';
+}
+// THE PANEL VOTE on olympusViable. Tier-1 (top-5) members carry weight 2, tier-2 weight 1.
+// VETO RULE: if >=2 of the TOP-5 say "no", the repo is rejected outright. Otherwise a weighted
+// majority decides, and anything not a clear weighted yes/no resolves to the skeptical "risky".
+function fuseOlympus(members){
+  const items = members.map(m => ({ label:m.label, tier:(m.tier===2?2:1), n:normViable(m.olympusViable&&m.olympusViable.verdict), reason:(m.olympusViable&&m.olympusViable.reason)||'' }));
+  const top5 = items.filter(i => i.tier===1);
+  const topNo = top5.filter(i => i.n==='no').length;
+  const counts = { yes:0, risky:0, no:0 }; items.forEach(i => counts[i.n]++);
+  let verdict;
+  if(topNo >= 2) verdict = 'no';                                 // the user's veto rule
+  else {
+    const w = { yes:0, risky:0, no:0 }; items.forEach(i => { w[i.n] += (i.tier===1?2:1); });
+    if(w.no > w.yes && w.no >= w.risky) verdict = 'no';
+    else if(w.yes > w.no && w.yes > w.risky) verdict = 'yes';
+    else verdict = 'risky';
+  }
+  const reason = 'PANEL olympusViable = '+verdict.toUpperCase()
+    + (topNo>=2 ? ' (VETOED: '+topNo+' of top-5 said NO)' : '')
+    + ' [yes/risky/no = '+counts.yes+'/'+counts.risky+'/'+counts.no+', top-5 NO='+topNo+']. '
+    + items.map(i => i.label+'['+(i.tier===1?'T1':'T2')+']: '+i.n).join(', ');
+  return { verdict, reason, vetoed: topNo>=2, topNo, counts, members: items.map(i => ({ label:i.label, tier:i.tier, verdict:i.n })) };
+}
 // Optional synthesis: one model reads both verdicts and writes a reconciled, centralized reason.
 async function judgeSynthesize(provider, repo, layer, members){
   const prompt = `Two independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
@@ -350,8 +399,9 @@ async function judgeViaEnsemble(repo, ref, layer){
   // Single model available (one configured, or the other failed): return it directly.
   if(members.length===1){
     const m = members[0];
-    const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant,
+    const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable,
       disclaimer:'Single model ('+m.label+'). Not proof.'+(errors.length?' (other provider failed: '+errors.join('; ')+')':'') }, 'llm:'+m.model);
+    out.panel = fuseOlympus(members);
     if(errors.length) out.providerErrors = errors;
     return out;
   }
@@ -397,12 +447,18 @@ async function judgeViaEnsemble(repo, ref, layer){
       fused.reason = '[single-source: no file cited by 2+ models] ' + (fused.reason||'');
   };
   corro('freeHelpers', fhv, fh.agreement); corro('approachWrong', aw, fa.agreement); corro('invariant', iv, fi.agreement);
+  // THE PANEL VOTE on overall Olympus viability (weighted top-5, with the >=2-of-top-5 veto).
+  const panel = fuseOlympus(members);
+  // The centralized olympusViable verdict IS the panel vote; the synthesis only enriches the reason.
+  const ov = { verdict: panel.verdict, reason: panel.reason,
+    citations: [...new Set(members.flatMap(m => (m.olympusViable&&m.olympusViable.citations)||[]))] };
   const labels = members.map(m => m.label).join('+');
-  const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv,
+  const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv, olympusViable:ov,
     disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
-      +'. Agreement: helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
-  out.members = members.map(m => ({ label:m.label, model:m.model, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant }));
+      +'. PANEL olympusViable='+panel.verdict.toUpperCase()+(panel.vetoed?' (VETOED)':'')+'. Agreement: helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
+  out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
   out.agreement = { freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
+  out.panel = panel;
   out.synthesized = synthesized;
   if(errors.length) out.providerErrors = errors;
   return out;
@@ -456,6 +512,7 @@ async function judgeHeuristic(repo, ref, layer){
     freeHelpers:{ verdict: helperHit ? 'free helpers present' : 'unclear', reason: helperHit ? 'a shared base/abstract class with reusable methods is present in this layer ('+helperHit.path+') -- a feature built here could reuse it (EASY); aim a layer ABOVE it' : 'no obvious shared base/abstract helper class detected by the scan (cannot confirm without a code read)', citations: helperHit ? [helperHit.path] : [] },
     approachWrong:{ verdict: aHits.length>=3 ? 'likely yes' : aHits.length>=1 ? 'unclear' : 'no', reason: reason(aHits,'approach-wrong'), citations: cite(aHits) },
     invariant:{ verdict: iHits.length>=2 ? 'likely yes' : iHits.length>=1 ? 'unclear' : 'no', reason: reason(iHits,'invariant'), citations: cite(iHits) },
+    olympusViable:{ verdict: 'risky', reason: 'A regex scan cannot judge Olympus viability (whether a SOTA-hard, non-prescriptive, deterministic, unsolved feature exists). Defaulting to "risky" -- run the model panel for a real verdict.', citations: [] },
     disclaimer: 'Heuristic rubric-signal scan (regex over the layer) — NOT a model judgment and NOT proof. For a deeper read, use the paste-a-Claude-chat mode (mode=prompt). Always confirm in-editor.',
   };
 }
