@@ -42,7 +42,7 @@ function mkProvider(label, key, base, model, small, tier){
   if(/bigmodel\.cn/i.test(baseUrl) || /^glm/i.test(model||'')) extra.thinking = { type:'disabled' };
   // gpt-oss / reasoning models on Groq + Cerebras emit malformed JSON under the complex judge prompt;
   // force strict JSON output (the prompt already says "Reply with ONLY a JSON object").
-  if(/groq\.com|cerebras\.ai/i.test(baseUrl) || /gpt-oss|qwen3/i.test(model||'')) extra.response_format = { type:'json_object' };
+  if(/groq\.com|cerebras\.ai|openrouter\.ai/i.test(baseUrl) || /gpt-oss|qwen3/i.test(model||'')) extra.response_format = { type:'json_object' };
   // tier: 1 = top-5 heavy seat (carries the veto), 2 = lighter resilience/diversity seat.
   const t = (String(tier)==='2') ? 2 : 1;
   return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra, tier: t };
