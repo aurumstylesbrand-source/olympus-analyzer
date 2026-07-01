@@ -1559,8 +1559,34 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
 // FINAL VERDICT — combines the model consensus (judge) with the rubric distilled from the
 // recently-accepted Olympus projects (/Users/mac/Desktop/olympus-experience, Jun 2026). Returns
 // go / refine / no-go from the structural levers, plus the checks the console can't auto-measure.
+/* ===== REPO CAPACITY (the user's actual goal) =====
+   The goal is NOT "is this ONE angle proven hard" (a free-LLM opinion, skeptical by design). It is
+   "can this SOLID repo host MANY hard 700+ LOC features FAST." The 6 accepted projects prove exactly
+   two difficulty mechanisms, and BOTH generalize to any repo with 5+ parallel code paths + a deep
+   offline core: (1) DISCOVERY GAP -- an unfamiliar code path / non-guessable invariant agents get
+   wrong by default (trpc, drizzle keyset/chunked/relation-agg); (2) BREADTH -- correct composition
+   across many groups holds the rate down (gorm 19 groups, mangum). Edge-case volume NEVER moved a
+   pass rate. Capacity is computed from STRUCTURE (parallel-path count + offline core + accepted
+   precedent) -- deterministic and more honest than a single-angle LLM verdict. It is the HEADLINE for
+   board repos; the panel olympusViable is demoted to a per-ANGLE read. The ONLY true pass is a real
+   10-agent batch at <=20% -- capacity says "this repo can carry that", not "this feature will". */
+const ACCEPTED_PRECEDENT={
+  'trpc/trpc':'PROVEN -- an accepted Olympus project shipped on this repo (20% pass: contextFactory wired across 7 adapters + cross-cutting invariants)',
+  'drizzle-team/drizzle-orm':'PROVEN -- THREE accepted Olympus projects shipped on this repo (keyset / chunked / relation-aggregations, all on the RQB)'
+};
+// Repos whose contract is carried by a SHARED BASE -> fewer INDEPENDENT hard features (honest downgrade).
+const THIN_SURFACE=new Set(['casbin/casbin']);
+function repoCapacity(r){
+  const key=(r.fullName||'').toLowerCase(), t=repoTier(r);
+  if(!t.curated) return null;                 // capacity is a BOARD judgment (we deep-vetted these; not pasted unknowns)
+  const div=repoDiv(r), paths=(div!=null?div:0), prec=ACCEPTED_PRECEDENT[key];
+  if(THIN_SURFACE.has(key)) return {cap:'thin',paths,prec,line:'Thinner surface: a shared base carries the contract, so it hosts FEWER independent hard features. Real, but scope each feature tightly (one hard invariant + hard hidden tests) -- do not expect to mine many from it.'};
+  if(paths>=5 || prec) return {cap:'pass',paths,prec,line:'Solid repo: '+(paths>=5?paths+' parallel code paths / subsystems':'deep multi-subsystem core')+' + a deterministic offline core. It can host MANY hard 700+ LOC features via the two proven mechanisms -- a DISCOVERY GAP (an unfamiliar path / non-guessable invariant agents get wrong by default) or BREADTH (correct composition across the parallel paths).'+(prec?' '+prec+'.':'')};
+  return {cap:'weak',paths,prec,line:'Limited surface ('+paths+' paths) -- can host a hard feature but not many; verify depth before committing.'};
+}
 function finalVerdict(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,t=repoTier(r),paths=repoDiv(r),s=r.screen||{};
+  const cap=repoCapacity(r);
   // Out-of-scope guard: the backend found almost no supported-language source (the repo is dominated
   // by an unsupported language, e.g. C). Any verdict off stray scripts would be meaningless.
   if(c.source&&c.source.outOfScope){
@@ -1609,7 +1635,20 @@ function finalVerdict(r){
   const panelV = (c.judge&&c.judge.data&&c.judge.data.panel) || null;
   const ovReason = (jd&&jd.olympusViable&&jd.olympusViable.reason) ? String(jd.olympusViable.reason) : '';
   let verdict,vclass,line;
-  if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model panel + the accepted-project rubric. Run the assessment first (the panel reads the layer against the Olympus standard).'; }
+  // BOARD (curated, deep-vetted) repos: REPO CAPACITY is the headline -- can this solid repo host MANY
+  // hard features (the user's real goal). The panel olympusViable is demoted to a per-ANGLE read, since
+  // it judges one specific layer skeptically-by-design and is NOT the right question for a known-solid
+  // repo. Pasted/external repos (no capacity, we did not deep-vet them) keep the panel-led logic below.
+  if(cap && cap.cap==='pass'){
+    verdict = cap.prec ? 'PASS (proven repo)' : 'PASS (repo)'; vclass='go';
+    const angleRead = !jd ? 'run the model panel for a per-angle read (it does not change this repo-level PASS)'
+      : ovv==='no' ? 'the panel flags your CURRENT angle as weak -- pick another (the novelty gate + briefing steer you to a clean one)'
+      : ovv==='risky' ? 'the panel says your CURRENT angle needs scoping -- confirm it is hard + unclaimed before building'
+      : ovv==='yes' ? 'the panel also likes your current angle' : 'run the panel for a per-angle read';
+    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch at <=20% -- capacity says the repo can carry that, not that this one feature will.';
+  }
+  else if(cap && cap.cap==='thin'){ verdict='RISKY (thin repo)'; vclass='risky'; line=cap.line+(jd&&ovReason?' Panel on the angle: '+ovReason.slice(0,200):''); }
+  else if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model panel + the accepted-project rubric. Run the assessment first (the panel reads the layer against the Olympus standard).'; }
   else if(ovv==='no' || (panelV&&panelV.vetoed)){ verdict='NO-GO'; vclass='nogo'; line='The model PANEL judged this repo NOT Olympus-grade'+(panelV&&panelV.vetoed?' (VETOED: '+panelV.topNo+' of the top-5 said no)':'')+'. '+ovReason.slice(0,300)+' It only yields transcribable / easy features, or is not deterministically testable, or is already solved. Drop it and pick a stronger repo.'; }
   else if(ovv==='risky'){ verdict='RISKY'; vclass='risky'; line='The PANEL is NOT convinced this repo is Olympus-grade. '+ovReason.slice(0,300)+' Confirm a genuinely HARD (discovery gap / breadth), deterministic, NOT-already-solved feature exists BEFORE you invest -- this is the go-cloud failure mode: structurally divergent, but the realistic features are too easy for SOTA.'; }
   else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
@@ -1632,7 +1671,7 @@ function finalVerdict(r){
   const contested = !!(panelV && panelV.contested && !panelV.vetoed);
   const lineC = contested ? line+' [PANEL CONTESTED -- up for debate: the top-2 judges agree but a majority of the other seats dissent; treat the verdict as provisional and verify.]' : line;
   const riskC = (contested && !risk) ? 'The panel is CONTESTED: the top-2 judges and the other seats disagree. Treat the verdict as provisional -- re-run the judgment or read the layer before committing.' : risk;
-  return {verdict,vclass,line:lineC,high,highPass,altitudeNote,manual,confidence:(contested&&!confidence?'medium':confidence),risk:riskC,olympusViable:ovv,panel:panelV};
+  return {verdict,vclass,line:lineC,high,highPass,altitudeNote,manual,confidence:(contested&&!confidence?'medium':confidence),risk:riskC,olympusViable:ovv,panel:panelV,cap:cap};
 }
 function verdictCard(r){
   const v=finalVerdict(r);
@@ -1642,7 +1681,13 @@ function verdictCard(r){
   const drop=(v.vclass==='nogo'||v.vclass==='risky')?`<button class="btn warn" id="anDropRepo" style="margin-left:auto">${v.vclass==='risky'?'Verify failed? Drop &amp; replace':'Drop repo &amp; find a replacement'} →</button>`:'';
   const confChip=v.confidence?`<span class="confpill ${v.confidence}">confidence: ${v.confidence}</span>`:'';
   const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
-  const meaning={go:'PASS = the model panel judged this repo Olympus-grade (a hard, deterministic, not-already-solved feature exists) AND it has two discovery layers. Build the feature.',risky:'RISKY = the panel is NOT convinced this repo is Olympus-grade. Verify a genuinely HARD, deterministic, unsolved feature exists BEFORE investing — this is the go-cloud trap (structurally divergent, but the realistic features are too easy for SOTA).',refine:'REFINE = the repo is viable but the assessed layer is one lever short — the line above says what to engineer or which deeper layer to judge.',nogo:'NO-GO = the panel rejected this repo as not Olympus-grade (only easy/transcribable features, OR non-deterministic, OR already solved). Drop it and pick a stronger repo.',pending:''}[v.vclass]||'';
+  const meaning=(v.cap?{
+    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard 700+ LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will hit <=20% — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
+    risky:'RISKY (thin repo) = a shared base carries the contract here, so it hosts FEWER independent hard features. Usable, but scope each feature tightly and do not expect to mine many.',
+    refine:'',nogo:'',pending:''
+  }:{
+    go:'PASS = the model panel judged this repo Olympus-grade (a hard, deterministic, not-already-solved feature exists) AND it has two discovery layers. Build the feature.',risky:'RISKY = the panel is NOT convinced this repo is Olympus-grade. Verify a genuinely HARD, deterministic, unsolved feature exists BEFORE investing — this is the go-cloud trap (structurally divergent, but the realistic features are too easy for SOTA).',refine:'REFINE = the repo is viable but the assessed layer is one lever short — the line above says what to engineer or which deeper layer to judge.',nogo:'NO-GO = the panel rejected this repo as not Olympus-grade (only easy/transcribable features, OR non-deterministic, OR already solved). Drop it and pick a stronger repo.',pending:''
+  })[v.vclass]||'';
   const VC={yes:'go',risky:'risky',no:'nogo'};
   const nov=noveltyScan(r); let novBox='';
   if(nov.status==='ok' && nov.danger){ novBox=`<div class="riskbox" style="background:rgba(232,118,91,.10);border-color:rgba(232,118,91,.4)"><b>⛔ Upstream overlap on your angle (the traefik cause):</b> ${nov.angleHits.slice(0,3).map(h=>'PR #'+h.num+' '+esc(String(h.title).slice(0,54))).join('; ')} — re-point to another surface or this may be UNFIXABLE. <span class="hint">scanned ${nov.prScanned} open PRs live</span></div>`; }
@@ -1657,7 +1702,7 @@ function verdictCard(r){
     return `<div class="panelvote"><b>Panel — olympusViable</b> <span class="hint">(the top-2 judges decide; the other seats can only make it contested · yes/risky/no = ${p.counts.yes}/${p.counts.risky}/${p.counts.no}):</span><div style="margin-top:5px;font-size:12px;color:var(--text-2)">${status}</div><div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">${chips}</div></div>`;
   })() : '';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
-    <div class="blabel">Final verdict <span class="hint">model PANEL judged vs the official Olympus standard + accepted-project rubric</span></div>
+    <div class="blabel">Final verdict <span class="hint">${v.cap?'REPO CAPACITY (can it host many hard features) is the headline; the panel judges your specific ANGLE':'model PANEL judged vs the official Olympus standard + accepted-project rubric'}</span></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${confChip}${drop}</div>
     <div style="font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px">${esc(v.line)}</div>
     ${panelBox}
