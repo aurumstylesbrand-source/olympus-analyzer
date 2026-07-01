@@ -515,7 +515,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 20;
+const SEED_VERSION = 21;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
 const MAX_FEATURES = 3;
@@ -701,8 +701,10 @@ Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/Sing
 ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
 Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
 ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
-const DIVMAP={'typeorm/typeorm':28,'nestjs/nest':35,'traefik/traefik':25,'dapr/dapr':9,'nats-io/nats-server':8,'apollographql/apollo-server':9,'sequelize/sequelize':27,'expr-lang/expr':14,'knadh/koanf':9,'caddyserver/caddy':12,'grpc/grpc-go':12,'open-telemetry/opentelemetry-go':4};
-const DIVUNIT={'typeorm/typeorm':'DB drivers','nestjs/nest':'platform adapters','traefik/traefik':'providers','dapr/dapr':'actor subsystems','nats-io/nats-server':'server subsystems','apollographql/apollo-server':'reporting components','sequelize/sequelize':'SQL dialects','expr-lang/expr':'optimizer passes','knadh/koanf':'format parsers','caddyserver/caddy':'modules','grpc/grpc-go':'balancers','open-telemetry/opentelemetry-go':'exporters'};
+// SEED_VERSION 21 board: DEEP-SUBSYSTEM repos (difficulty = a hard invariant, NOT 5+ sibling adapters).
+// The number here is the count of INTERACTING subsystems (the depth signal), not flat variant folders.
+const DIVMAP={'grpc/grpc-go':6,'open-policy-agent/opa':6,'vitessio/vitess':5,'caddyserver/caddy':6,'casbin/casbin':5,'effect-ts/effect':6,'trpc/trpc':6,'tanstack/router':6,'remix-run/react-router':5,'typescript-eslint/typescript-eslint':5,'tanstack/query':5,'drizzle-team/drizzle-orm':5};
+const DIVUNIT={'grpc/grpc-go':'RPC subsystems','open-policy-agent/opa':'engine stages','vitessio/vitess':'planner stages','caddyserver/caddy':'Caddyfile stages','casbin/casbin':'enforcement components','effect-ts/effect':'runtime subsystems','trpc/trpc':'core subsystems','tanstack/router':'router-core subsystems','remix-run/react-router':'router subsystems','typescript-eslint/typescript-eslint':'analysis stages','tanstack/query':'query-core subsystems','drizzle-team/drizzle-orm':'builder components'};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
 function topAngles(r,n){
@@ -833,66 +835,71 @@ function repo(fullName,url,lang,license,stars,verified,kind,why,path,areas){
 const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
 
 const SEED_OLYMPUS={batch:1,repos:[
- repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','34k',true,'gold',
-  'High divergence: ~17 concrete DB drivers, each hand-rolling its own SQL generation, over a deep query-builder + relation layer. Genuinely heterogeneous adapters (not template copies) = strongest multi-adapter surface on the board.','A',[
-   A('The driver layer — ~17 concrete drivers each generating SQL differently','Adapter Abstraction','a feature wired across the drivers where one cross-driver invariant fails silently on a single driver = the discovery gap. Build across a representative subset, not all 17.'),
-   A('Query-builder / relation-loading semantics','Type Safety','how relations + the builder resolve is a non-obvious contract — the obvious approach is wrong'),
-   A('Schema-sync / migration diffing per driver','Ordered Execution','each driver diffs schema differently — a cross-driver invariant lives here')]),
- repo('nestjs/nest','https://github.com/nestjs/nest','TypeScript','MIT','70k',true,'gold',
-  'HTTP platform adapters (express / fastify / ws / socket.io) plus microservice transports over a DI/lifecycle core. Breadth in the adapters, depth in the injector contract.','A',[
-   A('Platform adapters + microservice transports','Adapter Abstraction','feature spanning the adapters with a contract that breaks on exactly one = Path A gap'),
-   A('DI / provider lifecycle + scope resolution','Lifecycle Hooks Multi-Consumer','the injector lifecycle is a cross-cutting invariant the naive impl violates'),
-   A('Interceptor / guard / pipe execution ordering','Ordered Execution','an ordering invariant across the request pipeline')]),
- repo('traefik/traefik','https://github.com/traefik/traefik','Go','MIT','53k',true,'gold',
-  '~18 service-discovery providers feeding a dynamic-config + middleware-chain core. Go, offline-buildable, real provider heterogeneity.','A',[
-   A('The provider layer (~18 discovery providers)','Service Discovery','feature across providers where config reconciliation must hold on each = Path A'),
-   A('Middleware chain ordering + dynamic config reload','Ordered Execution','a cross-cutting ordering / reload invariant the naive impl fails'),
-   A('Load-balancer / health-check state','Health-aware LB','per-backend health-state contract')]),
- repo('dapr/dapr','https://github.com/dapr/dapr','Go','Apache-2.0','26k',true,'gold',
-  'Distributed application runtime. The ACTORS subsystem (pkg/actors: placement, dissemination, reentrancy, callbackstream, reminders/timers, router, drain/lifecycle, scheduler coordination) is a DEEP multi-subsystem state machine -- the nestjs-style interacting-subsystems profile, NOT flat parallel adapters. PANEL olympusViable = YES on the actors layer (glm + gemini yes): a hard cross-cutting feature (actor reentrancy + configurable concurrency, placement-aware backpressure, or deterministic exactly-once actor-state migration across placement changes) needs lifecycle / ordering / locking invariants a naive impl violates. Deterministic offline (go test, dedicated fake package). Go-primary, Apache-2.0, 26k stars. Judge the actors / placement / workflow layer.','A',[
-   A('Actor reentrancy + per-actor concurrency control','Lifecycle Hooks Multi-Consumer','the reentrancy stack + concurrency over reentrancystore.Store is a lifecycle invariant; the obvious approach mishandles re-entry / locking'),
-   A('Placement-aware backpressure / exactly-once state migration','Two-phase Commit','placement + dissemination + drain coordination; exactly-once migration across placement changes is an intermediate-state invariant a naive impl violates'),
-   A('Reminders / timers + scheduler coordination','Ordered Execution','timer / reminder ordering across the scheduler is a cross-cutting contract the obvious approach gets wrong')]),
- repo('nats-io/nats-server','https://github.com/nats-io/nats-server','Go','Apache-2.0','20k',true,'gold',
-  'High-performance messaging server. The SERVER core (JetStream stream / consumer state machines, Raft clustering, account / permission cross-cutting invariants, the auth-callout dispatcher, subscription routing) is a DEEP single-system surface (variantKinds empty -- the OPPOSITE of flat-adapter sprawl). PANEL olympusViable = YES on the server layer (glm + gemini yes): a hard feature touching the centralized auth dispatcher + strict register / unregister ordering + atomic-counter / balanced-lifecycle invariants (naive impls miss mutex acquisition or call-ordering -> deadlocks / leaks / races uncaught by value-only tests). Deterministic offline (in-process loopback servers, no live services). Go-primary, Apache-2.0, 20k stars. Judge the server / jetstream / consumer layer.','A',[
-   A('Auth-callout dispatcher + account / permission ordering','Access Control','the centralized auth dispatch (server/auth_callout.go) has strict ordering; the obvious approach misses locking / call-order'),
-   A('JetStream stream / consumer lifecycle + balanced register / unregister','Lifecycle Hooks Multi-Consumer','atomic counters + balanced lifecycle hooks; a naive impl violates the counter / registration balance -> state corruption'),
-   A('Subscription routing + clustering state','Two-phase Commit','cross-subsystem routing / clustering state is an intermediate-state invariant the naive impl violates')]),
- repo('apollographql/apollo-server','https://github.com/apollographql/apollo-server','TypeScript','MIT','14k',true,'gold',
-  'GraphQL server. The usageReporting subsystem (traceTreeBuilder, operationDerivedDataCache, durationHistogram, stats, traceDetails) is a DEEP multi-subsystem state machine -- a minute-bucket LRU cache, a TraceTreeBuilder lifecycle (startTiming before stopTiming, exactly once), SizeEstimator / protobuf size synchronization, schema-hash-keyed isolation across gateway updates -- the nestjs-style cross-cutting profile, NOT the flat top-level plugin set (which reads RISKY). PANEL olympusViable = YES on usageReporting (glm + gemini yes): a hard feature (custom cost-model trace sampling across the reporting pipeline, or adaptive path-based error aggregation interacting with the size estimator + protobuf serialization) the obvious approach gets wrong. Deterministic offline (jest + nock mocks). TS-primary, MIT, 14k stars. Judge the usageReporting subsystem, NOT the top-level plugins.','A',[
-   A('Cost-model trace sampling across the reporting pipeline','Aggregation','custom sampling spanning traceTreeBuilder + histogram + protobuf; the obvious per-trace approach is wrong'),
-   A('TraceTreeBuilder lifecycle (startTiming / stopTiming exactly once)','Lifecycle Hooks Multi-Consumer','the timing lifecycle is an intermediate-state invariant a naive impl violates'),
-   A('Minute-bucket LRU cache + size / protobuf synchronization','Two-phase Commit','SizeEstimator must stay in sync with protobuf serialization across schema-hash isolation -- a cross-cutting invariant')])
+ repo('grpc/grpc-go','https://github.com/grpc/grpc-go','Go','Apache-2.0','23k',true,'gold',
+  'Deep gRPC stack: resolver / balancer / transport / retry / flow-control / service-config subsystems interacting through a stream state machine (NOT flat adapters). Offline-deterministic core: the client retry / stream state machine (stream.go, service_config.go) tests in-process via bufconn (no live network) -- but you MUST inject a fake clock (upstream retry tests are wall-clock, non-deterministic). CLEAN ANGLE (0 open PRs on hedging/retry, verified 2026-07): client-side request HEDGING (gRFC A6) is unbuilt -- a TODO(hedging) still sits in stream.go and hedgingPolicy is silently ignored by service_config.go. Hard because the obvious sequential-retry model is WRONG: hedging fires concurrent attempts on a hedgingDelay timer up to maxAttempts, the first non-fatal response commits and cancels the rest, and it must interact correctly with the existing retryThrottler token bucket + replay buffer + transparent-retry exclusion. Scope to a bounded hedging slice + injected clock. Apache-2.0, Go 99.6%, 23k stars.','A',[
+   A('Client-side request hedging, gRFC A6 -- stream.go TODO(hedging), service_config.go','Retry','a concurrent-attempt state machine; first-commit-cancels-rest + throttler interaction is a non-guessable invariant the sequential-retry approach gets wrong'),
+   A('Hedging attempt cancellation + commit propagation','Cancellation Propagation','committing one attempt must cancel all outstanding attempts and contexts exactly once'),
+   A('Retry/hedge throttler token-bucket balance','State Machines','the shared retryThrottler must stay balanced across concurrent attempts -- an intermediate-state invariant')]),
+ repo('open-policy-agent/opa','https://github.com/open-policy-agent/opa','Go','Apache-2.0','12k',true,'gold',
+  'Deep Rego policy engine: parser/AST -> compiler (safety, rewriting, indexing) -> topdown evaluator (bindings, virtual/comprehension cache, early-exit, save-set) -> partial evaluation -> planner/IR. Subsystems share invariants (early-exit must disable under partial-eval / comprehensions / negation) -- a stateful interacting engine, NOT flat adapters. Offline-deterministic: the topdown evaluator + planner run pure in-process. CLEAN ANGLE (12 open PRs, all deps/perf -- none on the evaluator, verified 2026-07): extend the topdown EARLY-EXIT / findOne optimization to a construct it currently bails on (v1/topdown/eval.go earlyExit/findOne, earlyExitError/deferredEarlyExitError). Hard because the obvious stop-at-first-solution is WRONG: correctness requires early-exit to stay DISABLED under partial eval (saveSet != nil), inside comprehensions and under negation, and the deferred error must unwind to exactly the right stack frame -- composition across 5-8 files. CAUTION: OPA is heavily represented in training data, so push the discovery gap into an UNFAMILIAR branch (guard the Nova MSG floor, not just pass rate); diff the final feature against recent merges 8695/8816/8827. Apache-2.0, Go 84.3%, 12k stars.','A',[
+   A('Extend topdown early-exit to an unsupported construct -- eval.go earlyExit/findOne','Hot-path Optimization','the obvious stop-at-first is wrong; early-exit must disable under partial-eval/comprehension/negation -- a non-guessable invariant across the evaluator'),
+   A('Deferred early-exit error unwinding to the correct frame','Invariant Enforcement','deferredEarlyExitError must propagate to exactly the right call-stack frame; naive propagation corrupts results'),
+   A('Partial-eval save-set interaction','Determinism','early-exit vs saveSet != nil is a cross-cutting correctness invariant')]),
+ repo('vitessio/vitess','https://github.com/vitessio/vitess','Go','Apache-2.0','21k',true,'gold',
+  'Distributed MySQL-compatible database. Deep OFFLINE core: go/vt/sqlparser (lexer/sql.y/AST/normalizer/rewriter) + go/vt/vtgate/planbuilder (semantic analyzer -> logical operators -> physical route/plan), validated against testdata/*.json GOLDEN plans -- plans build from AST + a static VSchema, no cluster/network/time. A genuine multi-stage compiler, NOT flat adapters. CLEAN ANGLE: aggregation / window-function pushdown across a SCATTER route in planbuilder/operators/ -- correct composition across 5-10 operator files where the obvious tree-rewrite is wrong (clauses must be read AFTER the operator phase runs). AVOID subquery/EXISTS decorrelation -- open PR 20042 is on that exact surface; re-scan open planner PRs on your chosen surface before building. HEAVY monorepo (~36MB) -- the live judge may 502 on the free tier; rely on the structural read + this vetting, or scope the fetch to planbuilder. Apache-2.0, Go 93.3%, 21k stars.','A',[
+   A('Aggregation / window-function pushdown across a scatter Route -- planbuilder/operators/','Aggregation','the obvious tree-rewrite is wrong; correct pushdown composes across 5-10 operator files against golden plans'),
+   A('Operator-phase clause ordering','Ordered Execution','clauses must be read after the operator phase -- an ordering invariant the naive planner violates'),
+   A('Scatter-plan route composition (avoid the taken subquery-decorrelation surface, PR 20042)','Composition','cross-shard plan composition is a non-obvious contract')]),
+ repo('caddyserver/caddy','https://github.com/caddyserver/caddy','Go','Apache-2.0','74k',true,'gold',
+  'Web server / reverse proxy. Deep OFFLINE Caddyfile core: lexer -> dispenser -> parser -> import-graph (DFS cycle detection) -> adapter -> JSON, plus the replacer engine -- pure string/AST transformation, zero network/time. CLEAN ANGLE (no open PR on the formatter, verified 2026-07): Caddyfile FORMATTER IDEMPOTENCY / round-trip fidelity (caddyconfig/caddyfile/formatter.go + lexer.go token-state). Hard because the obvious rune-by-rune reindentation silently breaks the interacting cases the lexer already distinguishes -- heredoc bodies must pass through untouched while structure reindents; backtick vs double-quote vs backslash-escape must be preserved; comment-at-token-start vs mid-token hash; escaped-newline continuations -- and format(format(x)) == format(x) must hold across ALL of them at once. Frame it as an idempotency HARDENING invariant, NOT a new feature (caddy fmt already ships). AVOID the parser surface -- open PRs 7344 (extensible caddyfile, draft) / 7775 / 7446 are there; the formatter lane is clear. Stays in CORE (clears the module-first philosophy gate). Apache-2.0, Go 97.9%, 74k stars.','A',[
+   A('Caddyfile formatter idempotency / round-trip -- formatter.go + lexer.go','Idempotency','format(format(x))==format(x) across heredoc/escape/comment/continuation is a non-guessable invariant; rune-by-rune reindent is wrong'),
+   A('Lexer token-state preservation (heredoc / quote / escape)','Boundary Conditions','the formatter must respect the lexer token distinctions or corrupt heredocs/escapes'),
+   A('Import-graph provenance through formatting','Serialization','per-token line/import provenance must survive the round-trip')]),
+ repo('casbin/casbin','https://github.com/casbin/casbin','Go','Apache-2.0','20k',true,'gold',
+  'Authorization engine. Deep OFFLINE core: enforcer + PERM model interpreter + govaluate matcher + effector all run in-process from a .conf/.csv, zero network/time. CLEAN ANGLE (7 open PRs, none on the matcher/effector core, verified 2026-07): transitive RBAC role resolution under DOMAIN patterns + the g-function (rbac/default-role-manager/role_manager.go). Hard because the obvious flat role lookup is wrong: transitive resolution across domain-scoped + pattern-matched roles must terminate, respect priority, and stay consistent as the policy mutates. CAUTION: casbin routes all models through ONE shared Enforcer + a ~145-line default_effector.go, so most angles reduce to config + tiny helpers = TOO EASY -- you MUST commit to the transitive-RBAC-under-domain-patterns invariant as the single hard core and pair it with HARD hidden tests, or it under-clears the 20% bar. Avoid priority/deny effects (already shipped). Apache-2.0, Go 99.98%, 20k stars.','A',[
+   A('Transitive RBAC under domain patterns -- rbac/default-role-manager/role_manager.go','Access Control','transitive role resolution across domain-scoped pattern roles is a non-obvious termination + consistency invariant; flat lookup is wrong'),
+   A('g-function transitive closure consistency on policy mutation','Consistency','the role graph must stay consistent as policies are added/removed mid-enforcement'),
+   A('Matcher + effector composition (scope tight -- shared enforcer makes wide angles too easy)','Invariant Enforcement','the difficulty must live in the invariant, not the surface -- pair with hard tests')]),
+ repo('Effect-TS/effect','https://github.com/Effect-TS/effect','TypeScript','MIT','15k',true,'gold',
+  'TypeScript effect system. Deep multi-subsystem runtime: fiber scheduler, structured concurrency/interruption, STM (TRef/TMap transactional retry), Schedule state machine, Layer/Scope lifecycle -- genuine interacting internals. Offline-deterministic via a first-class TestClock (packages/effect/test has offline Fiber/STM/Schedule/Stream suites, no wall-clock/random). CLEAN ANGLE (Schedule/STM/Fiber PRs are narrow bug fixes only -- no in-flight feature work, verified 2026-07): Schedule COMPOSITION semantics -- union (shorter delay, continue-if-either) vs intersect (longer delay, continue-if-both) interacting under jittered/recurs bounds and the repeat/retry driver (packages/effect/src/Schedule.ts + internal decision loop). Hard because agents get the delay-selection + continuation-fixpoint interaction backwards, and correctness must compose across the Schedule decision core + Effect repeat/retry driver + TestClock. Secondary: Fiber interruption propagation across fork/scope boundaries. Design a specific composed INVARIANT, not add-a-combinator. HEAVY monorepo -- live judge may 502; rely on the structural read. MIT, TS 99.95%, 15k stars.','A',[
+   A('Schedule composition (union/intersect delay + continuation fixpoint) -- src/Schedule.ts','Composition','the delay-selection + continuation interaction is non-guessable; agents get union/intersect backwards; composes with the repeat/retry driver + TestClock'),
+   A('Fiber interruption propagation across fork/scope','Cancellation Propagation','interruptibility masking + finalizer ordering is an intermediate-state invariant the naive impl violates'),
+   A('STM transactional retry / orElse composition','Reentrancy','transactional retry composition is a non-obvious contract')]),
+ repo('trpc/trpc','https://github.com/trpc/trpc','TypeScript','MIT','40k',true,'gold',
+  'End-to-end typesafe RPC. Deep core in packages/server/src/unstable-core-do-not-import/: router / procedureBuilder / middleware / parser / transformer / error-formatter subsystems. Offline-deterministic: procedure + middleware resolution + input-parser chaining is pure (build a router, call via createCaller, assert resolved input/context/output). CLEAN ANGLE (no open PR on the input pipeline, verified 2026-07): the multi-.input() RUNTIME COMBINE invariant (middleware.ts createInputMiddleware + procedureBuilder.ts). Hard because the real logic is a SHALLOW spread only when BOTH sides are plain objects, else the whole accumulated input is silently discarded -- agents assume deep-merge or accumulate. The invariant threads a user middleware next({input}) override through and later validators merge on top -- a non-guessable cross-file invariant across 5-6 files. Keep the task on the runtime replace-vs-merge / override-threading semantics, NOT the typing (that corner has closed issues + collides). AVOID error-formatter (open PR 7279) + router-merge context (7377) + subscriptions/streaming (7401/7406/7384). MIT, TS-primary, 40k stars.','A',[
+   A('Multi-.input() runtime combine invariant -- middleware.ts + procedureBuilder.ts','Middleware Chains','shallow-spread-only-if-both-objects, else discard; override threading through next({input}) -- the obvious deep-merge/accumulate is wrong'),
+   A('Input-middleware override threading','Composition','a user next({input}) override must thread through and later validators merge on top -- a cross-file invariant'),
+   A('Parser chaining across procedure builders','Contract Enforcement','getParseFn chaining is a non-obvious contract')]),
+ repo('TanStack/router','https://github.com/TanStack/router','TypeScript','MIT','10k',true,'gold',
+  'Type-safe router. Deep framework-agnostic core in packages/router-core/src (matching trie / path algebra / search params / loaders / type inference / SSR) -- the adapters are thin. Offline-deterministic: route matching/ranking + search-middleware are pure functions with existing headless suites. CLEAN ANGLE (0 open PRs on this surface, backed by open issues 5984/5292/3335, verified 2026-07): search-middleware COMPOSITION invariant (searchMiddleware.ts retainSearchParams / stripSearchParams + buildLocation in router.ts). Hard because middlewares chain via next(search) and accumulate metadata (meta.removed/explicit/removedAny/defaulted); a param one middleware strips must NOT be resurrected by a later retain, and default-stripping must respect prior marks -- the obvious independent map/filter per middleware is wrong; you must thread the metadata accumulator. AVOID search-param serialization (open PRs 7568/7652/7679) + route-ranking (merged 5722 + perf 7463/7449) + interpolatePath (7594). MIT, TS-primary.','A',[
+   A('Search-middleware composition invariant -- searchMiddleware.ts retain/stripSearchParams','Middleware Chains','strip-then-retain metadata threading; a stripped param must not be resurrected -- independent per-middleware map/filter is wrong'),
+   A('Metadata accumulator threading into buildLocation','Composition','meta.removed/explicit/defaulted must thread across the chain into router.ts buildLocation'),
+   A('Search-param default vs explicit precedence','Invariant Enforcement','default-stripping must respect what a prior middleware marked explicit')]),
+ repo('remix-run/react-router','https://github.com/remix-run/react-router','TypeScript','MIT','55k',true,'gold',
+  'Router + data layer (v8). Deep core in packages/react-router/lib/router/: matching/ranking (utils.ts) + the ~5000-line data-router state machine (router.ts: navigation, loader/action orchestration, revalidation, fetchers, deferred). Offline-deterministic: route ranking/matching is a pure function of (route tree, pathname) with fixed score constants; loaders/actions are injectable stubs. CLEAN ANGLE (0 open PRs on computeScore/rankRouteBranches, verified 2026-07): route-ranking invariant under explodeOptionalSegments (utils.ts computeScore/rankRouteBranches/matchRoutes). Hard because optional segments (/a?/b?) are EXPLODED into multiple branches before scoring and the tie-break is sibling declaration order -- the obvious score-the-literal-path-once-and-sort is wrong; an exploded child must never rank ahead of an earlier-declared sibling even with a higher raw score. Documented subtle-bug history (PR 9727). Frame as a correctness/invariant BUG FIX (new features need an Open-Governance proposal; bug fixes merge directly). AVOID revalidation getMatchesToLoad (open PR 15129) + deferred/abort (15153/14761) + param encoding (15265/14621). MIT, TS-primary, 55k stars.','A',[
+   A('Route-ranking under optional-segment explosion -- utils.ts computeScore/rankRouteBranches','Ordered Execution','explode -> score -> stable-sort with sibling-order tie-break; score-once-and-sort is wrong -- a non-guessable ranking invariant'),
+   A('explodeOptionalSegments branch recombination','Boundary Conditions','exploded branches must preserve sibling declaration order -- an edge the naive impl misses'),
+   A('matchRoutes specificity determinism','Determinism','ranking must be deterministic across exploded variants')]),
+ repo('typescript-eslint/typescript-eslint','https://github.com/typescript-eslint/typescript-eslint','TypeScript','MIT','16k',true,'gold',
+  'The TypeScript-ESLint toolchain. Deep analysis stages: parser -> typescript-estree (AST converter) -> scope-manager (referencer/visitor, a fork of eslint-scope) -> type-utils. Offline-deterministic: scope analysis is pure; the target subsystem changes ~monthly (stable). CLEAN ANGLE (issue 11714, labeled accepting-prs, NO linked PR, verified 2026-07): implicit-global multi-declaration MERGE in scope-manager (GlobalScope.defineImplicitVariable + Referencer.populateGlobalsFromLib). Hard because the obvious fix (if the variable already exists, skip) IS the current bug: a single lib global (Array/Math/globalThis/undefined) is declared MANY times across lib files with differing type-vs-value attributes, and the implicit variable must MERGE/accumulate them, not first-write-wins. A perfect local-test blind spot: an agent verifies with String/Object (which happen to work) and misses the 8-name set that does not. Composition across referencer + global-scope + lib enumeration. AVOID type-utils (open PRs 12421/12284) + the estree binary-chain fix (12405). Frame as a bug fix (issue-first policy; 11714 is accepting-prs). MIT, TS-primary, 16k stars.','A',[
+   A('Implicit-global multi-declaration merge -- scope-manager defineImplicitVariable','Diff/Merge/Patch','lib globals are declared many times with differing type/value attrs; must merge not first-write-wins -- skip-if-exists is the bug'),
+   A('Local-test blind spot (String works, Math/Array do not)','Consistency','the working subset masks the broken 8-name set -- hidden tests must cover the missed names'),
+   A('Referencer + global-scope + lib enumeration composition','Invariant Enforcement','correctness spans 3 files agreeing on the multi-declaration model')]),
+ repo('TanStack/query','https://github.com/TanStack/query','TypeScript','MIT','46k',true,'gold',
+  'Async state manager. Stable query-core (no rewrite -- v6 is Svelte-only): retryer / observer / query-cache / notifyManager batching / structural sharing. Offline-deterministic with FAKE TIMERS (no real network). CLEAN ANGLE (0 open PRs on the core retryer, verified 2026-07): the retryer PAUSE/RESUME/CANCEL invariant across offline->online (core Retryer createRetryer + canContinue/continueRetry + onlineManager gate). Hard because the obvious setTimeout + retry-counter is wrong: the retryer must PAUSE mid-backoff when onlineManager goes offline, hold the pending promise, and resume the SAME attempt (not restart the counter, not double-fire) when back online, while staying cancelable (cancel during pause rejects cleanly). Small surface (1 symbol), non-guessable invariant, fully fake-timer testable. Secondary: the enabled-transition unsuspend ordering (real issue 8499). AVOID observer referential stability (10265) + useQueries structuralSharing (10101) + the resetQueries cluster (11012/10894/10891). MIT, TS-primary, 46k stars.','A',[
+   A('Retryer pause/resume/cancel across offline->online -- core Retryer','Retry','pause mid-backoff, resume the SAME attempt exactly once, stay cancelable -- setTimeout+counter is wrong'),
+   A('Paused-attempt promise holding + single resume','Observable Async State','the pending promise must resolve exactly once across pause/resume -- an intermediate-state invariant'),
+   A('Cancellation during pause','Cancellation Propagation','cancel while paused must reject cleanly without firing the attempt')]),
+ repo('drizzle-team/drizzle-orm','https://github.com/drizzle-team/drizzle-orm','TypeScript','Apache-2.0','29k',true,'gold',
+  'TypeScript SQL ORM / query builder. Offline-deterministic: the classic builder emits SQL via .toSQL() ({sql, params}) with no DB -- pure + testable. CLEAN ANGLE (no open PR on set operations -- only a dependabot bump, verified 2026-07): SET-OPERATION (UNION / INTERSECT / EXCEPT) cross-dialect PRECEDENCE + parenthesization + ORDER BY/LIMIT scoping (the union builder -> dialect.buildSetOperationQuery, PgDialect/MySqlDialect/SQLiteDialect). Hard because the obvious concatenate q1 UNION q2 ORDER BY is wrong: SQLite forbids parentheses around compound SELECTs and binds a trailing ORDER BY/LIMIT to the WHOLE compound, Postgres/MySQL allow parenthesized branches + per-branch ordering, and mixed-precedence chains (a UNION b INTERSECT c) differ across engines -- a non-guessable cross-dialect invariant on a small public surface. Base support merged long ago (1218) = shipped-but-shallow, ideal for a hard-edge task. AVOID RQB v2 (pre-1.0, churning -- MSSQL variant still open PR 5886, live correctness PRs 5673/5457/5429) and the encoder/placeholder area (5731). Structurally different from the prior accepted drizzle RQB-dialect problem. Apache-2.0, TS-primary, 29k stars.','A',[
+   A('Set-op (UNION/INTERSECT/EXCEPT) cross-dialect precedence -- dialect.buildSetOperationQuery','Ordered Execution','SQLite binds trailing ORDER BY/LIMIT to the whole compound + forbids parens; PG/MySQL differ -- concatenate-and-order is wrong'),
+   A('Compound-select parenthesization per dialect','Serialization','per-dialect parenthesization of compound SELECTs is a non-obvious cross-dialect contract'),
+   A('Mixed-precedence chain scoping (a UNION b INTERSECT c)','Boundary Conditions','operator precedence in compound chains diverges across engines')])
 ]};
 // All 6 audited 2026-06-27 against live GitHub + determinism: Go/TS-primary, permissive, active,
 // deterministic (or scopeable to an offline core). Replaces the prior unvalidated set (dropped
 // ky = network/HTTP-flaky, zerolog = unvalidated, casbin = unvalidated).
-const SEED_MARS={batch:1,repos:[
- repo('expr-lang/expr','https://github.com/expr-lang/expr','Go','MIT','7.9k',true,'gold',
-  'Expression language with a compiler + bytecode VM and 14+ optimizer AST-rewrite passes (fold, inArray, inRange, filterMap/Len/First/Last, sumRange/Array/Map, ...), each hand-rolling the same Visitor Visit(*Node) contract. ZERO external deps; go test fully offline + deterministic. Behavioural invariants: operator semantics, type-checking, constant-folding correctness. Go 99.9%, 7.9k stars.','',[
-   A('A new optimizer rewrite pass','Rule Engines','each pass transforms the AST under one Visitor contract; the correctness invariant is pinnable'),
-   A('Compile-time type checking / operator semantics','Type Safety','non-obvious contract -- naive impl wrong on edge operators')]),
- repo('knadh/koanf','https://github.com/knadh/koanf','Go','MIT','4k',true,'gold',
-  '9 format parsers (json/yaml/toml/hcl/hjson/huml/kdl/dotenv/nestedtext) each hand-rolling the koanf.Parser Unmarshal/Marshal contract, over a deep-merge + flatten/unflatten engine (Merge / MergeStrict / Flatten / Unflatten / Delete / Search). Deterministic + offline on the parsers + maps core (table-driven go test, no services); exclude the remote providers/* layer. Go 99.6%.','',[
-   A('Nested deep-merge + flatten/unflatten round-trip','Diff/Merge/Patch','structural merge with intermediate-state type-conflict invariants -- obvious approach wrong on nesting'),
-   A('Strict-mode merge (type-mismatch detection)','Config Validation','clear behavioural contract at Mars scale')]),
- repo('itchyny/gojq','https://github.com/itchyny/gojq','Go','MIT','3.8k',true,'gold',
-  'Pure-Go jq implementation: lexer + goyacc parser + bytecode compiler + VM + builtins. Deterministic offline (go test -race; 192KB golden program->output corpus). Rich invariants: backtracking generators, path-expression assignment, operator precedence, structural sharing -- avoid the clock/locale builtins (now/localtime). Go 93.2%.','',[
-   A('A new builtin / operator with backtracking semantics','Rule Engines','generator + path-expression invariants pinnable against the golden corpus'),
-   A('Path-expression assignment / update','Projections','structural update is a non-obvious contract -- obvious approach wrong')]),
- repo('tidwall/gjson','https://github.com/tidwall/gjson','Go','MIT','15.5k',true,'gold',
-  'GJSON path-syntax query/extraction over JSON -- string in, value out. Library logic is pure + offline (no net/clock); write your OWN deterministic tests (the upstream suite has random fuzz tests to exclude). Clean behavioural surface: path syntax, modifiers, multipaths. Go 100%, 15.5k stars.','',[
-   A('Path-syntax extension / modifier / projection','Projections','string in -> value out, easy to pin deterministically'),
-   A('Multipath / query-filter evaluation','Rule Engines','non-obvious matching contract')]),
- repo('gvergnaud/ts-pattern','https://github.com/gvergnaud/ts-pattern','TypeScript','MIT','15k',true,'gold',
-  'Exhaustive pattern matching with deep type inference; both runtime match() output AND type-level exhaustiveness are behavioural. Deterministic offline (jest, no net/clock/random). TS 99.8%, 15k stars.','',[
-   A('A new pattern combinator (runtime + type-level)','Rule Engines','runtime output is pinnable; exhaustiveness is a type invariant'),
-   A('Match resolution ordering / guard semantics','Conflict Resolution','first-match + guard interaction is a non-obvious contract')]),
- repo('flightcontrolhq/superjson','https://github.com/flightcontrolhq/superjson','TypeScript','MIT','5.3k',true,'gold',
-  'Serialize/deserialize Dates, BigInts, Maps, Sets, RegExp, Errors, URLs + custom types via a transformer rule registry (10 simple + 4 composite rules) and a referential-equality-preserving walker. Deterministic offline (vitest, no net/random; exclude the one wall-clock perf test). Invariants: round-trip fidelity, referential-equality + dedup correctness. TS 97.4%.','',[
-   A('Custom-type transformer registration / round-trip','Serialization','clear round-trip contract with referential-equality invariants'),
-   A('Referential-equality + circular-ref dedup','Diff/Merge/Patch','naive impl breaks the dedup intermediate-state invariant')])
-]};
+const SEED_MARS={batch:1,repos:[]};
 
 /* ---------- state + storage ---------- */
 let state={olympus:null,mars:null,used:[],gh:''};
@@ -1397,8 +1404,70 @@ function wireScreen(r){
 // Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
 // effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
 // utility folder. These point the judge at the layer that actually carries the divergence.
-const CURATED_JUDGE_LAYERS={'dapr/dapr':['actors','placement','workflow'],'nats-io/nats-server':['server','jetstream','consumer'],'apollographql/apollo-server':['usageReporting','plugin','cache'],'typeorm/typeorm':['driver'],'nestjs/nest':['adapters','core'],'traefik/traefik':['provider'],'sequelize/sequelize':['abstract-dialect','mysql','postgres'],'expr-lang/expr':['optimizer'],'knadh/koanf':['parsers']};
+const CURATED_JUDGE_LAYERS={'grpc/grpc-go':['stream','balancer','resolver'],'open-policy-agent/opa':['topdown','planner','ast'],'vitessio/vitess':['planbuilder','sqlparser','operators'],'caddyserver/caddy':['caddyfile','caddyconfig'],'casbin/casbin':['rbac','effector','model'],'effect-ts/effect':['Schedule','Fiber','packages/effect/src'],'trpc/trpc':['unstable-core','procedureBuilder','middleware'],'tanstack/router':['router-core','searchMiddleware','path'],'remix-run/react-router':['lib/router','utils'],'typescript-eslint/typescript-eslint':['scope-manager','referencer','type-utils'],'tanstack/query':['query-core','retryer','queryCache'],'drizzle-team/drizzle-orm':['dialect','query-builder']};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
+
+/* ===== NOVELTY GATE (the traefik lesson) =====
+   A repo can be perfectly Olympus-grade AND have your exact angle already in an open upstream PR,
+   which is an UNFIXABLE rejection. angle = keywords for the RECOMMENDED clean angle; taken = surfaces
+   known to be under active open-PR work at vetting (2026-07). noveltyScan() matches these live against
+   the repo's OPEN pull-request + issue titles fetched in fetchRepoActivity(). */
+const NOVELTY_KEYWORDS={
+ 'grpc/grpc-go':{angle:['hedg'],taken:[],note:'hedging was unbuilt with 0 open PRs at vetting (2026-07)'},
+ 'open-policy-agent/opa':{angle:['early exit','early-exit','earlyexit','findone'],taken:[],note:'evaluator had only deps/perf PRs at vetting -- 0 on early-exit'},
+ 'vitessio/vitess':{angle:['aggregation pushdown','window','scatter'],taken:['subquery','decorrel','exists'],note:'subquery decorrelation taken by PR 20042'},
+ 'caddyserver/caddy':{angle:['formatter','fmt idempoten','round-trip','round trip','idempoten'],taken:['caddyfile parser','extensible caddyfile'],note:'parser surface taken by 7344/7775/7446; caddy fmt already ships (frame as hardening)'},
+ 'casbin/casbin':{angle:['transitive','role manager','domain pattern','g-function','g function'],taken:['priority','deny effect'],note:'shared-enforcer base -> too-easy risk; scope tight + hard tests'},
+ 'effect-ts/effect':{angle:['schedule','combinator','union','intersect'],taken:[],note:'Schedule/Fiber feature-clean at vetting; only narrow bug PRs'},
+ 'trpc/trpc':{angle:['input','.input','multi-input','combine'],taken:['error formatter','declared error','router context','subscription'],note:'error-formatter 7279 + router-merge 7377 taken'},
+ 'tanstack/router':{angle:['search middleware','searchmiddleware','retainsearchparams','stripsearchparams'],taken:['search param','serializ','ranking','interpolatepath'],note:'serialization 7568/7652/7679 + ranking 5722 taken'},
+ 'remix-run/react-router':{angle:['ranking','computescore','optional segment','rankroute'],taken:['revalidat','getmatchestoload','deferred','encode'],note:'revalidation 15129 + deferred 15153 taken; frame as bugfix'},
+ 'typescript-eslint/typescript-eslint':{angle:['implicit global','defineimplicit','populateglobals','multi-declaration'],taken:['type-utils','typeorvaluespecifier'],note:'type-utils 12421/12284 taken; issue 11714 is the clean angle'},
+ 'tanstack/query':{angle:['retryer','pause','resume','offline'],taken:['reset','resetqueries','structuralsharing','observer'],note:'resetQueries cluster + observer 10265 taken'},
+ 'drizzle-team/drizzle-orm':{angle:['union','intersect','except','set operation','set-operation'],taken:['rqb','relational query','encoder','placeholder'],note:'RQB v2 churning; encoder 5731 taken'}
+};
+function deriveAngleKW(r){ // fallback for external/pasted repos not in NOVELTY_KEYWORDS
+  const set=new Set(); (topAngles(r,4)||[]).forEach(a=>String(a||'').toLowerCase().split(/[^a-z0-9]+/).forEach(w=>{if(w.length>3)set.add(w);}));
+  return [...set].slice(0,8);
+}
+function noveltyScan(r){
+  const key=(r.fullName||'').toLowerCase(), c=extCache[key]||{}, a=c.activity;
+  if(!a||(a.loading&&!a.pullsAll)) return {status:(a&&a.loading)?'loading':'unfetched'};
+  const kw=NOVELTY_KEYWORDS[key]||null;
+  const angleKW=(kw&&kw.angle&&kw.angle.length)?kw.angle:deriveAngleKW(r);
+  const takenKW=(kw&&kw.taken)||[];
+  const prs=a.pullsAll||[], iss=a.issuesAll||[];
+  const has=(t,list)=>list.filter(k=>t.indexOf(String(k).toLowerCase())>=0);
+  const angleHits=[], takenHits=[];
+  prs.forEach(p=>{const t=(p.title||'').toLowerCase(); const ah=has(t,angleKW);
+    if(ah.length) angleHits.push({num:p.num,title:p.title,url:p.url,kw:ah});
+    else { const th=has(t,takenKW); if(th.length) takenHits.push({num:p.num,title:p.title,url:p.url,kw:th}); }});
+  const wanted=iss.filter(i=>{const t=(i.title||'').toLowerCase(); const lb=(i.labels||[]).map(x=>String(x).toLowerCase());
+    return has(t,angleKW).length && lb.some(l=>/wanted|good first|accepting|help/.test(l));}).slice(0,4).map(i=>({num:i.num,title:i.title,url:i.url}));
+  return {status:'ok', curated:!!kw, angleKW, angleHits, takenHits, wanted,
+    prScanned:a.pullsScanned||prs.length, issScanned:a.issuesScanned||iss.length,
+    lastCommit:(a.commits&&a.commits[0]&&a.commits[0].date)||null, openPRs:prs.length,
+    note:(kw&&kw.note)||'', danger:angleHits.length>0};
+}
+function noveltyBriefingBlock(r){
+  const s=noveltyScan(r);
+  if(s.status!=='ok') return '**UPSTREAM & NOVELTY GATE (live):** not fetched yet -- open '+r.fullName+' in Analyze so the console reads live GitHub activity, then re-assemble. This is the check that catches the traefik failure (a feature already under an open PR = an UNFIXABLE rejection).';
+  const rel=d=>{try{return relTime(d);}catch(e){return d||'?';}};
+  const L=['**UPSTREAM & NOVELTY GATE (live -- scanned '+s.prScanned+' open PRs + '+s.issScanned+' open issues):**'];
+  L.push('  - ACTIVENESS: '+s.openPRs+' open PRs; last commit '+(s.lastCommit?rel(s.lastCommit):'unknown')+'. '+(s.openPRs>0?'Repo is alive.':'Low PR activity -- confirm it is not abandoned.'));
+  if(s.danger){
+    L.push('  - !! IN-DEVELOPMENT OVERLAP ON YOUR ANGLE (DEAD-ANGLE RISK -- the traefik cause):');
+    s.angleHits.slice(0,6).forEach(h=>L.push('      * PR #'+h.num+' "'+String(h.title).slice(0,90)+'"  [matched: '+h.kw.join(', ')+']'));
+    L.push('      => This surface may be UNFIXABLE. Re-point to a different surface, or confirm each PR is NOT on your invariant before writing any code.');
+  } else {
+    L.push('  - IN-DEVELOPMENT OVERLAP: none found on the angle keywords ['+s.angleKW.join(', ')+'] across the scanned open PRs. Still run the GATE ZERO grep on your exact new symbols before building.');
+  }
+  if(s.takenHits.length){ L.push('  - ADJACENT / KNOWN-TAKEN surfaces (avoid -- being worked upstream):'); s.takenHits.slice(0,5).forEach(h=>L.push('      * PR #'+h.num+' "'+String(h.title).slice(0,80)+'"  [matched: '+h.kw.join(', ')+']')); }
+  if(s.wanted.length){ L.push('  - WANTED ISSUES on the angle (a maintainer would merge -- but someone may already be on it):'); s.wanted.forEach(w=>L.push('      * #'+w.num+' "'+String(w.title).slice(0,80)+'"')); }
+  if(s.note) L.push('  - VETTING NOTE (2026-07): '+s.note);
+  L.push('  - ALREADY-SHIPPED / PHILOSOPHY: the console cannot fully confirm these -- verify the feature is not already in the public API, and that CONTRIBUTING/scope would accept it (Phase 1 below).');
+  return L.join('\n');
+}
 function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
   // auto-pick the HEAVIEST divergent layer (most per-variant code) — the one most likely to host
   // an Olympus-hard feature. The operator never chooses it.
@@ -1572,12 +1641,16 @@ function verdictCard(r){
   const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
   const meaning={go:'PASS = the model panel judged this repo Olympus-grade (a hard, deterministic, not-already-solved feature exists) AND it has two discovery layers. Build the feature.',risky:'RISKY = the panel is NOT convinced this repo is Olympus-grade. Verify a genuinely HARD, deterministic, unsolved feature exists BEFORE investing — this is the go-cloud trap (structurally divergent, but the realistic features are too easy for SOTA).',refine:'REFINE = the repo is viable but the assessed layer is one lever short — the line above says what to engineer or which deeper layer to judge.',nogo:'NO-GO = the panel rejected this repo as not Olympus-grade (only easy/transcribable features, OR non-deterministic, OR already solved). Drop it and pick a stronger repo.',pending:''}[v.vclass]||'';
   const VC={yes:'go',risky:'risky',no:'nogo'};
+  const nov=noveltyScan(r); let novBox='';
+  if(nov.status==='ok' && nov.danger){ novBox=`<div class="riskbox" style="background:rgba(232,118,91,.10);border-color:rgba(232,118,91,.4)"><b>⛔ Upstream overlap on your angle (the traefik cause):</b> ${nov.angleHits.slice(0,3).map(h=>'PR #'+h.num+' '+esc(String(h.title).slice(0,54))).join('; ')} — re-point to another surface or this may be UNFIXABLE. <span class="hint">scanned ${nov.prScanned} open PRs live</span></div>`; }
+  else if(nov.status==='ok' && nov.takenHits.length){ novBox=`<div class="riskbox"><b>⚠ Adjacent surfaces under active upstream PRs:</b> ${esc(nov.takenHits.slice(0,4).map(h=>'#'+h.num).join(', '))} — keep to the clean angle, avoid these.${nov.note?' <span class="hint">'+esc(nov.note)+'</span>':''}</div>`; }
   const panelBox = (v.panel && v.panel.members && v.panel.members.length) ? `<div class="panelvote"><b>Panel — olympusViable</b> <span class="hint">(top-5 weighted; ${v.panel.vetoed?'VETOED: '+v.panel.topNo+' of top-5 said no':'yes/risky/no = '+v.panel.counts.yes+'/'+v.panel.counts.risky+'/'+v.panel.counts.no}):</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${v.panel.members.map(m=>`<span class="pvote ${VC[m.verdict]||'refine'}">${esc(m.label)} <i>T${m.tier}</i> ${m.verdict}</span>`).join('')}</div></div>` : '';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
     <div class="blabel">Final verdict <span class="hint">model PANEL judged vs the official Olympus standard + accepted-project rubric</span></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${confChip}${drop}</div>
     <div style="font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px">${esc(v.line)}</div>
     ${panelBox}
+    ${novBox}
     ${riskBox}
     ${crit}${altit}
     ${meaning?`<div class="vmanual" style="margin-top:11px;color:var(--muted)">${esc(meaning)}</div>`:''}
@@ -1706,6 +1779,7 @@ function genLaunch(){
   const _invLine=v.high[2].ok?('  - The invariant to pin (confirmed): '+clean(jd&&jd.invariant&&jd.invariant.reason)+_cite(jd&&jd.invariant,'assert around')):('  - Invariant: NOT confirmed (model said "'+((jd&&jd.invariant||{}).verdict||'?')+'") -- design a feature whose naive impl violates an intermediate-state invariant.');
   const featureBlock=jd?('**THE FEATURE TO BUILD (from the model findings — only confirmed levers are stated as fact):**\n'+_gapLine+'\n'+_invLine+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
   const tips=TIPS.slice(0,5).map((tp,i)=>'  '+(i+1)+'. '+tp.h+' -- '+tp.b).join('\n');
+  const noveltyBlock=noveltyBriefingBlock(r);
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
 
@@ -1722,9 +1796,11 @@ ${modelBlock}
 
 ${featureBlock}
 
+${noveltyBlock}
+
 **TIER: ${t.tier==='olympus'?'OLYMPUS':'MARS'}** ${t.curated?'(curated)':'(assessed)'} — ${t.why} Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.
 
-**Code paths:** ${div!=null?div+' '+unit:'?'} (5+ is the precondition, NOT the difficulty). **Variant layers:** ${kindsTxt}.
+**Subsystem depth:** ${div!=null?div+' '+unit:'?'} (interacting subsystems = the depth signal, NOT the difficulty; the difficulty is the invariant/angle above). **Layers:** ${kindsTxt}.
 
 ${provenAngle}
 
@@ -1950,16 +2026,24 @@ async function fetchRepoActivity(name){
   extCache[key]={...(extCache[key]||{}),activity:{...((extCache[key]||{}).activity||{}),loading:true}}; repaintLive();
   const get=async path=>{ const res=await fetch('https://api.github.com/repos/'+name+path,{headers:hdr}); if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); };
   try{
-    const [commits,pulls,issuesRaw]=await Promise.all([
+    const [commits,pulls,issuesRaw,issuesOpen]=await Promise.all([
       get('/commits?per_page=6').catch(()=>[]),
-      get('/pulls?state=open&sort=updated&direction=desc&per_page=6').catch(()=>[]),
+      get('/pulls?state=open&sort=updated&direction=desc&per_page=100').catch(()=>[]),
       get('/issues?state=all&sort=updated&direction=desc&per_page=12').catch(()=>[]),
+      get('/issues?state=open&sort=updated&direction=desc&per_page=100').catch(()=>[]),
     ]);
     const issues=(Array.isArray(issuesRaw)?issuesRaw:[]).filter(i=>!i.pull_request).slice(0,6);
+    const pullsArr=(Array.isArray(pulls)?pulls:[]);
+    const issuesOpenArr=(Array.isArray(issuesOpen)?issuesOpen:[]).filter(i=>!i.pull_request);
+    const lbl=x=>((x&&x.labels)||[]).map(l=>(l&&l.name)||'').filter(Boolean);
     const act={ loading:false, at:Date.now(),
       commits:(Array.isArray(commits)?commits:[]).map(c=>({sha:c.sha,msg:((c.commit&&c.commit.message)||'').split('\n')[0],author:(c.author&&c.author.login)||(c.commit&&c.commit.author&&c.commit.author.name)||'?',date:c.commit&&c.commit.author&&c.commit.author.date,url:c.html_url})),
-      pulls:(Array.isArray(pulls)?pulls:[]).map(p=>({num:p.number,title:p.title,author:p.user&&p.user.login,date:p.updated_at,url:p.html_url,draft:p.draft})),
-      issues:issues.map(i=>({num:i.number,title:i.title,author:i.user&&i.user.login,date:i.updated_at,url:i.html_url,state:i.state})) };
+      pulls:pullsArr.slice(0,6).map(p=>({num:p.number,title:p.title,author:p.user&&p.user.login,date:p.updated_at,url:p.html_url,draft:p.draft})),
+      issues:issues.map(i=>({num:i.number,title:i.title,author:i.user&&i.user.login,date:i.updated_at,url:i.html_url,state:i.state})),
+      // NOVELTY GATE feed: the FULL open-PR list + open issues w/ labels (scanned against the angle, not shown in the panel)
+      pullsAll:pullsArr.map(p=>({num:p.number,title:p.title||'',url:p.html_url,draft:!!p.draft,labels:lbl(p)})),
+      issuesAll:issuesOpenArr.map(i=>({num:i.number,title:i.title||'',url:i.html_url,labels:lbl(i)})),
+      pullsScanned:pullsArr.length, issuesScanned:issuesOpenArr.length };
     extCache[key]={...extCache[key],activity:act}; repaintLive();
   }catch(e){ extCache[key]={...extCache[key],activity:{...((extCache[key]||{}).activity||{}),loading:false,error:(e&&e.message)||'failed'}}; repaintLive(); }
 }
