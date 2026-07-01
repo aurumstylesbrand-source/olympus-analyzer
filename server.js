@@ -30,7 +30,7 @@ const JUDGE_API_KEY = process.env.JUDGE_API_KEY || '';
 const JUDGE_BASE_URL = (process.env.JUDGE_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '');
 const JUDGE_MODEL = process.env.JUDGE_MODEL || 'gemini-flash-lite-latest';
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
-function mkProvider(label, key, base, model, small, tier){
+function mkProvider(label, key, base, model, small, tier, primary){
   if(!key) return null;
   const baseUrl = (base || GEMINI_BASE).replace(/\/$/, '');
   // Providers with tight free token-per-minute limits (Groq, Cerebras) get a TRIMMED prompt so
@@ -43,17 +43,19 @@ function mkProvider(label, key, base, model, small, tier){
   // gpt-oss / reasoning models on Groq + Cerebras emit malformed JSON under the complex judge prompt;
   // force strict JSON output (the prompt already says "Reply with ONLY a JSON object").
   if(/groq\.com|cerebras\.ai|openrouter\.ai/i.test(baseUrl) || /gpt-oss|qwen3/i.test(model||'')) extra.response_format = { type:'json_object' };
-  // tier: 1 = top-5 heavy seat (carries the veto), 2 = lighter resilience/diversity seat.
+  // tier: 1 = strong seat, 2 = lighter resilience/diversity seat. primary: one of the TOP-2 judges
+  // (chosen by an intelligence probe) whose vote decides -- the other seats can only make it "contested".
   const t = (String(tier)==='2') ? 2 : 1;
-  return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra, tier: t };
+  const prim = /^(1|true|yes)$/i.test(String(primary||''));
+  return { label: label || model || 'model', key, baseUrl, model: model || 'gemini-flash-lite-latest', small: isSmall, extra, tier: t, primary: prim };
 }
 // Provider roster: explicit A/B/C/D slots, PLUS the legacy single-provider config as an extra
 // member, so existing deployments keep working AND extra free models can be added alongside them.
 const PROVIDERS = [];
 // Up to 10 panel slots (A-J). Each: JUDGE_X_KEY/_BASE_URL/_MODEL/_LABEL/_SMALL/_TIER (TIER 1=top-5
 // heavy seat that carries the veto, 2=lighter resilience seat). A missing key skips the slot.
-'ABCDEFGHIJ'.split('').forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL'], process.env['JUDGE_'+s+'_TIER']); if(p) PROVIDERS.push(p); });
-if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL, '', process.env.JUDGE_TIER||'1'); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
+'ABCDEFGHIJ'.split('').forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL'], process.env['JUDGE_'+s+'_TIER'], process.env['JUDGE_'+s+'_PRIMARY']); if(p) PROVIDERS.push(p); });
+if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL, '', process.env.JUDGE_TIER||'1', process.env.JUDGE_PRIMARY); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
 const SYNTH = (process.env.JUDGE_SYNTH || 'on').toLowerCase(); // 'on' | 'off' | a provider label that does the reconciliation
 const CACHE = path.join(__dirname, '.cache');
 if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
@@ -319,7 +321,7 @@ const withDeadline = (promise, ms, label) => Promise.race([ promise,
 async function judgeOneModel(provider, prompt){
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
   const raw = parseModelJson(contentOf(resp));
-  return { label: provider.label, model: provider.model, tier: provider.tier||1, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {}, olympusViable: raw.olympusViable || {} };
+  return { label: provider.label, model: provider.model, tier: provider.tier||1, primary: provider.primary||false, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {}, olympusViable: raw.olympusViable || {} };
 }
 // Normalize any verdict phrasing to one of yes|no|unclear (handles the freeHelpers vocabulary too).
 function normVerdict(v){ const z = String(v||'').toLowerCase().trim();
@@ -365,24 +367,39 @@ function normViable(v){
 // THE PANEL VOTE on olympusViable. Tier-1 (top-5) members carry weight 2, tier-2 weight 1.
 // VETO RULE: if >=2 of the TOP-5 say "no", the repo is rejected outright. Otherwise a weighted
 // majority decides, and anything not a clear weighted yes/no resolves to the skeptical "risky".
+// TOP-2 / DEBATE RULE (chosen by the user): the two PRIMARY judges (the strongest, picked by an
+// intelligence probe) decide. If both primaries agree, that is the verdict -- but if a majority of the
+// OTHER seats disagree, it is flagged CONTESTED ("up for debate"). If both primaries say "no" it is a
+// hard veto. If the primaries split (or fewer than 2 answered), a weighted vote (primary x3, others x1)
+// resolves it and the result is contested. Ties resolve to the skeptical "risky".
 function fuseOlympus(members){
-  const items = members.map(m => ({ label:m.label, tier:(m.tier===2?2:1), n:normViable(m.olympusViable&&m.olympusViable.verdict), reason:(m.olympusViable&&m.olympusViable.reason)||'' }));
-  const top5 = items.filter(i => i.tier===1);
-  const topNo = top5.filter(i => i.n==='no').length;
-  const counts = { yes:0, risky:0, no:0 }; items.forEach(i => counts[i.n]++);
-  let verdict;
-  if(topNo >= 2) verdict = 'no';                                 // the user's veto rule
-  else {
-    const w = { yes:0, risky:0, no:0 }; items.forEach(i => { w[i.n] += (i.tier===1?2:1); });
-    if(w.no > w.yes && w.no >= w.risky) verdict = 'no';
-    else if(w.yes > w.no && w.yes > w.risky) verdict = 'yes';
-    else verdict = 'risky';
+  const items = members.map(m => ({ label:m.label, tier:(m.tier===2?2:1), primary:!!m.primary, n:normViable(m.olympusViable&&m.olympusViable.verdict) }));
+  const answered = items.filter(i => i.n);
+  const primaries = answered.filter(i => i.primary);
+  const secondaries = answered.filter(i => !i.primary);
+  const counts = { yes:0, risky:0, no:0 }; answered.forEach(i => counts[i.n]++);
+  const pick = w => { const mx=Math.max(w.yes,w.risky,w.no); return w.risky===mx?'risky':(w.no===mx?'no':'yes'); };
+  const primNo = primaries.filter(i => i.n==='no').length;
+  const primAgree = primaries.length>=2 && primaries.every(i => i.n===primaries[0].n);
+  let verdict, contested=false, vetoed=false, basis;
+  if(primaries.length>=2 && primNo>=2){ verdict='no'; vetoed=true; basis='both primary judges say NO'; }
+  else if(primAgree){
+    verdict = primaries[0].n; basis='top-2 agree ('+verdict+')';
+    const disagree = secondaries.filter(i => i.n!==verdict).length;
+    if(secondaries.length && disagree*2 > secondaries.length){ contested=true; basis='top-2 agree ('+verdict+') but '+disagree+'/'+secondaries.length+' of the other seats disagree'; }
+  } else {
+    const w={yes:0,risky:0,no:0}; answered.forEach(i => { w[i.n] += (i.primary?3:1); });
+    verdict = pick(w); contested = primaries.length>=2;
+    basis = primaries.length>=2 ? 'top-2 SPLIT -> weighted vote (primary x3)' : (primaries.length? 'only 1 primary answered -> weighted vote' : 'no primary answered -> weighted vote');
   }
+  const plabel = primaries.length ? primaries.map(i => i.label+':'+i.n).join(' & ') : '(none answered)';
   const reason = 'PANEL olympusViable = '+verdict.toUpperCase()
-    + (topNo>=2 ? ' (VETOED: '+topNo+' of top-5 said NO)' : '')
-    + ' [yes/risky/no = '+counts.yes+'/'+counts.risky+'/'+counts.no+', top-5 NO='+topNo+']. '
-    + items.map(i => i.label+'['+(i.tier===1?'T1':'T2')+']: '+i.n).join(', ');
-  return { verdict, reason, vetoed: topNo>=2, topNo, counts, members: items.map(i => ({ label:i.label, tier:i.tier, verdict:i.n })) };
+    + (vetoed?' (VETOED: both top-2 said NO)':'') + (contested?' (CONTESTED -- up for debate)':'')
+    + '. Top-2: '+plabel+'. '+basis+'. [yes/risky/no = '+counts.yes+'/'+counts.risky+'/'+counts.no+']. '
+    + items.map(i => i.label+'['+(i.primary?'PRIMARY':(i.tier===1?'T1':'T2'))+']: '+(i.n||'no-answer')).join(', ');
+  return { verdict, reason, contested, vetoed, topNo: primNo, counts,
+    primaries: primaries.map(i => ({ label:i.label, verdict:i.n })),
+    members: items.map(i => ({ label:i.label, tier:i.tier, primary:i.primary, verdict:i.n })) };
 }
 // Optional synthesis: one model reads both verdicts and writes a reconciled, centralized reason.
 async function judgeSynthesize(provider, repo, layer, members){
@@ -463,7 +480,7 @@ async function judgeViaEnsemble(repo, ref, layer){
   const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv, olympusViable:ov,
     disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
       +'. PANEL olympusViable='+panel.verdict.toUpperCase()+(panel.vetoed?' (VETOED)':'')+'. Agreement: helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
-  out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
+  out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), primary:m.primary||false, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
   out.agreement = { freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
   out.panel = panel;
   out.synthesized = synthesized;

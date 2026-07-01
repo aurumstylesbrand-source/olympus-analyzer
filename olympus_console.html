@@ -1629,7 +1629,10 @@ function finalVerdict(r){
     'Spec: 490-500 words, ASCII, behavioural, name every callable signature once, state silent directional choices — but leave the mechanism as the discovery gap.',
     'Flakiness (MANDATORY now): deterministic suite, no time / network / order / JIT nondeterminism; prove F2P/P2P stable across 3+ runs.'
   ];
-  return {verdict,vclass,line,high,highPass,altitudeNote,manual,confidence,risk,olympusViable:ovv,panel:panelV};
+  const contested = !!(panelV && panelV.contested && !panelV.vetoed);
+  const lineC = contested ? line+' [PANEL CONTESTED -- up for debate: the top-2 judges agree but a majority of the other seats dissent; treat the verdict as provisional and verify.]' : line;
+  const riskC = (contested && !risk) ? 'The panel is CONTESTED: the top-2 judges and the other seats disagree. Treat the verdict as provisional -- re-run the judgment or read the layer before committing.' : risk;
+  return {verdict,vclass,line:lineC,high,highPass,altitudeNote,manual,confidence:(contested&&!confidence?'medium':confidence),risk:riskC,olympusViable:ovv,panel:panelV};
 }
 function verdictCard(r){
   const v=finalVerdict(r);
@@ -1644,7 +1647,15 @@ function verdictCard(r){
   const nov=noveltyScan(r); let novBox='';
   if(nov.status==='ok' && nov.danger){ novBox=`<div class="riskbox" style="background:rgba(232,118,91,.10);border-color:rgba(232,118,91,.4)"><b>⛔ Upstream overlap on your angle (the traefik cause):</b> ${nov.angleHits.slice(0,3).map(h=>'PR #'+h.num+' '+esc(String(h.title).slice(0,54))).join('; ')} — re-point to another surface or this may be UNFIXABLE. <span class="hint">scanned ${nov.prScanned} open PRs live</span></div>`; }
   else if(nov.status==='ok' && nov.takenHits.length){ novBox=`<div class="riskbox"><b>⚠ Adjacent surfaces under active upstream PRs:</b> ${esc(nov.takenHits.slice(0,4).map(h=>'#'+h.num).join(', '))} — keep to the clean angle, avoid these.${nov.note?' <span class="hint">'+esc(nov.note)+'</span>':''}</div>`; }
-  const panelBox = (v.panel && v.panel.members && v.panel.members.length) ? `<div class="panelvote"><b>Panel — olympusViable</b> <span class="hint">(top-5 weighted; ${v.panel.vetoed?'VETOED: '+v.panel.topNo+' of top-5 said no':'yes/risky/no = '+v.panel.counts.yes+'/'+v.panel.counts.risky+'/'+v.panel.counts.no}):</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${v.panel.members.map(m=>`<span class="pvote ${VC[m.verdict]||'refine'}">${esc(m.label)} <i>T${m.tier}</i> ${m.verdict}</span>`).join('')}</div></div>` : '';
+  const panelBox = (v.panel && v.panel.members && v.panel.members.length) ? (()=>{
+    const p=v.panel;
+    const prim=(p.primaries&&p.primaries.length)?p.primaries.map(x=>esc(x.label)+':'+x.verdict).join(' & '):'(none answered)';
+    const status = p.vetoed ? `<b style="color:var(--bad)">VETOED</b> — both top-2 judges said no`
+      : p.contested ? `<b style="color:#f0a637">CONTESTED — up for debate</b> · top-2 (${prim}) agree but the other seats dissent`
+      : `top-2 decide: <b>${prim}</b>`;
+    const chips=p.members.map(m=>`<span class="pvote ${VC[m.verdict]||'refine'}">${esc(m.label)} <i>${m.primary?'PRIMARY':('T'+m.tier)}</i> ${m.verdict||'no-answer'}</span>`).join('');
+    return `<div class="panelvote"><b>Panel — olympusViable</b> <span class="hint">(the top-2 judges decide; the other seats can only make it contested · yes/risky/no = ${p.counts.yes}/${p.counts.risky}/${p.counts.no}):</span><div style="margin-top:5px;font-size:12px;color:var(--text-2)">${status}</div><div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">${chips}</div></div>`;
+  })() : '';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
     <div class="blabel">Final verdict <span class="hint">model PANEL judged vs the official Olympus standard + accepted-project rubric</span></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${confChip}${drop}</div>
