@@ -103,9 +103,16 @@ const dirOf = p => p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '';
 function inLayer(p, layer){
   const low = p.toLowerCase(), l = layer.toLowerCase();
   if(l.includes('/')) return low.includes(l);
-  const seg = low.split('/').some(s => s === l || s === l+'s' || s+'s' === l);
+  const segs = low.split('/');
+  const seg = segs.some(s => s === l || s === l+'s' || s+'s' === l);
+  // Also match when the layer names a FILE, not a dir: basename (minus extension) equals the layer,
+  // or the basename begins with the layer at a word boundary (stream -> stream.go, retryer -> retryer.ts,
+  // procedurebuilder -> procedureBuilder.ts). Deep-invariant repos scope the angle to a file, not a dir.
+  const base = segs[segs.length-1] || '';
+  const baseNoExt = base.replace(/\.[a-z0-9]+$/, '');
+  const fileMatch = baseNoExt === l || (base.indexOf(l) === 0 && !/[a-z0-9]/.test(base.charAt(l.length) || '.'));
   const m = p.match(CONTAINER);
-  return seg || (m && m[2].toLowerCase() === l);
+  return seg || fileMatch || (m && m[2].toLowerCase() === l);
 }
 // Compact a file list into a prompt blob, bounded by file count and per-file size.
 function blob(files, maxFiles, perFile){
