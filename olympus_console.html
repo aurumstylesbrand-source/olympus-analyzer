@@ -1415,7 +1415,7 @@ function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCa
 const NOVELTY_KEYWORDS={
  'grpc/grpc-go':{angle:['hedg'],taken:[],note:'hedging was unbuilt with 0 open PRs at vetting (2026-07)'},
  'open-policy-agent/opa':{angle:['early exit','early-exit','earlyexit','findone'],taken:[],note:'evaluator had only deps/perf PRs at vetting -- 0 on early-exit'},
- 'vitessio/vitess':{angle:['aggregation pushdown','window','scatter'],taken:['subquery','decorrel','exists'],note:'subquery decorrelation taken by PR 20042'},
+ 'vitessio/vitess':{angle:['aggregation pushdown','pushdown','window function','aggregation'],taken:['subquery','decorrel','exists'],note:'subquery decorrelation taken by PR 20042; keep the angle to aggregation/window pushdown across scatter'},
  'caddyserver/caddy':{angle:['formatter','fmt idempoten','round-trip','round trip','idempoten'],taken:['caddyfile parser','extensible caddyfile'],note:'parser surface taken by 7344/7775/7446; caddy fmt already ships (frame as hardening)'},
  'casbin/casbin':{angle:['transitive','role manager','domain pattern','g-function','g function'],taken:['priority','deny effect'],note:'shared-enforcer base -> too-easy risk; scope tight + hard tests'},
  'effect-ts/effect':{angle:['schedule','combinator','union','intersect'],taken:[],note:'Schedule/Fiber feature-clean at vetting; only narrow bug PRs'},
