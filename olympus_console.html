@@ -1796,7 +1796,7 @@ function renderLaunch(){
     ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px"><span class="verdictchip ${_v.vclass}" style="font-size:13px">${esc(_v.verdict)}</span><span class="hint">${_v.highPass}/3 levers · analysed — the briefing will carry the model's findings + citations</span></div>`
     : `<div class="honest" style="margin-top:12px">⚠ <b>${esc(r?r.fullName:'this repo')}</b> hasn't been analysed yet, so the briefing will be thin. <a href="#" id="lToAnalyze" style="color:var(--green);font-weight:600">Analyse it first →</a> (read source + run the free judgment) so the briefing carries the verdict, the model's gap + invariant, and the file citations.</div>`;
   viewEl.innerHTML=`<h2 class="ahero" style="display:block"><span style="font-weight:800;font-size:29px;letter-spacing:-.035em">Launch <em style="font-style:normal;color:var(--green)">briefing</em></span></h2>
-    <p class="lede">Assembles a paste-ready briefing from this repo's <b>analysis</b> — the final verdict + levers, the model's findings &amp; file citations, the feature to build, the ranked angles and the standards. Analyse the repo first so the briefing carries real evidence, not folder-name guesses.</p>
+    <p class="lede">Assembles a paste-ready briefing that leads with the <b>Selection Mindset</b> (find the feature like the maintainer), the repo's <b>capacity</b> to validate yourself, and the only genuinely repo-derived evidence — the model's real reads &amp; file citations + the live novelty gate. It deliberately does NOT hand you an angle. Analyse the repo first so the evidence is real, not folder-name guesses.</p>
     <div class="bcard" style="margin-bottom:14px">
       <div class="field" style="margin-bottom:0"><label>Repo</label><select id="lRepo">${opts}</select>${loadingNote}${liveNote}</div>
       ${statusCard}
@@ -1817,14 +1817,9 @@ function genLaunch(){
   const liveRead=!!(r.live&&r.commit);
   const div=repoDiv(r),unit=repoUnit(r),t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r),judgedLayer=(c.judge&&c.judge.layer)||'';
   const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'the heaviest divergent layer';
-  const ranked=topAngles(r,8);
-  const angList=ranked.map((a,i)=>'  '+(i+1)+'. '+a+'   ['+(ANGLE_FAM[a]||'—')+']').join('\n');
-  const comboTxt=comboFor(r).slice(0,3).map((cc,i)=>'  '+(i+1)+'. '+cc.angles.join(' + ')).join('\n');
-  // Proven angle, grounded in the accepted projects (drives the recommendation, not folder names).
-  const bf=bestFitAngle(r);
-  const provenAngle='**PROVEN ANGLE -- '+bf.archetype.name.toUpperCase()+' (accepted-project precedent):** '+bf.archetype.what+'. Closest accepted precedent: '+bf.precedent.repo+' ('+bf.precedent.lang+', '+bf.precedent.pass+') -- '+bf.precedent.lesson+'\n'+
-    bf.mechanisms.map(m=>'  - '+m.name+': '+m.act+' [anchor: '+m.anchor+']').join('\n')+
-    '\n  Bar: '+ACCEPTED_INTEL.bar;
+  // Removed: PROVEN ANGLE / ranked Best-fit angles / Escalation combinations -- they asserted angles NOT
+  // read from the repo (folder-name + accepted-precedent heuristics), superseded by the Selection Mindset
+  // reframe. topAngles/bestFitAngle/comboFor remain only for the dashboard's "Generic angle brainstorm".
   const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is NOT on the platform allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*; NOT ISC / MPL / GPL / NOASSERTION) — likely DISQUALIFIED. Confirm before any work.\n`:'';
   const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
   const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
