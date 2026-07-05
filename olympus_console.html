@@ -900,6 +900,15 @@ const SEED_OLYMPUS={batch:1,repos:[
 // deterministic (or scopeable to an offline core). Replaces the prior unvalidated set (dropped
 // ky = network/HTTP-flaky, zerolog = unvalidated, casbin = unvalidated).
 const SEED_MARS={batch:1,repos:[]};
+// BLACKLIST -- dumped/rejected repos that must NEVER appear on the board again. load() prunes these
+// from every tier + the used list on EVERY load, so a stale localStorage entry from an old seed
+// (e.g. traefik carried forward because it once had logged work) self-heals without a manual reset.
+// Keep in sync with memory/collision-lens-and-blacklist.md. Lowercased fullNames.
+const BLACKLIST=new Set(['traefik/traefik','traefik/yaegi','dolthub/dolt','dolthub/go-mysql-server',
+  'open-policy-agent/opa','vitessio/vitess','caddyserver/caddy','google/cel-go','grpc/grpc-go',
+  'casbin/casbin','google/gopacket','gopacket/gopacket','etcd-io/bbolt','sqlc-dev/sqlc','colinhacks/zod',
+  'tanstack/router','remix-run/react-router','tanstack/query','nestjs/nest']);
+function isBlacklisted(n){return BLACKLIST.has(String(n||'').toLowerCase());}
 
 /* ---------- state + storage ---------- */
 let state={olympus:null,mars:null,used:[],gh:''};
@@ -944,6 +953,7 @@ function seedWithState(seed,prev){
   const seedNames=new Set(seed.repos.map(s=>String(s.fullName).toLowerCase()));
   Object.keys(prev).forEach(k=>{
     if(seedNames.has(k))return;
+    if(isBlacklisted(k))return; // never resurrect a dumped repo, even if it carries old work
     const pr=prev[k];if(!pr)return;
     const hasWork=(pr.intelligence&&String(pr.intelligence).trim())||(Array.isArray(pr.slots)&&pr.slots.some(x=>x&&String(x).trim()));
     const userAdded=pr.source&&pr.source!=='seed';
@@ -961,7 +971,12 @@ async function load(){
   }
   state.olympus=(o&&Array.isArray(o.repos))?o:clone(SEED_OLYMPUS);state.mars=(m&&Array.isArray(m.repos))?m:clone(SEED_MARS);
   [state.olympus,state.mars].forEach(bd=>{bd.repos=(bd.repos||[]).filter(Boolean).map(normalizeRepo);});
-  let u=await sget(KEYS.used)||[];u=dedupe([...u,...state.olympus.repos.map(r=>r.fullName),...state.mars.repos.map(r=>r.fullName)]);
+  // Self-healing prune: drop blacklisted/dumped repos, and empty the retired Mars tier, so stale
+  // localStorage entries (traefik olympus + mars from an old seed) can never resurface on their own.
+  state.olympus.repos=state.olympus.repos.filter(r=>!isBlacklisted(r.fullName));
+  state.mars.repos=[];
+  await sset(KEYS.olympus,state.olympus);await sset(KEYS.mars,state.mars);
+  let u=await sget(KEYS.used)||[];u=dedupe([...u,...state.olympus.repos.map(r=>r.fullName)]).filter(n=>!isBlacklisted(n));
   state.used=u;await sset(KEYS.used,u);
   state.gh=await sget(KEYS.gh)||'';
   state.analyzer=await sget(KEYS.analyzer)||'';
