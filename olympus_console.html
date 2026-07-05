@@ -1760,7 +1760,7 @@ function analysisResults(r,div){
   const _fr=(lbl,o)=>o&&o.verdict?`<div class="vcrit"><span class="vlamp ${/yes|present|wrong|fails/i.test(o.verdict)&&!/unclear/i.test(o.verdict)?'pass':/unclear/i.test(o.verdict)?'warn':'fail'}"></span><div><div class="vk">${esc(lbl)}: <b>${esc(o.verdict)}</b></div><div class="vd">${esc((o.reason||'').slice(0,240))}</div>${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:3px">reads: '+o.citations.slice(0,4).map(esc).join(', ')+'</div>':''}</div></div>`:'';
   const findingsBlock=_jdata?`<div class="sec"><div class="seclbl">What the model actually read <span class="hint">the ${esc((_jd.layer)||'')} layer's real code &mdash; THIS drives the verdict, angles and areas below, not folder names</span></div><div class="bcard">${_fr('Free helpers',_jdata.freeHelpers)}${_fr('Obvious approach wrong',_jdata.approachWrong)}${_fr('Naive fails an invariant',_jdata.invariant)}<div class="hint" style="margin-top:8px">Source: ${esc(_jdata.source||'model')}${_jdata.synthesized?', synthesis-reconciled':''}. Each citation is a real file in the repo; the accepted-project rubric (Jun 2026) then maps these findings to the verdict.</div></div></div>`:'';
   return findingsBlock+`
-    <div class="sec"><div class="seclbl">Best-fit angles <span class="hint">ranked from the model's assessment + the ${esc(kindsLabel)} divergent layers &mdash; a brainstorm to confirm, not a measurement</span></div>${angWarn}<div class="recang">${angChips}</div></div>
+    <div class="sec"><div class="seclbl">Generic angle brainstorm <span class="hint">generic prompts from folder names + a ranking, NOT read from this repo &mdash; ignore any that do not fit; the real feature is YOURS to find as the maintainer (see the briefing's Selection Mindset)</span></div>${angWarn}<div class="recang">${angChips}</div></div>
     <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">heuristic angle pairings — each is a CANDIDATE; confirm the angles share a code path (backend /judge) before building</span></div>${comboHtml}</div>
     ${(openA||doneA)?`<div class="sec"><div class="seclbl">Strong areas <span class="hint">${derived?'derived from the live '+esc(kindsLabel)+' surface':'curated for this repo'}</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
     <div class="sec"><div class="seclbl">Repo insights <span class="hint">what this repo has taught us &mdash; plus general field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
@@ -1827,56 +1827,71 @@ function genLaunch(){
   const _cite=(o,verb)=>(o&&o.citations&&o.citations.length)?(' ('+verb+' '+o.citations[0]+')'):'';
   const _gapLine=v.high[1].ok?('  - The discovery gap (confirmed): '+clean(jd&&jd.approachWrong&&jd.approachWrong.reason)+_cite(jd&&jd.approachWrong,'start in')):('  - Discovery gap: NOT confirmed on the "'+judgedLayer+'" layer (model said "'+((jd&&jd.approachWrong||{}).verdict||'?')+'") -- engineer one, or re-run the judgment / judge a deeper layer.');
   const _invLine=v.high[2].ok?('  - The invariant to pin (confirmed): '+clean(jd&&jd.invariant&&jd.invariant.reason)+_cite(jd&&jd.invariant,'assert around')):('  - Invariant: NOT confirmed (model said "'+((jd&&jd.invariant||{}).verdict||'?')+'") -- design a feature whose naive impl violates an intermediate-state invariant.');
-  const featureBlock=jd?('**THE FEATURE TO BUILD (from the model findings — only confirmed levers are stated as fact):**\n'+_gapLine+'\n'+_invLine+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
+  const featureBlock=jd?('**A CANDIDATE LEAD the free models surfaced from a REAL read (evidence, NOT a prescription -- verify it or find something bigger + more valuable):**\n'+_gapLine+'\n'+_invLine+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
   const tips=TIPS.slice(0,5).map((tp,i)=>'  '+(i+1)+'. '+tp.h+' -- '+tp.b).join('\n');
   const noveltyBlock=noveltyBriefingBlock(r);
+  const selectionMindset =
+`**THE SELECTION MINDSET (read this FIRST -- the north star):**
+Think like a SENIOR ENGINEER on ${r.fullName}'s core team who wants to ship something SUBSTANTIAL and HIGH-IMPACT -- a feature the maintainer themselves would realistically build and merge. NOT "what can I pad to hit 700 LOC," but "what meaningful, valuable capability is this repo genuinely MISSING that would make a large impact?" -- while following the repo's philosophy, contribution guidelines, and the things that cause rejection. Pick a feature that way -- genuinely big and valuable, inherently needing a large solution -- and the 700+ LOC follows NATURALLY, because the feature is actually substantial. If you catch yourself asking "how do I inflate this," you picked too small; go find a bigger, more valuable one.`;
+  const capacityWhy =
+`**WHY THIS REPO CAN CARRY IT (capacity -- validate it yourself, do not take it on faith):**
+  - ${v.line}
+  - ${div!=null?div+' interacting '+unit:'deep multi-subsystem structure'} + a deterministic offline core = room to host MANY large features.
+  - Confirm this yourself: open the repo, read the core, and satisfy yourself it is genuinely large + deep enough to accept substantial features that need real cross-cutting implementation. If not, DROP it and pick a bigger repo.`;
+  const yourJob =
+`**YOUR JOB -- FIND THE FEATURE (this briefing deliberately does NOT pick it for you):**
+  1. Read the repo's core + its CONTRIBUTING / philosophy / roadmap / open issues. What substantial, valuable capability is it genuinely MISSING that a maintainer would want built?
+  2. Pick the biggest, most valuable such feature that fits the core. GATE ZERO: not already built, not in an open/merged PR (the novelty gate above is a start -- then grep + read the source yourself).
+  3. Confirm it INHERENTLY needs 700+ LOC across 6+ files by its nature (never by padding) AND has a real discovery gap (obvious approach wrong / non-guessable invariant).
+  4. Drive it through your workflow at ~/Desktop/olympus-workflow/ (01_analyze -> 04_create -> prompt_validation -> pre_submit_gate) and validate against those + ~/Desktop/olympus-experience/.`;
+  const standingRules =
+`**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% Olympus / <=30% Mars * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
 
 ---
 
-## REPO BRIEFING — ${r.fullName}
+## REPO BRIEFING -- ${r.fullName}
 
-> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data — open in Analyze to refresh.'} The verdict + model findings below are from the analysis; treat structural claims as leads to verify in-editor.
+> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data -- open in Analyze to refresh.'} This briefing gives you EVIDENCE (real free-model reads of the code + the live novelty gate) and tells you the repo is CAPABLE. It deliberately does NOT hand you "the best angle" -- the feature is YOURS to find by reading the repo like its maintainer. Treat every structural claim below as a lead to verify in-editor, never as fact.
 ${licLine}
-**FINAL VERDICT: ${v.verdict}** (${v.highPass}/3 structural levers${v.confidence?', confidence: '+v.confidence:''}) — ${v.line}
+${selectionMindset}
+
+**REPO CAPACITY READ: ${v.verdict}** (${v.highPass}/3 structural levers${v.confidence?', confidence: '+v.confidence:''}) -- ${v.line}
 ${leverLines}
 ${v.risk?'  ! VERIFY BEFORE BUILDING: '+v.risk+'\n':''}
+${capacityWhy}
+
 ${modelBlock}
 
 ${featureBlock}
 
 ${noveltyBlock}
 
-**TIER: ${t.tier==='olympus'?'OLYMPUS':'MARS'}** ${t.curated?'(curated)':'(assessed)'} — ${t.why} Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.
+${yourJob}
 
-**Subsystem depth:** ${div!=null?div+' '+unit:'?'} (interacting subsystems = the depth signal, NOT the difficulty; the difficulty is the invariant/angle above). **Layers:** ${kindsTxt}.
+**TIER: ${t.tier==='olympus'?'OLYMPUS':'MARS'}** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.
 
-${provenAngle}
+**Subsystem depth:** ${div!=null?div+' '+unit:'?'} (interacting subsystems = the CAPACITY signal, NOT the difficulty; the difficulty is the FEATURE you pick). **Layers:** ${kindsTxt}.
 
-**Best-fit angles (ranked — tie each to the proven angle + the model findings above before committing):**
-${angList}
+**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'}):** pass ${std.pass} - LOC ${std.loc} - files ${std.files} - description ${std.desc} - ${std.msg} - Flakiness MANDATORY - plagiarism all <0.5.
+${standingRules}
 
-**Escalation combinations (fuse only to ADD a silently-failing invariant to a transcribable angle):**
-${comboTxt}
+**THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files that must AGREE on a data format; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer. WARNING: a large API inventory (15-20+ symbols) is NOT difficulty -- it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality cascade.
 
-**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'}):** pass ${std.pass} · LOC ${std.loc} · files ${std.files} · description ${std.desc} · ${std.msg} · Flakiness MANDATORY · plagiarism all <0.5.
-
-**THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR, from one or more of: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read, course-correct), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files where components must AGREE on data formats; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer (no free per-variant helpers). WARNING: a large API inventory (15-20+ symbols) is NOT difficulty — it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality check cascade. CASCADE WARNING: documenting an unstated detail to pass a check LOWERS difficulty — in the SAME edit add a paired hard behavioural test.
-
-**VERIFY MANUALLY (Phase 1 — the console cannot check these):**
+**VERIFY MANUALLY (Phase 1 -- the console cannot check these):**
   1. Plagiarism: grep your planned API symbols in the repo (0 hits + platform <0.5 = green). Do this FIRST.
-  2. Closed issues / merged PRs / docs scope / maintainer philosophy / CONTRIBUTING scale — discard if any block it.
-  3. Write the naive impl first and confirm it FAILS the invariant above (prove the gap is load-bearing).
+  2. Closed issues / merged PRs / docs scope / maintainer philosophy / CONTRIBUTING scale -- discard if any block it.
+  3. Write the naive impl first and confirm it FAILS an intermediate-state invariant (prove the gap is load-bearing).
   4. Flakiness (MANDATORY): deterministic suite; run F2P/P2P 3x each; fix any flip before submitting.
   5. Coherence: one feature spanning 3+ subsystems reaching ${std.loc.split(' ')[0]} LOC and ${std.files} files without padding.
 
 **Field notes:**
 ${tips}
 
--> Next: take the feature from the model's gap + invariant above, build the Phase 2 claim-to-test matrix, then code.
+-> Next: pick the feature AS THE MAINTAINER (Selection Mindset), prove GATE ZERO + core-fit + that 700+ LOC follows naturally, then run your workflow prompts.
 --- END BRIEFING ---`;
-  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Carries the final verdict + the model's findings &amp; citations + the angles from this repo's analysis. Drop it in after your STANDARDS block. It does NOT pick a category — the AI chooses, checking overlap.</p></div>`;
+  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Leads with the SELECTION MINDSET + capacity evidence + the model's real reads &amp; citations + the live novelty gate. It deliberately does NOT pick the feature -- that is yours to find as the maintainer. Drop it in after your STANDARDS block.</p></div>`;
   document.getElementById('lCopy').addEventListener('click',()=>{let ok=false;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);ok=true;}else{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}}catch(e){ok=false;}const b=document.getElementById('lCopy');b.textContent=ok?'Copied ✓':'Copy failed';setTimeout(()=>b.textContent='Copy',1400);});
 }
 
