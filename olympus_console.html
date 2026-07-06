@@ -1770,11 +1770,7 @@ function deriveAreas(r){
   ];
 }
 function analysisResults(r,div){
-  const t=repoTier(r),best=topAngles(r,10),tmpl=anglesAreTemplate(r),std=standardsFor(t.tier);
-  const kindsLabel=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,3).join(' / '):'variant';
-  const angWarn=tmpl?`<div class="fit weak" style="margin:0 0 10px"><span class="fitdot"></span><b>These angles are inferred from folder NAMES + a generic ranking, not from reading code.</b> Answer the difficulty screen, or run the backend /judge, to ground them in this repo's behaviour.</div>`:'';
-  const angChips=best.map((a,i)=>`<span class="angle sel" style="cursor:default"><b style="color:var(--bg);margin-right:5px">${i+1}</b>${esc(a)}</span>`).join('');
-  const comboHtml=comboFor(r).map((c,i)=>`<div class="combo"><div class="cpair">${i+1}. ${c.angles.map(esc).join('  +  ')} &rarr; 1</div><div class="cwhy">${esc(c.why)}</div></div>`).join('');
+  const t=repoTier(r),std=standardsFor(t.tier);
   const areas=deriveAreas(r),derived=!((r.areas||[]).length);
   const openA=areas.filter(a=>!a.avoid).map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('');
   const doneA=areas.filter(a=>a.avoid).map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join('');
@@ -1792,10 +1788,8 @@ function analysisResults(r,div){
   const _fr=(lbl,o)=>o&&o.verdict?`<div class="vcrit"><span class="vlamp ${/yes|present|wrong|fails/i.test(o.verdict)&&!/unclear/i.test(o.verdict)?'pass':/unclear/i.test(o.verdict)?'warn':'fail'}"></span><div><div class="vk">${esc(lbl)}: <b>${esc(o.verdict)}</b></div><div class="vd">${esc((o.reason||'').slice(0,240))}</div>${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:3px">reads: '+o.citations.slice(0,4).map(esc).join(', ')+'</div>':''}</div></div>`:'';
   const findingsBlock=_jdata?`<div class="sec"><div class="seclbl">What the model actually read <span class="hint">the ${esc((_jd.layer)||'')} layer's real code &mdash; THIS drives the verdict, angles and areas below, not folder names</span></div><div class="bcard">${_fr('Free helpers',_jdata.freeHelpers)}${_fr('Obvious approach wrong',_jdata.approachWrong)}${_fr('Naive fails an invariant',_jdata.invariant)}<div class="hint" style="margin-top:8px">Source: ${esc(_jdata.source||'model')}${_jdata.synthesized?', synthesis-reconciled':''}. Each citation is a real file in the repo; the accepted-project rubric (Jun 2026) then maps these findings to the verdict.</div></div></div>`:'';
   return findingsBlock+`
-    <div class="sec"><div class="seclbl">Generic angle brainstorm <span class="hint">generic prompts from folder names + a ranking, NOT read from this repo &mdash; ignore any that do not fit; the real feature is YOURS to find as the maintainer (see the briefing's Selection Mindset)</span></div>${angWarn}<div class="recang">${angChips}</div></div>
-    <div class="sec"><div class="seclbl">Escalation combinations <span class="hint">heuristic angle pairings — each is a CANDIDATE; confirm the angles share a code path (backend /judge) before building</span></div>${comboHtml}</div>
-    ${(openA||doneA)?`<div class="sec"><div class="seclbl">Strong areas <span class="hint">${derived?'derived from the live '+esc(kindsLabel)+' surface':'curated for this repo'}</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
-    <div class="sec"><div class="seclbl">Repo insights <span class="hint">what this repo has taught us &mdash; plus general field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
+    ${(!derived&&(openA||doneA))?`<div class="sec"><div class="seclbl">Candidate leads <span class="hint">read from this repo's structure during our validated discovery &mdash; a starting point to verify or BEAT, NOT a prescription; the real feature is yours to find as the maintainer (see the briefing's Selection Mindset)</span></div>${openA}${doneA?'<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>'+doneA:''}</div>`:''}
+    <div class="sec"><div class="seclbl">Repo insights <span class="hint">structural profile read live &mdash; plus proven field notes</span></div>${repoIntelHtml}${tipsHtml}</div>
     <div class="sec"><div class="seclbl">Doctrine + standards <span class="hint">proven laws + the standard THIS tier is scored against</span></div>${stdCard}${doctrineHtml}</div>`;
 }
 
@@ -1809,14 +1803,13 @@ function renderLaunch(){
   const key=(launchSel.repo||'').toLowerCase(),c=extCache[key];
   // Live refresh on open: board repos re-read when a token is present and we haven't yet.
   if(r&&state.gh&&!isExternal(r)&&!(c&&(c.live||c.liveError))&&!(c&&c.loading)){fetchRepoLive(launchSel.repo,{board:true});}
-  if(r&&lastLaunchRepo!==launchSel.repo&&!(c&&c.loading)){launchSel.angles=topAngles(r);lastLaunchRepo=launchSel.repo;}
+  if(r&&lastLaunchRepo!==launchSel.repo&&!(c&&c.loading)){lastLaunchRepo=launchSel.repo;}
   let opts=repos.map(x=>`<option value="${x.fullName}" ${launchSel.repo===x.fullName?'selected':''}>${x.fullName} · ${x.tier}${repoDiv(x)!=null?' · '+repoDiv(x)+'p':''}</option>`).join('');
   if(launchSel.repo&&!repos.some(x=>x.fullName.toLowerCase()===key)){
     opts=`<option value="${esc(launchSel.repo)}" selected>${esc(launchSel.repo)} · external${repoDiv(r)!=null?' · '+repoDiv(r)+'p':''}</option>`+opts;
   }
   const loadingNote=(c&&c.loading)?`<p class="hint" style="margin-top:6px"><span class="spin"></span>Reading ${esc(launchSel.repo)} live from GitHub…</p>`:'';
   const liveNote=(c&&c.live)?`<p class="hint" style="margin-top:6px;color:var(--green)">✓ Read live — divergence ${repoDiv(r)}${c.commit?', commit '+String(c.commit).slice(0,10):''}.</p>`:'';
-  const angSel=ANGLES.map(a=>`<span class="angle ${launchSel.angles.includes(a)?'sel':''}" data-ang="${a}">${a}</span>`).join('');
   const _hasJudge=!!(c&&c.judge&&c.judge.data),_v=_hasJudge?finalVerdict(r):null;
   const statusCard=_v
     ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px"><span class="verdictchip ${_v.vclass}" style="font-size:13px">${esc(_v.verdict)}</span><span class="hint">${_v.highPass}/3 levers · analysed — the briefing will carry the model's findings + citations</span></div>`
@@ -1827,11 +1820,9 @@ function renderLaunch(){
       <div class="field" style="margin-bottom:0"><label>Repo</label><select id="lRepo">${opts}</select>${loadingNote}${liveNote}</div>
       ${statusCard}
     </div>
-    <details class="disc"><summary>Adjust angles — ${launchSel.angles.length} selected, pre-filled from the analysis</summary><div class="angles" id="lAngles" style="margin-top:10px">${angSel}</div></details>
     <button class="btn primary" id="lGen" style="margin-top:8px">Assemble briefing →</button>
     <div id="lOut" style="margin-top:16px"></div>`;
   document.getElementById('lRepo').addEventListener('change',e=>{launchSel.repo=e.target.value;lastLaunchRepo=null;if(state.gh)selectLaunchLive(e.target.value);renderLaunch();});
-  const la=document.getElementById('lAngles');if(la)la.addEventListener('click',e=>{const a=e.target.closest('.angle');if(!a)return;const v=a.dataset.ang;launchSel.angles.includes(v)?launchSel.angles=launchSel.angles.filter(x=>x!==v):launchSel.angles.push(v);renderLaunch();});
   const lta=document.getElementById('lToAnalyze');if(lta)lta.addEventListener('click',ev=>{ev.preventDefault();analyzeSel=launchSel.repo;activeModule='acquire';render();if(state.gh||state.analyzer)fetchRepoLive(launchSel.repo,{board:!isExternal(r)});});
   document.getElementById('lGen').addEventListener('click',genLaunch);
 }
@@ -1843,9 +1834,12 @@ function genLaunch(){
   const liveRead=!!(r.live&&r.commit);
   const div=repoDiv(r),unit=repoUnit(r),t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r),judgedLayer=(c.judge&&c.judge.layer)||'';
   const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'the heaviest divergent layer';
-  // Removed: PROVEN ANGLE / ranked Best-fit angles / Escalation combinations -- they asserted angles NOT
-  // read from the repo (folder-name + accepted-precedent heuristics), superseded by the Selection Mindset
-  // reframe. topAngles/bestFitAngle/comboFor remain only for the dashboard's "Generic angle brainstorm".
+  // Removed everywhere user-facing: PROVEN ANGLE, ranked Best-fit / Generic angle brainstorm, Escalation
+  // combinations, and the launch "Adjust angles" picker -- all asserted angles NOT read from the repo
+  // (folder-name + accepted-precedent heuristics), which mislead the builder. Superseded by the Selection
+  // Mindset reframe. topAngles/bestFitAngle/comboFor/anglesAreTemplate are now vestigial (kept only as an
+  // internal keyword fallback in deriveAngleKW); the ONLY angle content shown is genuinely repo-derived --
+  // the real /judge findings + curated discovery candidate-leads (never folder-name-derived).
   const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is NOT on the platform allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*; NOT ISC / MPL / GPL / NOASSERTION) — likely DISQUALIFIED. Confirm before any work.\n`:'';
   const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
   const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
