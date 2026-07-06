@@ -585,6 +585,16 @@ http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://localhost');
   if (u.pathname === '/health') { res.writeHead(200); return res.end(JSON.stringify({ ok: true })); }
 
+  // Serve the console itself so the deployed URL is always the LATEST build (no stale local copy).
+  // no-store defeats browser/CDN caching so a redeploy is picked up on the next reload.
+  if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/index.html' || u.pathname === '/olympus_console.html')) {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'olympus_console.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end(html);
+    } catch (e) { res.writeHead(500, { 'Content-Type': 'text/plain' }); return res.end('console not found'); }
+  }
+
   // Accepted-project experience folder: list files (and read one). Local-only; available:false when
   // the dir is not reachable (e.g. the Render host) so the console can fall back to manual paste.
   if (u.pathname === '/experience') {

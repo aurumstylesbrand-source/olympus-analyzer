@@ -985,6 +985,12 @@ async function load(){
   // localStorage entries (traefik olympus + mars from an old seed) can never resurface on their own.
   state.olympus.repos=state.olympus.repos.filter(r=>!isBlacklisted(r.fullName));
   state.mars.repos=[];
+  // Reconcile toward the CURRENT seed: ensure every current-seed repo is present, so newly-added board
+  // repos ALWAYS appear -- even for a persisted board with batch>1, which the old version-change path kept
+  // verbatim and never merged new seeds into (that is why fresh repos stayed invisible until a full reset).
+  {const have=new Set(state.olympus.repos.map(r=>String(r.fullName).toLowerCase()));
+   SEED_OLYMPUS.repos.forEach(s=>{const k=String(s.fullName).toLowerCase();
+     if(!have.has(k)&&!isBlacklisted(k)){state.olympus.repos.push(normalizeRepo(clone(s)));}});}
   await sset(KEYS.olympus,state.olympus);await sset(KEYS.mars,state.mars);
   let u=await sget(KEYS.used)||[];u=dedupe([...u,...state.olympus.repos.map(r=>r.fullName)]).filter(n=>!isBlacklisted(n));
   state.used=u;await sset(KEYS.used,u);
