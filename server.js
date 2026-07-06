@@ -592,11 +592,7 @@ http.createServer(async (req, res) => {
       const html = fs.readFileSync(path.join(__dirname, 'olympus_console.html'), 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       return res.end(html);
-    } catch (e) {
-      let files = ''; try { files = fs.readdirSync(__dirname).join(','); } catch (x) { files = 'readdir failed: ' + x.message; }
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
-      return res.end('console read error: ' + String(e.message) + '\n__dirname=' + __dirname + '\ncwd=' + process.cwd() + '\nfiles=' + files);
-    }
+    } catch (e) { res.writeHead(500, { 'Content-Type': 'text/plain' }); return res.end('console not found'); }
   }
 
   // Accepted-project experience folder: list files (and read one). Local-only; available:false when
