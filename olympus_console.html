@@ -4,32 +4,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0B0C12;--bg-2:#0F1017;--surface:#16171F;--surface-2:#1B1D27;--surface-3:#23242F;
-  --line:#252733;--line-2:#33353F;
-  --green:#A6E84D;--green-deep:#82C636;--green-soft:rgba(166,232,77,.13);--green-tint:rgba(166,232,77,.07);
-  --violet:#8B7FF0;--violet-tint:rgba(139,127,240,.12);
-  --text:#ECEEF2;--text-2:#B9BECB;--muted:#7E8597;--muted-2:#565C6B;
-  --ok:#A6E84D;--ok-bg:rgba(166,232,77,.12);--warn:#E2B547;--warn-bg:rgba(226,181,71,.12);--bad:#E8765B;--bad-bg:rgba(232,118,91,.12);
+  --bg:#09090F;--bg-2:#0F0F1A;--surface:#15161F;--surface-2:#1B1C28;--surface-3:#242638;
+  --line:#232539;--line-2:#353851;
+  --green:#7C6DF7;--green-deep:#6D5EF6;--green-soft:rgba(124,109,247,.16);--green-tint:rgba(124,109,247,.08);
+  --violet:#A78BFA;--violet-tint:rgba(167,139,250,.14);
+  --text:#ECEDF6;--text-2:#B7BBD2;--muted:#7E8299;--muted-2:#565A73;
+  --ok:#34D399;--ok-bg:rgba(52,211,153,.13);--warn:#F5B13D;--warn-bg:rgba(245,177,61,.13);--bad:#F0705C;--bad-bg:rgba(240,112,92,.13);
   --sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
   --r:14px;--r-lg:20px;--r-sm:10px;
-  --sh:0 1px 0 rgba(255,255,255,.025) inset,0 22px 50px -30px rgba(0,0,0,.85);
+  --sh:0 1px 0 rgba(255,255,255,.03) inset,0 24px 60px -34px rgba(0,0,0,.9),0 0 0 1px rgba(124,109,247,.04);
   --sh-sm:0 10px 24px -18px rgba(0,0,0,.7);
 }
 /* ---------- LIGHT THEME (toggle in the rail) ---------- */
 html[data-theme="light"]{
-  --bg:#EAECEF;--bg-2:#F3F5F7;--surface:#FFFFFF;--surface-2:#F5F7F9;--surface-3:#EAEEF1;
-  --line:#E4E8EC;--line-2:#D3D9DF;
-  --green:#5C9E1F;--green-deep:#4C8417;--green-soft:rgba(92,158,31,.13);--green-tint:rgba(92,158,31,.08);
-  --text:#171C22;--text-2:#3B4654;--muted:#697682;--muted-2:#9BA6B1;
-  --ok:#5C9E1F;--ok-bg:rgba(92,158,31,.14);--warn:#BC7A12;--warn-bg:rgba(188,122,18,.13);--bad:#D04A2E;--bad-bg:rgba(208,74,46,.12);
-  --violet:#6F5FE0;--violet-tint:rgba(111,95,224,.10);
+  --bg:#ECEDF3;--bg-2:#F4F5FA;--surface:#FFFFFF;--surface-2:#F5F6FB;--surface-3:#EBEDF6;
+  --line:#E5E6F0;--line-2:#D3D6E4;
+  --green:#5A4BD4;--green-deep:#4C3EC0;--green-soft:rgba(90,75,212,.13);--green-tint:rgba(90,75,212,.07);
+  --text:#16181F;--text-2:#3A4152;--muted:#697086;--muted-2:#9BA0B4;
+  --ok:#16A34A;--ok-bg:rgba(22,163,74,.13);--warn:#B5790F;--warn-bg:rgba(181,121,15,.13);--bad:#CE4126;--bad-bg:rgba(206,65,38,.11);
+  --violet:#7C5FE0;--violet-tint:rgba(124,95,224,.10);
   --sh:0 1px 0 rgba(255,255,255,.8) inset,0 14px 34px -22px rgba(28,40,54,.26);
   --sh-sm:0 8px 20px -14px rgba(28,40,54,.20);
 }
 html[data-theme="light"] #app{
   background:
-   radial-gradient(720px 460px at 100% -4%, rgba(92,158,31,.10), transparent 62%),
-   radial-gradient(560px 520px at -4% 102%, rgba(92,158,31,.06), transparent 60%),
+   radial-gradient(720px 460px at 100% -4%, rgba(90,75,212,.10), transparent 62%),
+   radial-gradient(560px 520px at -4% 102%, rgba(90,75,212,.06), transparent 60%),
    var(--bg);
   background-attachment:fixed;}
 html[data-theme="light"] .topbar{background:linear-gradient(180deg,var(--bg) 70%,rgba(234,236,239,.82) 90%,transparent);}
@@ -44,24 +44,25 @@ html[data-theme="light"] .fit.screen .fitdot{background:#1C8AB0;}
 html[data-theme="light"] .pa{--c:#1C8AB0;}
 *{box-sizing:border-box}body{margin:0;background:var(--bg)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-#app{display:flex;font-family:var(--sans);color:var(--text);background:var(--bg);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+#app{display:flex;font-family:var(--sans);color:var(--text);background:radial-gradient(900px 520px at 100% -6%,rgba(124,109,247,.11),transparent 60%),radial-gradient(760px 620px at -6% 104%,rgba(167,139,250,.08),transparent 60%),var(--bg);background-attachment:fixed;min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
 .mono{font-family:var(--mono)}
 /* left rail */
 .rail{position:fixed;left:0;top:0;bottom:0;width:86px;background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0 16px;z-index:50;gap:6px}
 .rail-top{margin-bottom:16px}
-.rail .glyph{width:36px;height:36px;border-radius:11px;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 0 22px rgba(166,232,77,.4)}
+.rail .glyph{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,var(--violet),var(--green-deep));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px -6px rgba(124,109,247,.7)}
 .rail .glyph::after{content:"";width:12px;height:12px;border-radius:3px;background:var(--bg);transform:rotate(45deg)}
 .rail-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
 .rail-foot{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;margin-top:auto}
 .navbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;padding:12px 0;border:0;background:transparent;border-radius:14px;color:var(--muted);cursor:pointer;transition:.16s;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
-.navbadge{position:absolute;top:6px;right:12px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--green);color:var(--bg);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono);box-shadow:0 2px 8px -2px rgba(166,232,77,.6)}
+.navbadge{position:absolute;top:6px;right:12px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--green);color:var(--bg);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono);box-shadow:0 2px 8px -2px rgba(124,109,247,.6)}
 .navbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .navbtn:hover{color:var(--text);background:var(--surface)}
 .navbtn.active{color:var(--green);background:var(--green-tint)}
-.navbtn.active::before{content:"";position:absolute;left:-13px;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--green);box-shadow:0 0 14px rgba(166,232,77,.7)}
+.brand small{color:var(--violet)}
+.navbtn.active::before{content:"";position:absolute;left:-13px;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--green);box-shadow:0 0 14px rgba(124,109,247,.7)}
 .main{flex:1;margin-left:86px;min-width:0}
 /* topbar */
-.topbar{position:sticky;top:0;z-index:40;padding:20px 0 10px;background:linear-gradient(180deg,var(--bg) 72%,rgba(10,11,13,.85) 90%,transparent);backdrop-filter:blur(8px)}
+.topbar{position:sticky;top:0;z-index:40;padding:20px 0 10px;background:linear-gradient(180deg,var(--bg) 72%,rgba(9,9,15,.9) 90%,transparent);backdrop-filter:blur(10px)}
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
 .brand{display:flex;align-items:baseline;gap:9px;line-height:1}
@@ -83,7 +84,7 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 /* readout */
 .readout{display:flex;align-items:center;gap:15px;margin:0 0 20px;flex-wrap:wrap}
 .gauge{display:flex;gap:5px}.seg{width:26px;height:6px;border-radius:3px;background:var(--line-2)}
-.gauge.gold .seg.lit{background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.5)}
+.gauge.gold .seg.lit{background:var(--green);box-shadow:0 0 10px rgba(124,109,247,.5)}
 .gauge.cyan .seg.lit{background:var(--text-2)}
 .stat{font-family:var(--mono);font-size:11.5px;color:var(--muted)}.stat b{color:var(--text);font-weight:600}
 .batchtag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase}
@@ -92,7 +93,7 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px 24px 18px;margin-bottom:16px;overflow:hidden;box-shadow:var(--sh);transition:border-color .18s,transform .18s}
 .card:hover{border-color:var(--line-2)}
 .card::before{content:"";position:absolute;left:0;top:20px;bottom:20px;width:4px;border-radius:0 4px 4px 0}
-.card.gold::before{background:var(--green);box-shadow:0 0 16px rgba(166,232,77,.4)}
+.card.gold::before{background:var(--green);box-shadow:0 0 16px rgba(124,109,247,.4)}
 .card.test::before{background:var(--text-2)}
 .card.archived{opacity:.5}
 .chead{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -116,7 +117,7 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 /* fit banner */
 .fit{display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--text-2);margin:16px 0;padding:14px 16px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--line);line-height:1.5}
 .fit .fitdot{width:10px;height:10px;border-radius:50%;flex:none}
-.fit.strong{border-color:rgba(166,232,77,.35)}.fit.strong .fitdot{background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.6)}
+.fit.strong{border-color:rgba(124,109,247,.35)}.fit.strong .fitdot{background:var(--green);box-shadow:0 0 10px rgba(124,109,247,.6)}
 .fit.possible{border-color:rgba(226,181,71,.4)}.fit.possible .fitdot{background:var(--warn)}
 .fit.weak .fitdot{background:var(--muted-2)}
 /* charts */
@@ -135,7 +136,7 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 .constellation{display:flex;gap:6px;justify-content:space-between;padding:6px 4px 4px}
 .cstar{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
 .cstardot{width:10px;height:10px;border-radius:50%;background:var(--line-2);transition:.2s}
-.cstar.strong .cstardot{background:var(--green);width:12px;height:12px;box-shadow:0 0 0 4px var(--green-tint),0 0 12px rgba(166,232,77,.6)}
+.cstar.strong .cstardot{background:var(--green);width:12px;height:12px;box-shadow:0 0 0 4px var(--green-tint),0 0 12px rgba(124,109,247,.6)}
 .cstar.possible .cstardot{background:var(--warn)}
 .cstar.weak .cstardot{background:var(--line-2)}
 .cstarlbl{font-family:var(--mono);font-size:9px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);text-align:center}
@@ -267,40 +268,40 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 }
 /* ===== immersive (AI-BL) polish ===== */
 #app{background:
-  radial-gradient(720px 460px at 100% -4%, rgba(166,232,77,.11), transparent 62%),
-  radial-gradient(560px 520px at -4% 102%, rgba(166,232,77,.06), transparent 60%),
+  radial-gradient(720px 460px at 100% -4%, rgba(124,109,247,.11), transparent 62%),
+  radial-gradient(560px 520px at -4% 102%, rgba(124,109,247,.06), transparent 60%),
   radial-gradient(1000px 680px at 50% 128%, rgba(130,198,54,.05), transparent 62%),
   var(--bg);
   background-attachment:fixed;}
 .wrap{max-width:1200px}
 /* circular rail buttons */
-.rail .glyph{box-shadow:0 0 26px rgba(166,232,77,.5)}
+.rail .glyph{box-shadow:0 0 26px rgba(124,109,247,.5)}
 .navbtn{gap:7px;background:transparent!important;padding:8px 0}
 .navbtn svg{width:20px;height:20px;background:var(--surface);border:1px solid var(--line);border-radius:50%;padding:11px;box-sizing:content-box;transition:.18s}
 .navbtn:hover svg{border-color:var(--line-2);background:var(--surface-2)}
 .navbtn.active{color:var(--green)}
-.navbtn.active svg{background:var(--green);border-color:var(--green);color:var(--bg);box-shadow:0 0 20px rgba(166,232,77,.6)}
+.navbtn.active svg{background:var(--green);border-color:var(--green);color:var(--bg);box-shadow:0 0 20px rgba(124,109,247,.6)}
 .navbtn.active::before{display:none}
 @media(max-width:760px){.navbtn svg{padding:8px}.navbtn.active::before{display:block}}
 /* mixed-colour titles */
 .mh em{color:var(--green);font-style:normal}
 /* topbar pills */
 .topstats .tchip{border-radius:20px;padding:6px 12px;background:var(--surface);position:relative}
-.topstats .tchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px;vertical-align:1px;box-shadow:0 0 7px rgba(166,232,77,.8)}
+.topstats .tchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px;vertical-align:1px;box-shadow:0 0 7px rgba(124,109,247,.8)}
 /* glowing bento chart cards (AI-BL) */
 .chartcard{background:linear-gradient(180deg,var(--surface-2),var(--surface));border-radius:18px;position:relative;overflow:hidden;transition:border-color .18s,transform .18s}
 .chartcard:hover{border-color:var(--green-deep);transform:translateY(-2px)}
-.chartcard::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 100% 0%,rgba(166,232,77,.07),transparent 60%)}
+.chartcard::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 100% 0%,rgba(124,109,247,.07),transparent 60%)}
 .chartttl{display:flex;align-items:center;gap:8px}
-.chartttl::before{content:"";width:13px;height:13px;border-radius:4px;background:var(--green);box-shadow:0 0 10px rgba(166,232,77,.7);flex:none}
+.chartttl::before{content:"";width:13px;height:13px;border-radius:4px;background:var(--green);box-shadow:0 0 10px rgba(124,109,247,.7);flex:none}
 /* glowing panels — green square on section + panel heads */
 .panel,.card{position:relative}
-.boardhead .mh3::before,.dhead .reponame::before{content:"";display:inline-block;width:11px;height:11px;border-radius:4px;background:var(--green);box-shadow:0 0 9px rgba(166,232,77,.7);margin-right:9px;vertical-align:1px}
+.boardhead .mh3::before,.dhead .reponame::before{content:"";display:inline-block;width:11px;height:11px;border-radius:4px;background:var(--green);box-shadow:0 0 9px rgba(124,109,247,.7);margin-right:9px;vertical-align:1px}
 /* doctrine-in-play emphasis */
-.dlaw.lime{background:linear-gradient(180deg,rgba(166,232,77,.06),var(--surface-2))}
+.dlaw.lime{background:linear-gradient(180deg,rgba(124,109,247,.06),var(--surface-2))}
 /* live loading */
 .loadwrap{display:flex;align-items:center;gap:16px;padding:14px 0 4px}
-.loadring{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:sp .8s linear infinite;flex:none;box-shadow:0 0 20px rgba(166,232,77,.35)}
+.loadring{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:sp .8s linear infinite;flex:none;box-shadow:0 0 20px rgba(124,109,247,.35)}
 .loadtxt{font-size:13.5px;color:var(--text-2);line-height:1.5}.loadtxt b{color:var(--green)}
 .skelrow{display:flex;gap:11px;margin-top:14px}
 .skel{height:58px;border-radius:13px;flex:1;background:linear-gradient(100deg,var(--surface) 28%,var(--surface-3) 50%,var(--surface) 72%);background-size:200% 100%;animation:shimmer 1.25s linear infinite}
@@ -341,7 +342,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .screnbar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .chest{font-size:9px;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:5px;padding:1px 6px;margin-left:8px;letter-spacing:.04em;vertical-align:middle}
 .tierband{border-radius:13px;padding:13px 15px;margin:0 0 12px;border:1px solid var(--line)}
-.tierband.olympus{background:linear-gradient(180deg,rgba(166,232,77,.12),rgba(166,232,77,.04));border-color:rgba(166,232,77,.45)}
+.tierband.olympus{background:linear-gradient(180deg,rgba(124,109,247,.12),rgba(124,109,247,.04));border-color:rgba(124,109,247,.45)}
 .tierband.mars{background:linear-gradient(180deg,rgba(94,200,229,.10),rgba(94,200,229,.03));border-color:rgba(94,200,229,.42)}
 .tiertop{display:flex;align-items:center;gap:10px;margin-bottom:5px}
 .tierlabel{font-family:Inter,sans-serif;font-weight:800;font-size:16px;letter-spacing:.02em}
@@ -362,7 +363,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .probe{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
 .probe input{flex:1;min-width:180px;background:var(--surface-3);border:1px solid var(--line);border-radius:7px;padding:6px 9px;color:var(--text);font:inherit;font-size:12px}
 .probe .btn{padding:5px 12px;font-size:12px}
-.honest.measured{background:rgba(166,232,77,.08);border-color:rgba(166,232,77,.36)}
+.honest.measured{background:rgba(124,109,247,.08);border-color:rgba(124,109,247,.36)}
 .honest.measured b{color:var(--text)}
 .fit.screen{background:rgba(94,200,229,.08);border-color:rgba(94,200,229,.4)}
 .fit.screen .fitdot{background:#5EC8E5}
@@ -399,7 +400,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .ahero .asub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .bento{display:grid;grid-template-columns:repeat(12,1fr);gap:13px;margin-bottom:16px}
 .bcard{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);border-radius:18px;padding:17px 19px;box-shadow:var(--sh);position:relative;overflow:hidden;min-width:0}
-.bcard.accent{border-color:rgba(166,232,77,.32);box-shadow:0 0 0 1px rgba(166,232,77,.10),var(--sh)}
+.bcard.accent{border-color:rgba(124,109,247,.32);box-shadow:0 0 0 1px rgba(124,109,247,.10),var(--sh)}
 .bcard.violet{border-color:rgba(139,127,240,.32)}
 .bcard .blabel{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-2);margin:0 0 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600}
 .bcol-7{grid-column:span 7}.bcol-5{grid-column:span 5}.bcol-6{grid-column:span 6}.bcol-4{grid-column:span 4}.bcol-8{grid-column:span 8}.bcol-12{grid-column:span 12}
@@ -417,7 +418,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .verdictchip.risky{color:#f0a637;background:rgba(240,166,55,.12);border:1px solid rgba(240,166,55,.5)}
 .verdictchip.pending{color:var(--muted);background:var(--surface-3);border:1px solid var(--line)}
 .confpill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em;text-transform:none}
-.confpill.high{color:var(--green);background:rgba(166,232,77,.13);border:1px solid rgba(166,232,77,.35)}
+.confpill.high{color:var(--green);background:rgba(124,109,247,.13);border:1px solid rgba(124,109,247,.35)}
 .confpill.medium{color:#f0a637;background:rgba(240,166,55,.12);border:1px solid rgba(240,166,55,.4)}
 .confpill.low{color:var(--bad);background:var(--bad-bg);border:1px solid rgba(232,118,91,.4)}
 .riskbox{font-size:12.5px;line-height:1.55;color:var(--text-2);background:rgba(240,166,55,.08);border:1px solid rgba(240,166,55,.32);border-radius:11px;padding:11px 13px;margin-bottom:12px}
@@ -425,7 +426,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .panelvote{font-size:12px;color:var(--text-2);background:var(--surface-3);border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:12px}
 .pvote{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;display:inline-flex;gap:5px;align-items:center}
 .pvote i{font-style:normal;opacity:.55;font-size:9px}
-.pvote.go{color:var(--green);background:rgba(166,232,77,.12)}
+.pvote.go{color:var(--green);background:rgba(124,109,247,.12)}
 .pvote.risky{color:#f0a637;background:rgba(240,166,55,.13)}
 .pvote.nogo{color:var(--bad);background:var(--bad-bg)}
 .pvote.refine{color:var(--muted);background:var(--surface-3);border:1px solid var(--line)}
@@ -456,7 +457,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .ahero h2{background:linear-gradient(180deg,var(--text),var(--text-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ahero h2 em{-webkit-text-fill-color:var(--green);background:none}
 .verdictchip{box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
-.verdictchip.go{box-shadow:0 8px 22px -10px rgba(166,232,77,.5)}
+.verdictchip.go{box-shadow:0 8px 22px -10px rgba(124,109,247,.5)}
 .bento .bcard{display:flex;flex-direction:column}
 .charttip{position:fixed;z-index:90;display:none;background:var(--surface-3);border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text);pointer-events:none;box-shadow:var(--sh-sm);white-space:nowrap}
 .divdot:hover circle:last-child{stroke:var(--text);stroke-width:1.5}
@@ -488,25 +489,24 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
     <div class="rail-top"><span class="glyph"></span></div>
     <nav class="rail-nav" id="nav">
       <button class="navbtn" data-m="acquire"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-7M20 16v-3"/></svg><span class="nlabel">Analyze</span></button>
-      <button class="navbtn active" data-m="olympus"><svg viewBox="0 0 24 24"><path d="M3 20h18L14 6l-3.5 6.5L8 9l-5 11Z"/></svg><span class="nlabel">Olympus</span></button>
-      <button class="navbtn" data-m="mars"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c5 2 9 2 14 0M5 15c5-2 9-2 14 0"/></svg><span class="nlabel">Mars</span></button>
+      <button class="navbtn active" data-m="olympus"><svg viewBox="0 0 24 24"><path d="M3 20h18L14 6l-3.5 6.5L8 9l-5 11Z"/></svg><span class="nlabel">Board</span></button>
       <button class="navbtn" data-m="launch"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 2 5.5 6 5.5 10l-2 3h-7l-2-3C4.5 9 8.5 5 12 3Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 19l-1.5 2.5M15 19l1.5 2.5"/></svg><span class="nlabel">Launch</span></button>
     </nav>
     <div class="rail-foot">
       <button class="navbtn" id="themeBtn" title="Toggle light / dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg><span class="nlabel">Theme</span></button>
       <button class="navbtn" id="acceptedBtn" title="Accepted-project experience files (new-file watcher)"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span class="nlabel">Accepted</span><span class="navbadge" id="expBadge" style="display:none">0</span></button>
       <button class="navbtn" id="doctrineBtn"><svg viewBox="0 0 24 24"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z"/><path d="M5 17h13M9 8h5"/></svg><span class="nlabel">Doctrine</span></button>
-      <button class="navbtn" id="resetBtn"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6M4 19v-4h4"/></svg><span class="nlabel">Reset</span></button>
+      <button class="navbtn" id="resetBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7"/></svg><span class="nlabel">Settings</span></button>
     </div>
   </aside>
   <main class="main">
     <div class="topbar"><div class="wrap topbar-inner">
       <div class="brand"><span class="word"><em>Olympus</em> Console</span><small>repo intelligence · challenge design</small></div>
-      <div class="topstats"><span class="tchip">Oly <b>&le;20%</b></span><span class="tchip">Mars <b>&le;30%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">flakiness <b>0</b></span></div>
+      <div class="topstats"><span class="tchip">pass <b>&le;20%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">files <b>6+</b></span><span class="tchip">flakiness <b>0</b></span></div>
     </div></div>
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass ≤20% of 10 · Mars ≤30% · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
+      <p class="foot">Olympus pass ≤20% of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
@@ -517,7 +517,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <script>
 const SEED_VERSION = 34;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
-const TIER_PLAN = {olympus:{gold:3,test:2},mars:{gold:4,test:3}};
+const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 
 /* ---------- 100 feature angles ---------- */
@@ -555,12 +555,12 @@ const TIPS=[
  {h:'Dockerfile + test.sh hygiene',b:'olympus-base image, WORKDIR /app, pinned deps, model:1000 user, interactive entrypoint. Never run tests or reinstall preinstalled tools in the image. test.sh ships in test.patch at 100755 with distinct base/new modes, no installs, no solution code. Hash-suffix test files; never use the markers shipd / datacurve.'}
 ];
 /* ---------- Accepted-project intelligence (calibration anchors) ----------
-   Distilled from the 6 ACCEPTED projects in /Users/mac/Desktop/olympus-experience/
+   Distilled from the 4 ACCEPTED projects in /Users/mac/Desktop/olympus-experience/
    (experience-intelligence-extraction.md + cross-project-calibration.md, Jun 2026, adversarially
    audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED -- the Olympus bar is <=20% NOW
    (was 30%), so any <=30% precedent below needs MORE difficulty today. This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
-  bar:'Olympus <=20% of 10 (tightened from 30%) - Mars <=30% - Flakiness MANDATORY - >=1 solver with a hard ceiling.',
+  bar:'Olympus <=20% of 10 (tightened from 30%) - Flakiness MANDATORY - >=1 solver with a hard ceiling.',
   envelope:'400-1380 LOC (700+ target, 600 floor) - 9-29 files (6+ min) - description 490-500 words, pure ASCII, behavioural (name WHAT not HOW).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
@@ -754,7 +754,12 @@ function poolPanel(){
 
 /* ---------- doctrine ---------- */
 const DOCTRINE = [
- {c:'gold',h:'Accepted-project precedents (6 real anchors, recalibrated to <=20%)',body:
+ {c:'gold',h:'THE GOAL — capacity + value + acceptance (read this first)',body:`<p>The job is to find repos that can host <b>MANY</b> features that are <b>hard AND valuable AND maintainer-acceptable</b> — not one hard trick. Judge every repo on three things, in order:</p><ol>
+   <li><b>VALUE / feature richness</b> — is there a WIDE space of genuinely-missing, valuable capabilities a maintainer would want? (Panel <i>featureRichness</i>: rich / some / thin.)</li>
+   <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
+   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → ≤20% pass)?</li></ol>
+   <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
+ {c:'gold',h:'Accepted-project precedents (4 real anchors, recalibrated to <=20%)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
    '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
    ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
@@ -774,18 +779,18 @@ const DOCTRINE = [
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li><b>Pass rate ≤20% of 10 runs for Olympus (tightened from 30%); Mars ≤30% (tightened from 40%).</b></li>
+   <li><b>Pass rate ≤20% of 10 runs (tightened from 30%).</b></li>
    <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
    <li>Solution LOC 700+ (600 floor). Files 6+ (5 ok).</li>
    <li>Description up to 500 words; accepted cluster is 496-500. Plagiarism ALL below 0.5.</li>
-   <li>Solving-agent MSGs 85+. Mars: no MSG target.</li></ul>
+   <li>Solving-agent MSGs 150+ (120 min for a solve).</li></ul>
    <p><b>Authenticity law — never pad.</b> The feature must be genuine, actually work, and genuinely deserve its 700+ LOC. Comments, whitespace, duplication, reformatting and speculative defensive code are caught as padding. Raise the AGENT floor honestly (a feature above the helper layer so agents write per-variant code); never inflate the reference.</p>`},
  {c:'gold',h:'Verify Flakiness (MANDATORY check)',body:`<p>The platform now <b>runs every suite 3x clean + 3x patched and fails the submission on ANY nondeterministic result.</b> A test that passes only sometimes sinks the whole problem regardless of difficulty.</p>
    <p><b>Two places it bites:</b> (1) the <b>repo you pick</b> — avoid suites with known flakiness (WASM-heap pressure, real network/clock, port binding, parallel DB races, order-dependent global state); (2) the <b>tests you write</b> — no wall-clock/sleep assertions, no real network, no reliance on map/set iteration order, no shared mutable fixtures across tests, seed any randomness, and isolate each test's state. If a hard behavioural test can only be made to pass intermittently, redesign it to assert the invariant deterministically or drop it.</p>
    <p><b>Prove it before submitting:</b> run F2P/P2P locally at least 3x each; if any run flips, it is flaky — fix it, do not submit and hope.</p>`},
  {c:'violet',h:'Check-vs-difficulty cascade',body:`<p>Every Aligned/Fairness fix LOWERS difficulty. When you document an unstated detail to pass a check, you hand Nova the answer. <b>In the SAME edit, add a paired hard behavioral test</b> (an intermediate-state or surface-shape assertion) so the documentation does not soften the gap. Track it: each "document X" must have a "+ test Y" in the same diff.</p>`},
- {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to the tier ceiling (Olympus ≤20%, Mars ≤30%) is forcing codebase discovery — a feature above the helper layer (agents write per-variant code) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
- {c:'gold',h:'LOC-floor law',body:`<p>The platform measures AGENT median LOC, not your reference. The only floor-raiser is a feature whose target layer has no free helpers, forcing agents to hand-roll per-variant code. Never collapse divergent variants into a shared helper — that divergence is the LOC and the difficulty.</p>`},
+ {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to the ≤20% ceiling is forcing codebase discovery — a feature above the helper layer (agents write real logic from scratch) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
+ {c:'gold',h:'LOC-floor law',body:`<p>The platform measures AGENT median LOC, not your reference. The only floor-raiser is a feature whose target layer has no free helpers, forcing agents to hand-roll real per-case logic. Never collapse divergent variants into a shared helper — that divergence is the CAPACITY + the LOC floor; the difficulty is the feature you pick.</p>`},
  {c:'violet',h:'Phase 1 — Rejection prevention (all 7 before any code)',body:`<ol>
    <li>Plagiarism: grep the repo for your API symbols. 0 hits + platform &lt;0.5 = green. ≥0.5 same repo = PIVOT.</li>
    <li>Closed issues: "not planned / wontfix / won't do" → DISCARD.</li>
@@ -814,7 +819,6 @@ const DOCTRINE = [
    <li>Trimming a description word can make a fair test unfair → cross-check every trim.</li>
    <li>Hard tests added for an unfair-fix can themselves be unfair → verify the new tests.</li>
    <li>Never delete a success-path test → replace with a fair fixture (the platform synthesizes deleted ones).</li></ol>`},
- {c:'cyan',h:'Mars routing (check after first batch)',body:`<p>If ANY: Nova &lt;50 MSGs, bimodal outcomes (0/N or N/N), 90%+ greenfield, or suggestive API names → STOP Olympus, submit Mars. A Mars accept beats an Olympus reject after 48 iterations.</p>`},
  {c:'gold',h:'Three discovery-gap types (from accepted data)',body:`<ol>
    <li><b>Structural multi-path</b> — 5+ divergent paths + 2 silently-failing cross-cutting invariants (tRPC: 7 adapters).</li>
    <li><b>Unfamiliar sibling path</b> — a second builder family agents must re-discover (drizzle: the relational query builder vs the select builders).</li>
@@ -998,19 +1002,18 @@ function render(){
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.m===activeModule));
   if(activeModule!=='acquire'&&typeof stopActivityPolling==='function')stopActivityPolling(); // stop live polling when off the Analyze view
   if(activeModule==='olympus'){activeTier='olympus';renderBoard();}
-  else if(activeModule==='mars'){activeTier='mars';renderBoard();}
   else if(activeModule==='launch'){renderLaunch();}
   else if(activeModule==='acquire'){renderAcquire();}
 }
 document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('.navbtn');if(!b)return;activeModule=b.dataset.m;render();});
 
-/* ---------- BOARD (olympus/mars) ---------- */
+/* ---------- BOARD (capacity repos) ---------- */
 function renderBoard(){
-  const data=state[activeTier];const accent=activeTier==='olympus'?'gold':'cyan';
+  const data=state[activeTier];const accent='gold';
   const total=data.repos.length, done=data.repos.filter(r=>r.archived).length;
   let segs='';for(let i=0;i<total;i++)segs+=`<span class="seg ${i<done?'lit':''}"></span>`;
-  let html=`<h2 class="mh">${activeTier==='olympus'?'Olympus':'Mars'} <em>board</em></h2>
-    <p class="lede">${activeTier==='olympus'?'Lean tier — every repo has 5+ variant code-paths (the precondition). Difficulty is the feature you build on top (helper-layer / surface / instance-state). Three features max per repo.':'Deep tier — clean single-pattern repos where the work is feature density, not structural exploration.'}</p>
+  let html=`<h2 class="mh">Capacity <em>board</em></h2>
+    <p class="lede">Vetted, wide-surface repos that can host MANY hard <b>and valuable</b> features a maintainer would realistically accept. The subsystem breadth is the CAPACITY signal (and the reason cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Three features tracked per repo.</p>
     <div class="readout"><span class="batchtag">Batch ${String(data.batch).padStart(2,'0')}</span><div class="gauge ${accent}">${segs}</div><span class="stat"><b>${done}</b> of <b>${total}</b> repos closed</span></div>`;
   if(activeTier==='olympus'){
     html+=`<div class="panel" style="border-color:var(--green-deep);background:linear-gradient(180deg,var(--green-tint),transparent)">
@@ -1129,7 +1132,7 @@ async function generateBatch(){
 function detCheck(name,tag,status,detail,fix){return {name,tag,status,detail,fix:fix||''};}
 function lampClass(s){return s==='pass'?'pass':s==='warn'?'warn':s==='fail'?'fail':'idle';}
 function opt(v,l,cur){return `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`;}
-function gapTypeFor(r){const paths=repoDiv(r),s=r.screen||{};if(s.helpers==='none')return 'feature ABOVE the helper layer — agents write per-variant code from scratch (the proven gap)';if(paths!=null&&paths>=5)return 'structural multi-path — confirm the target layer has NO free per-variant helpers';return 'name the gap (need 5+ variant paths the feature builds from scratch)';}
+function gapTypeFor(r){const paths=repoDiv(r),s=r.screen||{};if(s.helpers==='none')return 'feature ABOVE the helper layer — agents write real logic from scratch (the proven gap)';if(paths!=null&&paths>=5)return 'wide surface — name the discovery gap (an unfamiliar path / non-guessable invariant), the breadth is capacity, not the difficulty';return 'name the discovery gap: an unfamiliar path or a non-guessable intermediate-state invariant the naive impl gets wrong';}
 /* ---------- proven difficulty mechanism (30% TypeORM data, 130+ iterations) ----------
    Divergence is ONLY the precondition (are there 5+ variant paths?). It does NOT predict
    difficulty. The real screen is feature-level judgment: does the target layer already
@@ -1142,45 +1145,31 @@ const SCREEN_Q=[
  {k:'approach',q:'Obvious approach',sub:'Keep the surface to 1-2 new public symbols. Is the FIRST implementation an agent would reach for actually WRONG?',opts:[['wrong','Obvious approach is WRONG (HARD)'],['works','Obvious approach works (EASY)']]},
  {k:'invariant',q:'Intermediate-state invariant',sub:'Does the naive implementation pass every value check but FAIL a count / ordering / intermediate-state invariant?',opts:[['fails','Naive impl FAILS an invariant (HARD)'],['passes','Naive impl passes everything']]}
 ];
-// Tier determination — is THIS repo Olympus-worthy or Mars-worthy?
-// Board repos carry a curated, authoritative tier. External repos are judged structurally:
-// enough variant paths AND a behaviourally non-trivial surface => Olympus; otherwise Mars
-// (thin name-keyword repos can't host a no-free-helper feature where the obvious approach is wrong).
+// Capacity read — can THIS repo host many hard, VALUABLE, maintainer-acceptable features?
+// (Mars tier retired: every board repo is an Olympus-tier capacity repo; external repos are read
+// structurally. This function no longer routes anything to a second tier -- it only describes the
+// repo's capacity, and the real go/no-go is finalVerdict/repoCapacity + the value/acceptance panel.)
 function repoTier(r){
   const paths=repoDiv(r);
   const nm=(r.fullName||'').toLowerCase(), kinds=(r.divKinds||[]).map(k=>(k||'').toLowerCase());
   const hay=nm+' '+kinds.join(' ');
-  const THIN=/config|conf|koanf|viper|pars(e|er)|format|codec|encod|decod|marshal|serializ|yaml|toml|\bhcl\b|dotenv|\benv\b|logg|validat|\blint|i18n|locale|color|ansi|\bflag|getopt|slug|uuid|\bhash|template|markdown/;
   const RICH=/orm|sql|\bdb\b|database|dialect|quer|router|route|\bmux\b|server|http|client|\brpc|grpc|graphql|pool|session|transact|\btx\b|cache|queue|broker|stream|socket|\bws\b|connection|engine|schedul|worker|migrat|replicat|consensus|raft|module|provider|guard/;
   const STATEFUL=/orm|sql|\bdb\b|database|dialect|router|server|client|pool|session|transact|cache|queue|stream|socket|connection|engine|schedul|driver|adapter|store|module/;
-  const richHit=RICH.test(hay), thinHit=THIN.test(hay);
-  // approachFeasible: can the repo host a feature whose OBVIOUS approach is wrong? (keyword proxy)
-  // invariantFeasible: does it carry order/lifecycle/intermediate state to violate? (keyword proxy)
   // approachFeasible / invariantFeasible are BEHAVIOURAL properties the doctrine says are NOT
   // readable from names; this regex is a keyword PROXY only, and is labelled unverified downstream.
-  // Removed: the kinds.length>=4 folder-count inference, and the single-THIN-folder veto that
-  // wrongly demoted rich repos (e.g. drizzle, just because one folder is named 'serializer').
-  let approachFeasible = richHit;
+  let approachFeasible = RICH.test(hay);
   let invariantFeasible = STATEFUL.test(hay);
-  const curated=(r.tier==='olympus'||r.tier==='mars')?r.tier:null;
-  let tier, why;
-  if(curated){tier=curated;
-    // A curated tier is authoritative: the feasibility flags MUST agree with it, or the
-    // recommendation would contradict the tier (e.g. recommend the easy answer on a curated Olympus repo).
-    if(curated==='olympus'){approachFeasible=true; invariantFeasible=true;}
-    else {approachFeasible=false; invariantFeasible=false;}
-    why=curated==='olympus'
-      ? (paths!=null?paths+' variant paths — ':'')+'curated Olympus-tier: verified multi-variant structure that can host a feature whose obvious approach is wrong.'
-      : (paths!=null?paths+' paths but ':'')+'curated Mars-tier: the per-variant work is thin (small adapters / parsers), so a hard-behaviour Olympus feature would be bolted-on. Medium-tier is the honest home.';}
-  else if(paths==null){tier='mars'; why='code paths not read yet — read live or set the count';}
-  else if(paths<5){tier='mars'; why='only '+paths+' variant paths — not enough breadth for Olympus. Mars-tier.';}
-  else if(approachFeasible&&invariantFeasible){tier='olympus'; why=paths+' variant paths over a behaviourally non-trivial surface ('+(kinds[0]||'variants')+') — can host a no-free-helper feature where the obvious approach fails.';}
-  else {tier='mars'; why=paths+' paths but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — a hard-behaviour feature would be bolted-on. Mars-tier is the honest home.';}
-  return {tier, why, approachFeasible, invariantFeasible, paths, curated:!!curated};
+  const curated=(r.tier==='olympus')?'olympus':null;
+  let why;
+  if(curated){approachFeasible=true; invariantFeasible=true;
+    why=(paths!=null?paths+' subsystems — ':'')+'curated capacity repo: a vetted, wide-surface repo that can host MANY hard, valuable features a maintainer would accept.';}
+  else if(paths==null){why='code paths not read yet — read live or set the count.';}
+  else if(paths<5){why='only '+paths+' subsystems read — a thin surface (though a deep single-package repo can still qualify); verify real capacity before building, or pick a wider repo.';}
+  else if(approachFeasible&&invariantFeasible){why=paths+' subsystems over a behaviourally non-trivial surface ('+(kinds[0]||'variants')+') — capacity to host a hard, valuable feature.';}
+  else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
+  return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return tier==='olympus'
-  ? {loc:'700+ (600 floor)', files:'6+', desc:'≤500 words (cluster 496-500)', msg:'85+ solving-agent MSGs', pass:'≤20% of 10 runs (new ceiling)'}
-  : {loc:'450-500', files:'5-15', desc:'200-250 words (target 200)', msg:'no MSG target', pass:'≤30% ceiling (new)'};}
+function standardsFor(tier){return {loc:'700+ (600 floor)', files:'6+', desc:'≤500 words (cluster 496-500)', msg:'150+ solving-agent MSGs (120 min)', pass:'≤20% of 10 runs'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -1276,10 +1265,10 @@ function recommendScreen(r){
     helpers:{rec:'none',feasible:true,why:'aim a layer ABOVE the '+k0+' helpers — if the feature can call per-'+k0+' helpers for free it solves at ~80% (the TreeRepository trap)'},
     approach:{rec:t.approachFeasible?'wrong':'works',feasible:t.approachFeasible,why:t.approachFeasible
       ?'keep it to 1-2 new public symbols and design the behaviour so the first approach an agent reaches for is wrong (more symbols = more prescriptive = easier)'
-      :'this surface is too thin to make the obvious approach wrong without it feeling contrived — the smaller Mars scale fits'},
+      :'this surface looks too thin to make the obvious approach wrong without it feeling contrived — verify, or pick a wider-surface repo'},
     invariant:{rec:t.invariantFeasible?'fails':'passes',feasible:t.invariantFeasible,why:t.invariantFeasible
       ?'pin an intermediate-state invariant (count / ordering / lifecycle) the naive implementation violates while still passing value checks'
-      :'little order/lifecycle state to violate here — a count/state invariant would be forced; Mars scale'}
+      :'little order/lifecycle state to violate here — a count/state invariant would be forced; verify, or pick a repo with real intermediate state'}
   };
 }
 function estPass(r){
@@ -1339,24 +1328,17 @@ function chartFactors(r){
 function olympusFit(r){
   const t=repoTier(r),paths=repoDiv(r), s=r.screen||{};
   if(paths==null&&!t.curated) return {v:'screen',t:'Count the code paths first (read live, or set divergence).'};
-  if(s.helpers==null||s.approach==null||s.invariant==null) return {v:'screen',t:(paths!=null?paths+' code paths. ':'')+'Assessed '+t.tier.toUpperCase()+'-worthy — '+t.why+' Screen the feature below to confirm.'};
-  if(s.helpers==='free') return {v:'weak',t:'EASY — the target layer already exposes per-variant helpers, so agents call them for free (TypeORM TreeRepository = 100% pass). Move the feature ONE LAYER ABOVE the helpers, or route to Mars.'};
-  if(t.tier==='mars'){
-    const over=(s.approach==='wrong'||s.invariant==='fails');
-    return {v:over?'possible':'strong',t:over
-      ? 'MARS-worthy repo, Olympus-grade picks. '+t.why+' Forcing a wrong-obvious-approach + invariant here will read as bolted-on — submit as Mars (smaller scope) or pick an Olympus-capable repo.'
-      : 'MARS-worthy — '+t.why+' No free helpers + Mars scope = a clean medium-tier challenge. Submit under Mars standards.'};
-  }
-  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'OLYMPUS-worthy — '+paths+' paths, NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. The proven structure, now targeting the tighter <=20% ceiling (small surface, hard behaviour).'};
-  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'OLYMPUS-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the <=20% ceiling.'};
-  return {v:'possible',t:'OLYMPUS-capable repo but easy picks — the obvious approach works and nothing violates an invariant, so it lands at Mars scale. Make the obvious approach wrong or add an intermediate-state invariant, or submit as Mars.'};
+  if(s.helpers==null||s.approach==null||s.invariant==null) return {v:'screen',t:(paths!=null?paths+' code paths. ':'')+'Capacity read — '+t.why+' Run the panel (VALUE + ACCEPTANCE + difficulty) to confirm a hard, valuable, maintainer-acceptable feature.'};
+  if(s.helpers==='free') return {v:'weak',t:'EASY — the target layer already exposes free helpers, so agents call them for free (TypeORM TreeRepository = 100% pass). Move the feature ONE LAYER ABOVE the helpers, or pick a wider-surface repo.'};
+  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'Olympus-shaped — '+(paths!=null?paths+' subsystems, ':'')+'NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. Confirm the feature is also VALUABLE + maintainer-acceptable (the panel), then build (small surface, hard behaviour, ≤20% ceiling).'};
+  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'Olympus-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the ≤20% ceiling.'};
+  return {v:'possible',t:'Capacity is there but this ANGLE looks easy — the obvious approach works and nothing violates an invariant. Pick a harder feature (the difficulty is the feature you choose, not the repo), or make the obvious approach wrong + add an intermediate-state invariant.'};
 }
 function tierBanner(r){
   const t=repoTier(r),std=standardsFor(t.tier),paths=repoDiv(r);
   if(paths==null&&!t.curated) return '';
-  const label=t.tier==='olympus'?'OLYMPUS-WORTHY':'MARS-WORTHY';
   const pathNote=(paths==null&&t.curated)?' <span class="hint">(path count reads live on select)</span>':'';
-  return `<div class="tierband ${t.tier}"><div class="tiertop"><span class="tierlabel">${label}</span><span class="tiertag">${t.curated?'curated':'name-heuristic · unverified'}</span></div><div class="tierwhy">${esc(t.why)}${pathNote}</div><div class="tierstd">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards — LOC <b>${std.loc}</b> · files ${std.files} · description ${std.desc} · pass ${std.pass}.</div></div>`;
+  return `<div class="tierband olympus"><div class="tiertop"><span class="tierlabel">OLYMPUS CAPACITY</span><span class="tiertag">${t.curated?'curated':'name-heuristic · unverified'}</span></div><div class="tierwhy">${esc(t.why)}${pathNote}</div><div class="tierstd">Scored against <b>Olympus</b> standards — LOC <b>${std.loc}</b> · files ${std.files} · description ${std.desc} · pass ${std.pass}.</div></div>`;
 }
 function difficultyScreen(r){
   const s=r.screen||{},paths=repoDiv(r),rec=recommendScreen(r),t=repoTier(r),pr=(extCache[(r.fullName||'').toLowerCase()]||{}).probe;
@@ -1399,13 +1381,13 @@ function sourceReadBanner(r){
 function difficultyReadout(r){
   // SAME levers + count as the final verdict (one source of truth) — no more 1/3-vs-2/3 mismatch.
   const t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r);
-  const stdline=`<div class="stdline">Scored against <b>${t.tier==='olympus'?'Olympus':'Mars'}</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
+  const stdline=`<div class="stdline">Scored against <b>Olympus</b> standards: target pass <b>${std.pass}</b>, LOC <b>${std.loc}</b>, description <b>${std.desc}</b>.</div>`;
   const jd=((extCache[(r.fullName||'').toLowerCase()]||{}).judge||{}).data;
   // chip polarity must agree with the lever lamp: green only when the lever is satisfied.
   const evTag=(i,ok)=>{ if(!jd)return ''; const o=i===1?jd.approachWrong:i===2?jd.invariant:null; if(!o||!o.verdict)return '';
     const z=String(o.verdict).toLowerCase(); return /unclear|\?|split/.test(z)?' <span class="chip unver">models split</span>':ok?' <span class="chip ver">judge-evidenced</span>':' <span class="chip unver">model: not found</span>'; };
   const leverRows=v.high.map((l,i)=>`<div class="checkrow"><span class="lamp ${l.ok?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${l.ok?'✓':'—'} ${esc(l.k)}${evTag(i,l.ok)}</div><div class="checkdetail">${esc(l.d)}</div></div></div>`).join('');
-  const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">the same 3 levers as the final verdict</span></p><p class="chartsub"><b>${v.highPass}/3 structural levers</b> ${jd?'— evidenced by the model assessment':'— run the assessment to evidence them'}. ${esc(v.line.slice(0,150))}</p>${leverRows}</div>`;
+  const readinessCard=`<div class="chartcard wide"><p class="chartttl">Design readiness <span class="chest">the 3 difficulty levers — VALUE + ACCEPTANCE are judged separately (panel)</span></p><p class="chartsub"><b>${v.highPass}/3 difficulty levers</b> ${jd?'— evidenced by the model assessment':'— run the assessment to evidence them'}. ${esc(v.line.slice(0,150))}</p>${leverRows}</div>`;
   return `${readinessCard}${stdline}`;
 }
 function wireScreen(r){
@@ -1505,7 +1487,7 @@ function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
 function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};return (c.judgeLayerOverride&&String(c.judgeLayerOverride).trim())||judgeLayer(r);}
 function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
-  if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers the two behavioural questions the screen asks — is the obvious approach wrong, and does a naive impl violate an intermediate-state invariant — with code citations (model judgment, not proof).</div>`;
+  if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers five questions VALUE-first — is there a wide space of valuable missing features, would maintainers accept one into core, and the three difficulty levers (free helpers, obvious approach wrong, naive-fails-an-invariant) — with code citations (model judgment, not proof).</div>`;
   if(!layer){
     const readLive=!!(c.live||(c.source&&!c.source.error));
     return `<div class="honest"><b>No divergent layer auto-detected.</b> The judge points the model at a <b>container layer</b> — a folder of sibling variants (adapters / drivers / dialects / providers / parsers). `+
@@ -1618,7 +1600,7 @@ function finalVerdict(r){
   if(c.source&&c.source.outOfScope){
     return {verdict:'OUT OF SCOPE',vclass:'nogo',
       line:'The scanner found almost no Go / TypeScript / JS / Python / Rust source — this repo looks dominated by an unsupported language ('+esc(c.source.dominantExt||'?')+'). The measured surface is stray scripts, not the real codebase, so no verdict is meaningful. Pick a Go / TypeScript repo (the platform also allows Python / Rust / C++ / Java, but this console scores Go/TS-shaped divergence).',
-      high:[],highPass:0,altitudeNote:'',manual:[],confidence:'',risk:''};
+      high:[{k:'Capacity (subsystem breadth)',ok:false,d:'out of scope'},{k:'Discovery gap',ok:false,d:'out of scope'},{k:'Invariant',ok:false,d:'out of scope'}],highPass:0,altitudeNote:'',manual:[],confidence:'',risk:''};
   }
   const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase().trim();
     if(!z||/unclear|\?|split/.test(z))return 'unclear';
@@ -1681,7 +1663,7 @@ function finalVerdict(r){
   else if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model panel + the accepted-project rubric. Run the assessment first (the panel reads the layer against the Olympus standard).'; }
   else if(ovv==='no' || (panelV&&panelV.vetoed)){ verdict='NO-GO'; vclass='nogo'; line='The model PANEL judged this repo NOT Olympus-grade'+(panelV&&panelV.vetoed?' (VETOED: '+panelV.topNo+' of the top-5 said no)':'')+'. '+ovReason.slice(0,300)+' It only yields transcribable / easy features, or is not deterministically testable, or is already solved. Drop it and pick a stronger repo.'; }
   else if(ovv==='risky'){ verdict='RISKY'; vclass='risky'; line='The PANEL is NOT convinced this repo is Olympus-grade. '+ovReason.slice(0,300)+' Confirm a genuinely HARD (discovery gap / breadth), deterministic, NOT-already-solved feature exists BEFORE you invest -- this is the go-cloud failure mode: structurally divergent, but the realistic features are too easy for SOTA.'; }
-  else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally too easy: fewer than 5 divergent paths. A known surface cannot be made Olympus-hard by adding edge cases. Drop and replace it, or route to Mars.'; }
+  else if(!pathsOk){ verdict='NO-GO'; vclass='nogo'; line='Structurally thin: fewer than 5 divergent paths and not a deep single-package repo. A known surface cannot be made Olympus-hard by adding edge cases. Drop and pick a stronger, wider-surface capacity repo.'; }
   else if(!gapOk && !invOk && altitudeFree){ verdict='NO-GO'; vclass='nogo'; line='No discoverable difficulty on this layer: the model found neither a wrong obvious approach nor a naive-failing invariant, and the layer hands agents free helpers — a feature here is a thin transcribe. Judge a DEEPER layer, or drop and replace.'; }
   else if(gapOk && invOk && fhState==='present'){ verdict='RISKY'; vclass='risky'; line='Looks two-layer on the model read — the obvious approach is wrong AND a naive impl fails an invariant — BUT the model also flags FREE per-variant helpers at the "'+layerName+'" layer. A shared base may already implement the contract, which would make that gap and invariant transcribe-once (this is exactly how a repo looks PASS but builds EASY). Risky for Olympus: before building, open the base / abstract / default class and confirm each variant hand-rolls the contract itself. If a base does the work it is a NO-GO; otherwise aim the feature ABOVE the helpers.'; }
   else if(gapOk && invOk){ verdict='PASS'; vclass='go'; line='Olympus-shaped: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with TWO discovery layers — the obvious approach is wrong AND a naive impl violates an intermediate-state invariant. This is the profile of the recently-accepted projects. Build the feature above the helper layer; only a real agent batch measures the true pass rate.'+((fhState==='contested'||legSplit)?' NOTE: the models were NOT unanimous ('+(fhState==='contested'?'split on whether a shared base hands out free helpers':'split on a discovery leg')+') — treat this as provisional and verify before committing (see Verify below).':''); }
@@ -1737,7 +1719,7 @@ function verdictCard(r){
   })() : '';
   return `<div class="bcard ${v.vclass==='go'?'accent':''}" style="margin-bottom:14px">
     <div class="blabel">Final verdict <span class="hint">${v.cap?'REPO CAPACITY (can it host many hard features) is the headline; the panel judges your specific ANGLE':'model PANEL judged vs the official Olympus standard + accepted-project rubric'}</span></div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 structural levers</span>${confChip}${drop}</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="verdictchip ${v.vclass}">${esc(v.verdict)}</span><span class="hint">${v.highPass}/3 difficulty levers</span>${confChip}${drop}</div>
     <div style="font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px">${esc(v.line)}</div>
     ${panelBox}
     ${novBox}
@@ -1783,7 +1765,7 @@ function analysisResults(r,div){
   const openA=areas.filter(a=>!a.avoid).map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('');
   const doneA=areas.filter(a=>a.avoid).map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join('');
   const doctrineHtml=relevantDoctrine(r).map(d=>`<div class="dlaw ${d.c==='gold'?'lime':''}"><h5>${d.h}</h5>${d.body}</div>`).join('');
-  const stdCard=`<div class="dlaw lime"><h5>Standards for THIS submission — ${t.tier.toUpperCase()}</h5><p>LOC <b>${std.loc}</b> &middot; files ${std.files} &middot; description ${std.desc} &middot; ${std.msg} &middot; pass ${std.pass}. ${t.tier==='olympus'?'The feature must sit above the helper layer with only 1-2 new public symbols, an obvious approach that is WRONG, and an intermediate-state invariant the naive impl fails — hard behaviour, not surface size, earns the 700+ LOC.':'Medium scope — a focused feature with real cross-file coupling. Do NOT pad to Olympus scale; that is what gets Mars work bounced.'}</p></div>`;
+  const stdCard=`<div class="dlaw lime"><h5>Standards for THIS submission — OLYMPUS</h5><p>LOC <b>${std.loc}</b> &middot; files ${std.files} &middot; description ${std.desc} &middot; ${std.msg} &middot; pass ${std.pass}. The feature must be VALUABLE + maintainer-acceptable AND sit above the helper layer with only 1-2 new public symbols, an obvious approach that is WRONG, and an intermediate-state invariant the naive impl fails — hard behaviour, not surface size, earns the 700+ LOC.</p></div>`;
   const repoIntelTxt=(r.intelligence&&r.intelligence.trim())?r.intelligence.trim():'';
   const repoProfile=`${div!=null?div+' '+repoUnit(r):'paths ?'}  &middot;  tier: ${t.tier}  &middot;  gap: ${gapTypeFor(r)}`;
   const repoIntelHtml=repoIntelTxt
@@ -1820,7 +1802,7 @@ function renderLaunch(){
   const liveNote=(c&&c.live)?`<p class="hint" style="margin-top:6px;color:var(--green)">✓ Read live — divergence ${repoDiv(r)}${c.commit?', commit '+String(c.commit).slice(0,10):''}.</p>`:'';
   const _hasJudge=!!(c&&c.judge&&c.judge.data),_v=_hasJudge?finalVerdict(r):null;
   const statusCard=_v
-    ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px"><span class="verdictchip ${_v.vclass}" style="font-size:13px">${esc(_v.verdict)}</span><span class="hint">${_v.highPass}/3 levers · analysed — the briefing will carry the model's findings + citations</span></div>`
+    ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px"><span class="verdictchip ${_v.vclass}" style="font-size:13px">${esc(_v.verdict)}</span><span class="hint">${_v.highPass}/3 difficulty levers · analysed — the briefing will carry the model's findings + citations</span></div>`
     : `<div class="honest" style="margin-top:12px">⚠ <b>${esc(r?r.fullName:'this repo')}</b> hasn't been analysed yet, so the briefing will be thin. <a href="#" id="lToAnalyze" style="color:var(--green);font-weight:600">Analyse it first →</a> (read source + run the free judgment) so the briefing carries the verdict, the model's gap + invariant, and the file citations.</div>`;
   viewEl.innerHTML=`<h2 class="ahero" style="display:block"><span style="font-weight:800;font-size:29px;letter-spacing:-.035em">Launch <em style="font-style:normal;color:var(--green)">briefing</em></span></h2>
     <p class="lede">Assembles a paste-ready briefing that leads with the <b>Selection Mindset</b> (find the feature like the maintainer), the repo's <b>capacity</b> to validate yourself, and the only genuinely repo-derived evidence — the model's real reads &amp; file citations + the live novelty gate. It deliberately does NOT hand you an angle. Analyse the repo first so the evidence is real, not folder-name guesses.</p>
@@ -1886,7 +1868,7 @@ Evaluate as an EXPERIENCED MAINTAINER evolving ${r.fullName} -- NOT a contributo
   5. IMPLEMENT #1. GATE ZERO first: plagiarism (grep your API symbols; same-repo <0.5) + core-fit (no closed-unmerged PR of the same mechanism, no maintainer "userland / out-of-scope" stance). If #1 fails plagiarism, conflicts with the repo, or turns invalid mid-build, DISCARD it and advance to #2, then #3 -- always keep a vetted pipeline, never force a dead candidate.
   6. Drive the chosen feature through ~/Desktop/olympus-workflow/ (01_analyze -> 04_create -> prompt_validation -> pre_submit_gate) and validate against those + ~/Desktop/olympus-experience/.`;
   const standingRules =
-`**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% Olympus / <=30% Mars * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
+`**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% of 10 runs * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
 
@@ -1898,7 +1880,7 @@ Evaluate as an EXPERIENCED MAINTAINER evolving ${r.fullName} -- NOT a contributo
 ${licLine}
 ${selectionMindset}
 
-**REPO CAPACITY READ: ${v.verdict}** (${v.highPass}/3 structural levers${v.confidence?', confidence: '+v.confidence:''}) -- ${v.line}
+**REPO CAPACITY READ: ${v.verdict}** (${v.highPass}/3 difficulty levers; value + acceptance below${v.confidence?', confidence: '+v.confidence:''}) -- ${v.line}
 ${leverLines}
 ${v.risk?'  ! VERIFY BEFORE BUILDING: '+v.risk+'\n':''}
 ${capacityWhy}
@@ -1911,11 +1893,11 @@ ${noveltyBlock}
 
 ${yourJob}
 
-**TIER: ${t.tier==='olympus'?'OLYMPUS':'MARS'}** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under ${t.tier==='olympus'?'OLYMPUS':'MARS'} standards.
+**TIER: OLYMPUS** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under Olympus standards.
 
 **Subsystem depth:** ${div!=null?div+' '+unit:'?'} (interacting subsystems = the CAPACITY signal, NOT the difficulty; the difficulty is the FEATURE you pick). **Layers:** ${kindsTxt}.
 
-**Standards (${t.tier==='olympus'?'OLYMPUS':'MARS'}):** pass ${std.pass} - LOC ${std.loc} - files ${std.files} - description ${std.desc} - ${std.msg} - Flakiness MANDATORY - plagiarism all <0.5.
+**Standards (OLYMPUS):** pass ${std.pass} - LOC ${std.loc} - files ${std.files} - description ${std.desc} - ${std.msg} - Flakiness MANDATORY - plagiarism all <0.5.
 ${standingRules}
 
 **THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files that must AGREE on a data format; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer. WARNING: a large API inventory (15-20+ symbols) is NOT difficulty -- it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality cascade.
@@ -2098,7 +2080,7 @@ function chartLeverRadar(r){
   return `<svg class="csvg" viewBox="0 0 168 184">${rings}${axL}<polygon points="${dp}" fill="${col}" fill-opacity="0.26" stroke="${col}" stroke-width="1.8"/>${dots}${labels}</svg>`;
 }
 function relevantDoctrine(r){
-  const want=['Proven difficulty mechanism','Verify Flakiness','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade'];
+  const want=['THE GOAL','Proven difficulty mechanism','Verify Flakiness','Discovery-gap law','LOC-floor law','Rejection prevention','Check-vs-difficulty cascade'];
   const seen=new Set(),out=[];
   want.forEach(k=>{const law=DOCTRINE.find(d=>d.h&&d.h.indexOf(k)>=0);if(law&&!seen.has(law.h)){seen.add(law.h);out.push(law);}});
   return out.slice(0,5);
@@ -2188,12 +2170,12 @@ function paintDash(){
   const extBanner=(isExternal(r)&&c)?`<div class="fit possible" style="margin:0 0 12px"><span class="fitdot"></span>${c.manual?'Code paths <b>you entered</b>':'Read <b>live from GitHub</b>'} — <b>${div}</b> ${repoUnit(r)}. ${c.commit?'Latest commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span> — pin this in Launch. ':''}<a href="#" id="anEditDiv" style="color:var(--green)">set count</a></div>`:'';
   const liveBanner=(c&&c.live&&!isExternal(r))?`<div class="fit strong" style="margin:0 0 12px"><span class="fitdot"></span>Read <b>live from GitHub</b>${c.commit?' — commit <span class="mono">'+esc(String(c.commit).slice(0,10))+'</span>':''}. Path count <b>${div}</b> ${repoUnit(r)} (curated)${(c.liveDiv!=null&&c.liveDiv!==div)?'; live tree-walk saw '+c.liveDiv:''}${c.truncated?'; tree too large to read fully (truncated)':''}.</div>`:'';
   const liveErr=(c&&c.liveError)?`<div class="hint" style="margin:0 0 10px;color:var(--warn)">Live refresh didn't complete (${esc(c.liveError)}) — showing pre-verified stored numbers.</div>`:'';
-  const licWarn=(r.license&&r.license!=='?'&&!permissive(r.license))?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>License check:</b> ${esc(r.license)} is not on the permissive allowlist (MIT / Apache-2.0 / BSD / ISC / MPL-2.0). Likely <b>disqualified</b> — verify before investing.</div>`:'';
-  const lowDivWarn=(div!=null&&div<=2)?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>Low path count (${div}).</b> The counter only sees paths expressed as sibling <i>folders</i>. If this repo branches <i>in code</i> (a switch / registry over variants — like ni over package managers) the true count is higher; <a href="#" id="anEditDiv2" style="color:var(--green)">set count</a>. If it is genuinely flat, route to Mars.</div>`:'';
+  const licWarn=(r.license&&r.license!=='?'&&!permissive(r.license))?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>License check:</b> ${esc(r.license)} is not on the permissive allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*; NOT ISC / MPL / GPL / NOASSERTION). Likely <b>disqualified</b> — verify before investing.</div>`:'';
+  const lowDivWarn=(div!=null&&div<=2)?`<div class="fit weak" style="margin:0 0 12px"><span class="fitdot"></span><b>Low path count (${div}).</b> The counter only sees paths expressed as sibling <i>folders</i>. If this repo branches <i>in code</i> (a switch / registry over variants — like ni over package managers) the true count is higher; <a href="#" id="anEditDiv2" style="color:var(--green)">set count</a>. If it is genuinely flat, drop it and pick a wider-surface capacity repo.</div>`:'';
   const srcBanner=licWarn+extBanner+liveBanner+liveErr+lowDivWarn;
   const srcObj=(c&&c.source&&!c.source.error&&!c.source.loading)?c.source:null;
   const vChart=srcObj?chartVariantDonut(srcObj):'';
-  const variantCard=vChart?`<div class="bcard bcol-6"><div class="blabel">Per-variant code weight</div><p class="chartsub" style="margin:0 0 10px">Symbol share per divergent layer (full-repo scan). The biggest slices are where a feature writes the most <b>new per-variant code</b> — that divergence is the LOC and the difficulty.</p>${vChart}</div>`:'';
+  const variantCard=vChart?`<div class="bcard bcol-6"><div class="blabel">Per-variant code weight</div><p class="chartsub" style="margin:0 0 10px">Symbol share per divergent layer (full-repo scan). The biggest slices are where a feature writes the most <b>new per-variant code</b> — that divergence is the CAPACITY + the LOC floor; the difficulty is the feature you pick.</p>${vChart}</div>`:'';
   const chartsHtml=`<div class="bento"><div class="bcard ${vChart?'bcol-6':'bcol-12'}"><div class="blabel">Divergence vs the field</div><p class="chartsub" style="margin:0 0 6px">Where this repo sits on the path scale &mdash; 5+ is the <b>precondition</b>, not the difficulty.</p>${chartDivLine(r)}</div>${variantCard}</div>`;
   const unknown=r.lang==='?'&&div==null;
   const s=r.screen||{},scDone=!!(s.helpers&&s.approach&&s.invariant);
@@ -2223,10 +2205,10 @@ function paintDash(){
   const _aside=`<aside class="aside">
     <h2 class="asidename">Analyzing<em>${esc(r.fullName)}</em></h2>
     <div class="asidesub">${(c&&c.live)?'<span class="livedot on" style="width:6px;height:6px"></span> live · ':''}${esc(r.lang)} · ${esc(r.license)} · ★ ${esc(r.stars)}</div>
-    <div class="asideverdict">${_vchip} <span class="hint">${_fv.highPass}/3 levers</span></div>
+    <div class="asideverdict">${_vchip} <span class="hint">${_fv.highPass}/3 difficulty levers</span></div>
     <div class="asidelevers">${_levers}</div>
     <div class="asidestats">
-      <div class="asidestat"><span>Tier</span><b>${_t2.tier==='olympus'?'Olympus':'Mars'}</b></div>
+      <div class="asidestat"><span>Tier</span><b>Olympus</b></div>
       <div class="asidestat"><span>Paths</span><b>${div!=null?div:'?'}</b></div>
       <div class="asidestat"><span>Surface</span><b>${srcObj?srcObj.surface:'—'}</b></div>
       <div class="asidestat"><span>Target</span><b>${esc((_std2.pass||'').split(' ')[0])}</b></div>
@@ -2237,7 +2219,7 @@ function paintDash(){
   document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and determines the three levers (helpers / approach / invariant) with code citations &mdash; this IS the difficulty screen, you don't set it by hand</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and judges VALUE + ACCEPTANCE + the 3 difficulty levers (helpers / approach / invariant) with code citations &mdash; you don't set it by hand</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}
@@ -2411,9 +2393,9 @@ function wirePool(){
 const drawer=document.getElementById('drawer');
 document.getElementById('doctrineBtn').addEventListener('click',()=>{
   document.getElementById('drawerInner').innerHTML=`<h3>Doctrine</h3>
-   <p class="lede" style="margin-bottom:8px">Repo-agnostic laws from 130+ iterations. They drive the auditor and the launch prompt. Tap outside to close.</p>
+   <p class="lede" style="margin-bottom:8px">The goal: find repos that can host MANY hard, VALUABLE, maintainer-ACCEPTABLE features. Repo-agnostic laws from 130+ iterations that drive the auditor + the launch briefing. Tap outside to close.</p>
    ${DOCTRINE.map(d=>`<div class="law ${d.c}"><h4>${d.h}</h4>${d.body}</div>`).join('')}
-   <div class="law"><h4>100 feature angles</h4><div class="angles">${ANGLES.map(a=>`<span class="angle" style="cursor:default">${a}</span>`).join('')}</div></div>`;
+`;
   drawer.classList.add('open');
 });
 drawer.addEventListener('click',e=>{if(e.target===drawer)drawer.classList.remove('open');});
@@ -2484,7 +2466,7 @@ function openSettings(){
      <p class="hint" id="anlMsg" style="margin-top:8px"></p>
    </div>
    <div class="law"><h4>Live mode</h4><p>${tok?'<b>On.</b> Every repo you analyse is read live each time — fresh metadata and divergence from the tree, with a loading state — <i>when this file runs outside the claude.ai preview</i>. Inside the preview, outbound calls are blocked, so analyses fall back to pre-verified stored numbers (board) or manual entry (pasted repos).':'<b>Off.</b> Save a token to switch on live mode. Note it only takes effect outside this preview (see above).'}</p></div>
-   <div class="law"><h4>Reset boards</h4><p>Restore the Olympus and Mars boards to their seed batches. Logged features, lifecycle states and imported intelligence are erased. Your token stays.</p>
+   <div class="law"><h4>Reset board</h4><p>Restore the Olympus board to its seed batch. Logged features, lifecycle states and imported intelligence are erased. Your token stays.</p>
      <div class="setrow"><button class="btn warn" id="resetConfirm">Reset boards</button></div>
      <p class="hint" id="resetMsg" style="margin-top:8px"></p></div>`;
   drawer.classList.add('open');
