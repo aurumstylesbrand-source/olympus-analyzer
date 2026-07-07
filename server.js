@@ -125,8 +125,12 @@ function blob(files, maxFiles, perFile){
 
 const JUDGE_SCHEMA = {
   type:'object', additionalProperties:false,
-  required:['freeHelpers','approachWrong','invariant','olympusViable','disclaimer'],
+  required:['featureRichness','acceptanceFit','freeHelpers','approachWrong','invariant','olympusViable','disclaimer'],
   properties:{
+    featureRichness:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
+      properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
+    acceptanceFit:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
+      properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     freeHelpers:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
       properties:{ verdict:{type:'string'}, reason:{type:'string'}, citations:{type:'array', items:{type:'string'}} } },
     approachWrong:{ type:'object', additionalProperties:false, required:['verdict','reason','citations'],
@@ -143,17 +147,19 @@ function judgeKey(repo, ref, layer){ return 'judge_' + (repo+'@'+ref+'__'+layer)
 
 // The exact instruction a Claude judgment must follow — shared by the API path and the manual paste path.
 const JUDGE_TASK =
-`Answer three BEHAVIOURAL questions a regex scan cannot, citing specific files/symbols and labelling everything as a model judgment, NOT proof:
-1. freeHelpers (THE #1 DIFFICULTY SIGNAL — inspect the base/abstract/default files shown, not just the variants): Is there a SHARED BASE / ABSTRACT / DEFAULT class (e.g. a DefaultXCompiler / AbstractDialect / BaseDriver) that ALREADY IMPLEMENTS the variants' contract, so each variant is only a THIN override calling into shared implemented methods? If so, a new feature is transcribe-once = EASY = "free helpers present". OR does EACH variant INDEPENDENTLY hand-roll the full contract with NO shared base doing the work (each variant implements the methods itself from scratch)? Then HARD = "no free helpers". Decide by checking whether the variants CALL shared implemented logic or implement everything themselves. If you cannot see a base file to judge this, answer "unclear" (do NOT assume "no free helpers"). Answer "free helpers present" (a base/shared code does the work) | "no free helpers" (each variant hand-rolls it) | "unclear".
-2. approachWrong: For a feature built on this layer, is the obvious / first implementation approach likely WRONG? Why?
-3. invariant: Is there an intermediate-state invariant (count / ordering / lifecycle) a naive implementation would violate while still passing value-equality checks?
-4. olympusViable (THE OVERALL VERDICT -- judge it against the OLYMPUS VIABILITY STANDARD shown above, NOT just structure): can THIS repo host a feature that is genuinely hard for a SOTA model (a real discovery gap or genuine breadth, NOT just "implement X across N variants"), small-surface, NOT already solved, fits the project, and is DETERMINISTICALLY testable offline? Be skeptical -- structural divergence alone is NOT enough (the go-cloud lesson). When unsure between yes and risky, choose "risky". Answer "yes" | "risky" | "no" with a reason naming the strongest realistic HARD feature (or why none exists).
+`Answer these BEHAVIOURAL questions a regex scan cannot -- as an experienced MAINTAINER of this project -- citing specific files/symbols and labelling everything a model judgment, NOT proof. THE GOAL: can this repo host MANY features that are hard AND valuable AND that the maintainers would accept -- not just whether a single hard challenge exists.
+1. featureRichness (VALUE + BREADTH -- the #1 goal signal): reading this layer, is there a WIDE space of genuinely-MISSING, VALUABLE capabilities a maintainer would realistically want built here? Name 2-3 concrete examples. Or is the surface narrow / mostly complete / only cosmetic-or-trivial gaps? Answer "rich" (many distinct valuable missing features) | "some" (a few) | "thin" (little of real value is missing).
+2. acceptanceFit (MAINTAINER ACCEPTANCE / CORE-FIT): would the maintainers realistically ACCEPT a substantial NEW feature in this area INTO CORE -- is there an in-core seam / extension point and does it fit the project's stated philosophy? Or do they push this class of thing to plugins / userland, or has a similar mechanism already been declined (a closed-unmerged PR, an "out of scope" stance)? Answer "welcomes" (in-core seam, fits philosophy) | "neutral" (unclear) | "declines" (userland / out-of-scope / declined class).
+3. freeHelpers (DIFFICULTY -- does the code hand out a transcribe-once path?): does this layer expose FREE ready-made helpers -- a shared base/default/util that already implements the hard work, or ubiquitous per-case helpers -- so a new feature is mostly transcription (= EASY)? Or must a feature hand-roll real logic across the code with NO free helper doing the work (= HARD)? Judge by whether the code CALLS shared implemented logic or implements it itself. This applies to ANY repo shape (adapters, engines, pipelines, models), not only "variants of a contract". If you cannot tell, answer "unclear" (do NOT assume "no free helpers"). Answer "free helpers present" (easy) | "no free helpers" (hard) | "unclear".
+4. approachWrong (DIFFICULTY): for a substantial feature on this layer, is the OBVIOUS / first implementation approach likely WRONG? Why?
+5. invariant (DIFFICULTY): is there an intermediate-state invariant (count / ordering / lifecycle / visibility) a naive implementation would violate while still passing value-equality checks?
+6. olympusViable (THE OVERALL VERDICT -- judge against the OLYMPUS VIABILITY STANDARD above): weighing ALL of the above, can THIS repo host a feature that is genuinely HARD for a SOTA model AND genuinely VALUABLE AND one the maintainers would ACCEPT AND not already solved AND deterministically testable offline? Be skeptical: difficulty alone is NOT enough (a hard but thin or declined space fails -- the go-cloud/nestjs lessons), and value alone is NOT enough (valuable but easy fails). When unsure between yes and risky, choose "risky". Answer "yes" | "risky" | "no", naming the strongest realistic feature that is BOTH hard and acceptable (or why none exists).
 Reply with ONLY a JSON object of this exact shape (no prose, no markdown fence):
-{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"... with code citations","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"olympusViable":{"verdict":"yes|risky|no","reason":"... naming the strongest realistic hard feature or why none exists","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
+{"featureRichness":{"verdict":"rich|some|thin","reason":"... naming 2-3 concrete missing features","citations":["path"]},"acceptanceFit":{"verdict":"welcomes|neutral|declines","reason":"... with evidence of the seam or the userland/declined stance","citations":["path"]},"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"... with code citations","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"... with code citations","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"olympusViable":{"verdict":"yes|risky|no","reason":"... naming the strongest hard+acceptable feature or why none exists","citations":["path"]},"disclaimer":"Model judgment, not proof."}`;
 
 // Assemble the paste-ready prompt at a given size profile (so small-context providers get less).
 function assembleJudgePrompt(repo, ref, layer, variant, above, variantDirs, sz){
-  return `You are an Olympus reviewer assessing whether the "${layer}" layer of ${repo}@${ref} can host a genuinely HARD, Olympus-grade coding challenge. Judge against the standard below, not just structure.
+  return `You are an experienced, MAINTAINER-minded Olympus reviewer assessing whether the "${layer}" layer of ${repo}@${ref} can host MANY features that are hard AND valuable AND that the maintainers would accept -- not just whether one hard challenge exists. Judge against the standard below, not just structure.
 ${JUDGE_STANDARD ? `
 === OLYMPUS VIABILITY STANDARD (judge against this) ===
 ${JUDGE_STANDARD}
@@ -239,13 +245,14 @@ function verifyCitations(obj, allPaths, fileText){
 // Normalize any judgment object (from the API or pasted by a human) into the response shape.
 function shapeJudgment(repo, ref, layer, ctx, raw, source){
   const out = { repo, ref, layer, variantFiles:ctx&&ctx.variantFiles, aboveFiles:ctx&&ctx.aboveFiles, source,
+    featureRichness: raw.featureRichness || {}, acceptanceFit: raw.acceptanceFit || {},
     freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {},
     olympusViable: raw.olympusViable || {},
     disclaimer: raw.disclaimer || 'Model judgment, not proof. No call-graph or runtime analysis was performed.' };
   // Ground every citation against the real repo file list (drops/repairs hallucinated paths).
   if(ctx && ctx.allPaths){
     let unverified = 0;
-    ['freeHelpers','approachWrong','invariant','olympusViable'].forEach(k => {
+    ['featureRichness','acceptanceFit','freeHelpers','approachWrong','invariant','olympusViable'].forEach(k => {
       verifyCitations(out[k], ctx.allPaths, ctx.fileText);
       (out[k].citations||[]).forEach(c => { if(/\((unverified path|symbol unverified)\)/.test(c)) unverified++; });
     });
@@ -321,12 +328,16 @@ const withDeadline = (promise, ms, label) => Promise.race([ promise,
 async function judgeOneModel(provider, prompt){
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1500 }, provider.extra||{})));
   const raw = parseModelJson(contentOf(resp));
-  return { label: provider.label, model: provider.model, tier: provider.tier||1, primary: provider.primary||false, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {}, olympusViable: raw.olympusViable || {} };
+  return { label: provider.label, model: provider.model, tier: provider.tier||1, primary: provider.primary||false, featureRichness: raw.featureRichness || {}, acceptanceFit: raw.acceptanceFit || {}, freeHelpers: raw.freeHelpers || {}, approachWrong: raw.approachWrong || {}, invariant: raw.invariant || {}, olympusViable: raw.olympusViable || {} };
 }
-// Normalize any verdict phrasing to one of yes|no|unclear (handles the freeHelpers vocabulary too).
+// Normalize any verdict phrasing to one of yes|no|unclear (handles freeHelpers, featureRichness and
+// acceptanceFit vocabularies too: rich/welcomes -> yes, thin/declines -> no, some/neutral -> unclear).
 function normVerdict(v){ const z = String(v||'').toLowerCase().trim();
   if(/free helpers present|helpers present|has (free )?helpers|reusable helpers/.test(z)) return 'yes';
   if(/no (free )?helpers|hand-?roll|per-variant code/.test(z)) return 'no';
+  if(/^rich\b|wide space|welcomes\b|in-core seam/.test(z)) return 'yes';
+  if(/^thin\b|declines\b|userland|out[- ]of[- ]scope|declined class/.test(z)) return 'no';
+  if(/^some\b|^neutral\b/.test(z)) return 'unclear';
   if(/^(likely\s*yes|yes\b|probably|definitely)/.test(z)) return 'yes';
   if(/^(likely\s*no|no\b|unlikely|none)/.test(z)) return 'no';
   return 'unclear'; }
@@ -405,11 +416,11 @@ function fuseOlympus(members){
 async function judgeSynthesize(provider, repo, layer, members){
   const prompt = `Two independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
 
-`+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
+`+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
 
-Questions: (1) freeHelpers (#1 signal) - is there a SHARED BASE / ABSTRACT / DEFAULT class implementing the variants' contract so each variant is a THIN override (= free helpers present = easy), or does each variant INDEPENDENTLY hand-roll the full contract with no base doing the work (= no free helpers = hard)? (2) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (3) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
+Questions: (1) featureRichness - is there a WIDE space of genuinely-missing VALUABLE capabilities a maintainer would want here (rich | some | thin)? (2) acceptanceFit - would maintainers ACCEPT a substantial new feature into core here / is there an in-core seam, or is this pushed to userland / a declined class (welcomes | neutral | declines)? (3) freeHelpers (#1 difficulty signal) - does the code hand out free ready-made helpers so a feature is transcribe-once (= free helpers present = easy), or must it hand-roll real logic with no helper doing the work (= no free helpers = hard)? (4) approachWrong - is the obvious/first implementation of a NEW feature on this layer likely WRONG? (5) invariant - is there an intermediate-state invariant (count/ordering/lifecycle) a naive implementation would violate while still passing value-equality checks?
 Where the models agree, give the strongest shared reasoning. Where they disagree, weigh the cited evidence, pick the better-supported verdict, and say they disagreed. For freeHelpers specifically: if EITHER model found a shared base doing the work, lean "free helpers present" (the easy/risky reading), since a missed base is the costly error. Cite specific files/symbols. Reply with ONLY JSON (no prose, no fence):
-{"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"...","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from the models; not proof."}`;
+{"featureRichness":{"verdict":"rich|some|thin","reason":"...","citations":["path"]},"acceptanceFit":{"verdict":"welcomes|neutral|declines","reason":"...","citations":["path"]},"freeHelpers":{"verdict":"free helpers present|no free helpers|unclear","reason":"...","citations":["path:symbol"]},"approachWrong":{"verdict":"likely yes|unclear|no","reason":"...","citations":["path:symbol"]},"invariant":{"verdict":"...","reason":"...","citations":["path"]},"disclaimer":"Centralized from the models; not proof."}`;
   const resp = await withRetry(() => openaiChat(provider, Object.assign({ model: provider.model, messages:[{ role:'user', content: prompt }], max_tokens: 1300 }, provider.extra||{})));
   return parseModelJson(contentOf(resp));
 }
@@ -423,14 +434,18 @@ async function judgeViaEnsemble(repo, ref, layer){
   // Single model available (one configured, or the other failed): return it directly.
   if(members.length===1){
     const m = members[0];
-    const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable,
+    const out = shapeJudgment(repo, ref, layer, ctx, { featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable,
       disclaimer:'Single model ('+m.label+'). Not proof.'+(errors.length?' (other provider failed: '+errors.join('; ')+')':'') }, 'llm:'+m.model);
     out.panel = fuseOlympus(members);
     if(errors.length) out.providerErrors = errors;
     return out;
   }
   // >=2 members: deterministic fusion + optional synthesis pass.
+  const frr = fuseDimension(members,'featureRichness',{yes:'rich',no:'thin',unclear:'some'});
+  const faf = fuseDimension(members,'acceptanceFit',{yes:'welcomes',no:'declines',unclear:'neutral'});
   const fh = fuseDimension(members,'freeHelpers',{yes:'free helpers present',no:'no free helpers',unclear:'unclear'}), fa = fuseDimension(members,'approachWrong'), fi = fuseDimension(members,'invariant');
+  let fr = { verdict:frr.verdict, reason:frr.reason, citations:frr.citations };
+  let af = { verdict:faf.verdict, reason:faf.reason, citations:faf.citations };
   let fhv = { verdict:fh.verdict, reason:fh.reason, citations:fh.citations };
   let aw = { verdict:fa.verdict, reason:fa.reason, citations:fa.citations };
   let iv = { verdict:fi.verdict, reason:fi.reason, citations:fi.citations };
@@ -448,6 +463,10 @@ async function judgeViaEnsemble(repo, ref, layer){
       // The MAJORITY-fused verdict (fh/fa/fi.verdict) is authoritative; synthesis only supplies the
       // reason. A split keeps the majority verdict but is flagged, instead of being forced to unclear.
       const flag = ag => ag==='full' ? '' : ag==='split' ? '[majority, 1 dissented] ' : '[partial agreement] ';
+      if(s.featureRichness) fr = { verdict: frr.verdict, reason: flag(frr.agreement)+(s.featureRichness.reason||frr.reason),
+        citations: [...new Set([...(s.featureRichness.citations||[]), ...frr.citations])] };
+      if(s.acceptanceFit) af = { verdict: faf.verdict, reason: flag(faf.agreement)+(s.acceptanceFit.reason||faf.reason),
+        citations: [...new Set([...(s.acceptanceFit.citations||[]), ...faf.citations])] };
       if(s.freeHelpers) fhv = { verdict: fh.verdict, reason: flag(fh.agreement)+(s.freeHelpers.reason||fh.reason),
         citations: [...new Set([...(s.freeHelpers.citations||[]), ...fh.citations])] };
       if(s.approachWrong) aw = { verdict: fa.verdict, reason: flag(fa.agreement)+(s.approachWrong.reason||fa.reason),
@@ -470,6 +489,7 @@ async function judgeViaEnsemble(repo, ref, layer){
     if(affirmative && fused.corroboratedCitations.length === 0 && agreement !== 'full' && members.length >= 2)
       fused.reason = '[single-source: no file cited by 2+ models] ' + (fused.reason||'');
   };
+  corro('featureRichness', fr, frr.agreement); corro('acceptanceFit', af, faf.agreement);
   corro('freeHelpers', fhv, fh.agreement); corro('approachWrong', aw, fa.agreement); corro('invariant', iv, fi.agreement);
   // THE PANEL VOTE on overall Olympus viability (weighted top-5, with the >=2-of-top-5 veto).
   const panel = fuseOlympus(members);
@@ -477,11 +497,11 @@ async function judgeViaEnsemble(repo, ref, layer){
   const ov = { verdict: panel.verdict, reason: panel.reason,
     citations: [...new Set(members.flatMap(m => (m.olympusViable&&m.olympusViable.citations)||[]))] };
   const labels = members.map(m => m.label).join('+');
-  const out = shapeJudgment(repo, ref, layer, ctx, { freeHelpers:fhv, approachWrong:aw, invariant:iv, olympusViable:ov,
+  const out = shapeJudgment(repo, ref, layer, ctx, { featureRichness:fr, acceptanceFit:af, freeHelpers:fhv, approachWrong:aw, invariant:iv, olympusViable:ov,
     disclaimer:'Centralized from '+members.length+' models ('+labels+')'+(synthesized?' + synthesis reconciliation':'')
-      +'. PANEL olympusViable='+panel.verdict.toUpperCase()+(panel.vetoed?' (VETOED)':'')+'. Agreement: helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
-  out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), primary:m.primary||false, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
-  out.agreement = { freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
+      +'. PANEL olympusViable='+panel.verdict.toUpperCase()+(panel.vetoed?' (VETOED)':'')+'. Agreement: richness='+frr.agreement+', acceptance='+faf.agreement+', helpers='+fh.agreement+', approach='+fa.agreement+', invariant='+fi.agreement+'. A model consensus, not proof.' }, 'ensemble:'+labels);
+  out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), primary:m.primary||false, featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
+  out.agreement = { featureRichness:frr.agreement, acceptanceFit:faf.agreement, freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
   out.panel = panel;
   out.synthesized = synthesized;
   if(errors.length) out.providerErrors = errors;
