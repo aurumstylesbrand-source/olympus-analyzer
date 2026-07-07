@@ -1860,11 +1860,23 @@ Think like a SENIOR ENGINEER on ${r.fullName}'s core team who wants to ship some
   - ${div!=null?div+' interacting '+unit:'deep multi-subsystem structure'} + a deterministic offline core = room to host MANY large features.
   - Confirm this yourself: open the repo, read the core, and satisfy yourself it is genuinely large + deep enough to accept substantial features that need real cross-cutting implementation. If not, DROP it and pick a bigger repo.`;
   const yourJob =
-`**YOUR JOB -- FIND THE FEATURE (this briefing deliberately does NOT pick it for you):**
-  1. Read the repo's core + its CONTRIBUTING / philosophy / roadmap / open issues. What substantial, valuable capability is it genuinely MISSING that a maintainer would want built?
-  2. Pick the biggest, most valuable such feature that fits the core. GATE ZERO: not already built, not in an open/merged PR (the novelty gate above is a start -- then grep + read the source yourself).
-  3. Confirm it INHERENTLY needs 700+ LOC across 6+ files by its nature (never by padding) AND has a real discovery gap (obvious approach wrong / non-guessable invariant).
-  4. Drive it through your workflow at ~/Desktop/olympus-workflow/ (01_analyze -> 04_create -> prompt_validation -> pre_submit_gate) and validate against those + ~/Desktop/olympus-experience/.`;
+`**YOUR JOB -- THE FEATURE DISCOVERY PROTOCOL (maintainer mindset, high bar; this briefing does NOT pick the feature for you):**
+Evaluate as an EXPERIENCED MAINTAINER evolving ${r.fullName} -- NOT a contributor inventing something to submit. The target is a NATURAL EVOLUTION of the project that fills a genuine gap and integrates cleanly. Quality over quantity: fewer exceptional candidates beats a longer list of weak ones.
+
+  1. DEEP RESEARCH. Read the core + architecture, CONTRIBUTING / philosophy / roadmap, recent commits, open AND closed PRs, and issue discussions. Learn what the maintainers actually want and how they build before proposing anything.
+  2. GENERATE up to 5 CANDIDATE features (fewer if fewer clear the bar). EACH must pass ALL of:
+     - genuinely valuable + aligned with the repo's long-term vision and philosophy;
+     - the kind of feature the maintainers would realistically accept or build themselves;
+     - does NOT already exist -- verify across the repo, open PRs, recent commits, roadmap, and closed issues; do not assume;
+     - follows the existing architecture, patterns, and coding standards; technically feasible with NO unnecessary complexity and NO breaking changes;
+     - clear, self-contained scope solving a real user/developer pain point; a genuine FEATURE (never a bug fix, refactor, cleanup, docs, dependency bump, cosmetic tweak, or config change);
+     - substantial: a clean implementation is NATURALLY ~650-850 LOC of production code (excluding tests / docs / generated code) -- which maps to the platform's 700+ agent-median floor. If you are padding to hit the number, you picked too small -- find a bigger one;
+     - AND our EXTRA bar (maintainer-acceptable is necessary but NOT sufficient): it also makes a HARD challenge -- the OBVIOUS approach is wrong, it sits ABOVE the helper layer, and a naive impl violates a non-guessable intermediate-state invariant, so it forces codebase discovery and lands pass <=20%.
+     For each candidate record: (a) title; (b) the problem it solves; (c) the implementation approach; (d) the EVIDENCE it does not already exist (exactly what you searched -- repo, PRs, commits, issues, roadmap); (e) why it is ~650-850 LOC; (f) why the maintainers would accept it (their philosophy / architecture / contribution patterns); (g) risks, dependencies, prerequisites.
+  3. SECOND-PASS VALIDATION -- be HARDER than step 2. Re-verify every survivor against all criteria; remove overlaps, anything with signs of already existing, and anything that no longer looks exceptional; re-check history / issues / PRs / roadmap / philosophy from a maintainer's eye.
+  4. RANK the survivors #1..#5 by value, impact, feasibility, originality, maintainer-acceptance, AND Olympus difficulty; explain why each earned its rank.
+  5. IMPLEMENT #1. GATE ZERO first: plagiarism (grep your API symbols; same-repo <0.5) + core-fit (no closed-unmerged PR of the same mechanism, no maintainer "userland / out-of-scope" stance). If #1 fails plagiarism, conflicts with the repo, or turns invalid mid-build, DISCARD it and advance to #2, then #3 -- always keep a vetted pipeline, never force a dead candidate.
+  6. Drive the chosen feature through ~/Desktop/olympus-workflow/ (01_analyze -> 04_create -> prompt_validation -> pre_submit_gate) and validate against those + ~/Desktop/olympus-experience/.`;
   const standingRules =
 `**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% Olympus / <=30% Mars * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
   const txt=
@@ -1874,7 +1886,7 @@ Think like a SENIOR ENGINEER on ${r.fullName}'s core team who wants to ship some
 
 ## REPO BRIEFING -- ${r.fullName}
 
-> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data -- open in Analyze to refresh.'} This briefing gives you EVIDENCE (real free-model reads of the code + the live novelty gate) and tells you the repo is CAPABLE. It deliberately does NOT hand you "the best angle" -- the feature is YOURS to find by reading the repo like its maintainer. Treat every structural claim below as a lead to verify in-editor, never as fact.
+> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data -- open in Analyze to refresh.'} This briefing gives you EVIDENCE (real free-model reads of the code + the live novelty gate) and tells you the repo is CAPABLE. It deliberately does NOT hand you "the best angle" -- the feature is YOURS to find by reading the repo like its maintainer, via the FEATURE DISCOVERY PROTOCOL below (deep research -> propose up to 5 candidates against a hard bar -> validate harder -> rank #1..#5 -> implement the top with a fallback pipeline). Treat every structural claim below as a lead to verify in-editor, never as fact.
 ${licLine}
 ${selectionMindset}
 
