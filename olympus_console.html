@@ -556,7 +556,7 @@ const TIPS=[
  {h:'Dockerfile + test.sh hygiene',b:'olympus-base image, WORKDIR /app, pinned deps, model:1000 user, interactive entrypoint. Never run tests or reinstall preinstalled tools in the image. test.sh ships in test.patch at 100755 with distinct base/new modes, no installs, no solution code. Hash-suffix test files; never use the markers shipd / datacurve.'}
 ];
 /* ---------- Accepted-project intelligence (calibration anchors) ----------
-   Distilled from the 4 ACCEPTED projects in /Users/mac/Desktop/olympus-experience/
+   Distilled from the 7 ACCEPTED projects in /Users/mac/Desktop/olympus-experience/
    (experience-intelligence-extraction.md + cross-project-calibration.md, Jun 2026, adversarially
    audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED -- the Olympus bar is <=20% NOW
    (was 30%), so any <=30% precedent below needs MORE difficulty today. This drives bestFitAngle(). */
@@ -590,7 +590,10 @@ const ACCEPTED_INTEL = {
     {repo:'trpc/trpc',lang:'TS',feat:'request-scoped context factories across 7 adapters',pass:'20% (2/10)',arch:'discovery-gap',lesson:'5+ different-pattern paths + silent cross-cutting invariants; put core in src/contextFactory/, NOT adapters/.'},
     {repo:'go-gorm/gorm',lang:'Go',feat:'bidirectional keyset pagination on *gorm.DB',pass:'9-25%',arch:'breadth',lesson:'19 behavioural groups of correct-composition, built ABOVE the helper layer; no single gotcha.'},
     {repo:'drizzle-team/drizzle-orm',lang:'TS',feat:'keyset / chunked / relation-aggregations (RQB)',pass:'~20%',arch:'discovery-gap',lesson:'expand a KNOWN algorithm into the unfamiliar RQB sibling path; count + strip every derivable simplification.'},
-    {repo:'Kludex/mangum',lang:'Py',feat:'Lambda response streaming (two-phase asyncio)',pass:'9% (Orion-only)',arch:'discovery-gap',lesson:'one word ("lazy") bifurcates agents into two wrong extremes; discriminating tests fail BOTH. Orion-only solves = a valid Hard equilibrium.'}
+    {repo:'Kludex/mangum',lang:'Py',feat:'Lambda response streaming (two-phase asyncio)',pass:'9% (Orion-only)',arch:'discovery-gap',lesson:'one word ("lazy") bifurcates agents into two wrong extremes; discriminating tests fail BOTH. Orion-only solves = a valid Hard equilibrium.'},
+    {repo:'rclone/rclone',lang:'Go',feat:'conflict-safe name-collision planner (convmv)',pass:'16.7% (2/12, Orion-only; Nova 0/10)',arch:'discovery-gap',lesson:'vacate-aware collision planner where "does the target exist" is the WRONG check; abort atomic before the first rename. STRAIGHT approval (0 rounds) because difficulty was locked before the platform checks. Scanned one layer ABOVE the console-named layer (lib/transform, not lib/encoder).'},
+    {repo:'typeorm/typeorm',lang:'TS',feat:'in-memory relation resolver (no queries)',pass:'20% (2/10)',arch:'discovery-gap',lesson:'resolve relations from METADATA not .id. The whole 50->20% swing rode on ONE assertion (a deeper hop must not clear an already-set ancestor link) -- GRADUATE a single invariant across a pair; calibrate on a FRESH cohort, never a replay. 3 public symbols accepted because difficulty was behavioural.'},
+    {repo:'drizzle-team/drizzle-orm (flagset)',lang:'TS',feat:'flagset column type (4 dialects x 2 storage x 2 read)',pass:'20% (2/10)',arch:'breadth+gap',lesson:'SQLite has no native set ops -> emulate; BigInt end-to-end (JS 32-bit collapses bit 34). export * leaks ~30 symbols = instant rejection. A glob-per-file project test (exports.test.ts) is an F2P landmine -- run it base-only and skip new files with a vitest -t negative-lookahead.'}
   ],
   checks:[
     'Plagiarism = GATE ZERO: grep your CORE IDEA on the SAME repo before writing anything (3 of 6 forced a pivot; a duplicate central idea is DEAD).',
@@ -760,13 +763,13 @@ const DOCTRINE = [
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
    <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → ≤20% pass)?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
- {c:'gold',h:'Accepted-project precedents (4 real anchors, recalibrated to <=20%)',body:
+ {c:'gold',h:'Accepted-project precedents (7 real anchors, recalibrated to <=20%)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
    '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
    ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
    '<p><b>Proven mechanisms</b> (the console recommends the ones that fit each repo):</p><ul>'+
    ACCEPTED_INTEL.mechanisms.map(m=>'<li><b>'+m.name+'</b> &mdash; '+m.act+' <span class="hint">['+m.anchor+']</span></li>').join('')+'</ul>'+
-   '<p><b>The 4 accepted projects (calibration anchors):</b></p><ul>'+
+   '<p><b>The 7 accepted projects (calibration anchors):</b></p><ul>'+
    ACCEPTED_INTEL.projects.map(p=>'<li><b>'+p.repo+'</b> ('+p.lang+' &middot; '+p.pass+' &middot; '+p.arch+') &mdash; '+p.feat+'. <i>'+p.lesson+'</i></li>').join('')+'</ul>'+
    '<p><b>Recurring checks to gate pre-submit:</b></p><ul>'+
    ACCEPTED_INTEL.checks.map(c=>'<li>'+c+'</li>').join('')+'</ul>'},
@@ -1876,6 +1879,16 @@ Do NOT hunt this repo for an existing issue, open PR, TODO, RFC, or roadmap item
 `**PRECHECK-FIRST (pass every platform gate on the FIRST try -- the fast path to the agent runs):**
 BEFORE image build: description <=500 words, TARGET 479-500 (all 8 accepted landed there); NO em-dashes, no hard-wrap at 70-85 chars (one unwrapped paragraph per physical line), no wall-of-text, no 4+ blank lines, no rationale ("so that" / "because"), no heading labels; run the non-ASCII grep after EVERY prose edit. Category "feature" -> correct opener verb (makes Solution-Quality + Aligned strict). Plagiarism <0.5 (OUR wall, not the platform 90%): grep your symbols = 0 hits, pick an UNMINED sub-domain, record the number. Only-necessary-information: strip repo-findable / default / over-specified / redundant + editorial framing. Aligned: every test-pinned name / value-shape / sentinel / arg-order STATED (passable from the description alone). Behavioural tests only -- if you cannot explain a test without naming an internal method/field, REPLACE it. Test-patch sanity: test.sh INSIDE test.patch as a "new file mode 100755" entry, DISJOINT base+new file lists, no solution code, no installs, zero comments; filenames hash-suffixed (feature_6hex_test.*), no shipd/datacurve; no URLs. Dockerfile: olympus-base-LANG:latest, WORKDIR /app, PINNED deps, NEVER run tests at build (warm with go vet / go build only), user EXACTLY "groupadd -g 1000 model && useradd -u 1000 -g model -m model", bash entrypoint.
 AFTER image build: F2P -- every NEW test FAILS on base (no P2P slot); guards lead with typeof x === 'function' + a positive canary, NEVER a bare .toThrow(). Test Fairness -- assert ONLY test-planted data tokens, never error-message structure / arg order / return type / sentinels / internal constants / concurrency start-order. Flakiness (3x clean + 3x patched, MANDATORY) -- no Date.now / Math.random / fixed setTimeout; poll with waitUntil; deterministic in-memory backends. Task Quality -- touch 3+ layers and MODIFY existing files. Solution Quality grades the REFERENCE + public surface + portability -- fix real ref bugs even when tests pass; audit every "composes with X" against X full lifecycle in ONE pass.`;
+  const latestLessons =
+`**LATEST ACCEPTED-PROJECT LESSONS (Jul 2026 -- highest priority; these reflect the CURRENT platform):**
+  - SCAN THE ADJACENT LAYER: this briefing names a LAYER, not the feature. The real gap is often one layer UP or DOWN (rclone dropped the console lib/encoder lead for the documented collision gap one layer up in lib/transform). Read what sits above/below the named layer before committing.
+  - LOCK DIFFICULTY BEFORE THE PLATFORM CHECKS: rclone got a STRAIGHT approval (0 review rounds) because the behavioural matrix was stable from batch 1 and every later fix touched only env/fairness plumbing. Get the difficulty right FIRST; then no precheck fix can move the pass rate.
+  - ONE GRADUATED INVARIANT is often the whole knob: TypeORM swung 0% / 50% / 20% purely by asserting a single "a deeper hop must not clear an already-set ancestor link" on BOTH / NEITHER / ONE of a pair of tests. If your rate is bimodal, you have one binary invariant -- graduate it across a pair, do not toggle it wholesale.
+  - CALIBRATE ON A FRESH COHORT, never a replay of the batch you are fixing (TypeORM: old-cohort replay said 15%, fresh agents gave 50%). Replay shows DIRECTION only; the pass-rate NUMBER comes from a new batch.
+  - GLOB-PER-FILE PROJECT TESTS ARE A LANDMINE: a test like "for f of glob(src/**): test(f)" turns every NEW source file into an uncategorized F2P extra (flagset burned 3 rounds). AT CREATION, grep tests for globSync/readdirSync-driven test() and plan a base-only run that SKIPS your new files via a vitest -t negative-lookahead like ^(?!.*FEATURE).
+  - FEATURE-FILE COLLECTION ON BASE: a new test that imports a not-yet-built module or calls the feature in top-level defs CRASHES collection on base -> tests uncategorized -> Verify Solution FAIL. Import only base-present modules (namespace), guard feature usage behind a featureReady runtime check, guard beforeAll.
+  - test.sh traps: resolve --output_path to ABSOLUTE before any cd (drizzle + rclone rejection); NEVER "go test -skip" (checker rejects the flag) -- derive a -run regex from "go test -list" instead.
+  - WHEN A REVIEWER DESCRIBES A MECHANISM WRONG BUT THE CONCERN IS REAL, fix the concern, not their words (flagset: Devin insisted on a "snapshot" that did not exist; the real issue was base mode dropping a regression test).`;
   const standingRules =
 `**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% of 10 runs * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
   const txt=
@@ -1907,6 +1920,8 @@ ${yourJob}
 ${passTemplate}
 
 ${precheckFirst}
+
+${latestLessons}
 
 **TIER: OLYMPUS** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under Olympus standards.
 
