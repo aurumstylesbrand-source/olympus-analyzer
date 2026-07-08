@@ -530,12 +530,12 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
         <button class="iconbtn" id="resetBtn" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7"/></svg></button>
       </div>
     </div>
-    <div class="topnav-stats"><div class="wrap topstats"><span class="tchip">pass <b>&le;20%</b></span><span class="tchip">LOC <b>700+</b></span><span class="tchip">files <b>6+</b></span><span class="tchip">flakiness <b>0</b></span></div></div>
+    <div class="topnav-stats"><div class="wrap topstats"><span class="tchip">pass <b>&le;20%</b></span><span class="tchip">LOC <b>800+</b></span><span class="tchip">files <b>6+</b></span><span class="tchip">flakiness <b>0</b></span></div></div>
   </header>
   <main class="main">
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass ≤ 20% of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 700+ (600 ok) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
+      <p class="foot">Olympus pass ≤ 20% of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 800-1000 (700 floor) · 6+ files · desc 496-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
@@ -611,7 +611,7 @@ const ACCEPTED_INTEL = {
      act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
      anchor:'gorm burned 4 review rounds finding composition-lifecycle gaps one at a time.'},
     {key:'bugfix',when:()=>true,name:'Bug-fix-unlocks-feature (if the gap is too small)',
-     act:'If the genuine gap is a small bug-fix (below the 700-LOC floor), build the coherent cross-subsystem feature the fix is a PREREQUISITE for.',
+     act:'If the genuine gap is a small bug-fix (below the 800-LOC target), build the coherent cross-subsystem feature the fix is a PREREQUISITE for.',
      anchor:'relation-agg: a ~120-LOC JSON-precision codec fix became the prerequisite for RQB relation aggregations (718 LOC, 29 files).'}
   ],
   projects:[
