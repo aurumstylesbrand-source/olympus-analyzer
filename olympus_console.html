@@ -11,7 +11,7 @@
   --text:#ECEDF6;--text-2:#B7BBD2;--muted:#7E8299;--muted-2:#565A73;
   --ok:#34D399;--ok-bg:rgba(52,211,153,.13);--warn:#F5B13D;--warn-bg:rgba(245,177,61,.13);--bad:#F0705C;--bad-bg:rgba(240,112,92,.13);
   --sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
-  --r:14px;--r-lg:20px;--r-sm:10px;
+  --r:16px;--r-lg:22px;--r-sm:11px;
   --sh:0 1px 0 rgba(255,255,255,.03) inset,0 24px 60px -34px rgba(0,0,0,.9),0 0 0 1px rgba(124,109,247,.04);
   --sh-sm:0 10px 24px -18px rgba(0,0,0,.7);
 }
@@ -47,7 +47,7 @@ html[data-theme="light"] .pa{--c:#1C8AB0;}
 #app{display:flex;font-family:var(--sans);color:var(--text);background:radial-gradient(900px 520px at 100% -6%,rgba(124,109,247,.11),transparent 60%),radial-gradient(760px 620px at -6% 104%,rgba(167,139,250,.08),transparent 60%),var(--bg);background-attachment:fixed;min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
 .mono{font-family:var(--mono)}
 /* left rail */
-.rail{position:fixed;left:0;top:0;bottom:0;width:86px;background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0 16px;z-index:50;gap:6px}
+.rail{position:fixed;left:0;top:0;bottom:0;width:86px;background:linear-gradient(180deg,var(--bg-2),var(--bg));border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0 16px;z-index:50;gap:6px}
 .rail-top{margin-bottom:16px}
 .rail .glyph{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,var(--violet),var(--green-deep));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px -6px rgba(124,109,247,.7)}
 .rail .glyph::after{content:"";width:12px;height:12px;border-radius:3px;background:var(--bg);transform:rotate(45deg)}
@@ -67,15 +67,16 @@ html[data-theme="light"] .pa{--c:#1C8AB0;}
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
 .brand{display:flex;align-items:baseline;gap:9px;line-height:1}
 .brand .word{font-weight:700;font-size:19px;letter-spacing:-.03em;color:var(--text)}
-.brand .word em{font-style:normal;color:var(--green)}
+.brand .word em{font-style:normal;background:linear-gradient(120deg,var(--green),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand small{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--muted-2);text-transform:uppercase;margin-left:2px}
 .topstats{display:flex;gap:7px;flex-wrap:wrap}
 .topstats .tchip{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
 .topstats .tchip b{color:var(--green)}
 /* type */
-h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;color:var(--text)}
+h2.mh{font-weight:800;font-size:33px;margin:24px 0 8px;letter-spacing:-.04em;color:var(--text)}
+h2.mh em{font-style:normal;background:linear-gradient(120deg,var(--green),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .mh3{font-weight:700;font-size:18px;margin:0;letter-spacing:-.02em}
-.lede{font-size:14px;color:var(--muted);margin:0 0 22px;max-width:74ch;line-height:1.6}
+.lede{font-size:14.5px;color:var(--text-2);margin:0 0 24px;max-width:72ch;line-height:1.7}
 .lede b{color:var(--text-2);font-weight:600}
 .hint{font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.01em;text-transform:none;font-weight:400}
 .seclbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:500}
@@ -89,20 +90,20 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 .stat{font-family:var(--mono);font-size:11.5px;color:var(--muted)}.stat b{color:var(--text);font-weight:600}
 .batchtag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase}
 /* panels + cards */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;margin-bottom:16px;box-shadow:var(--sh)}
-.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px 24px 18px;margin-bottom:16px;overflow:hidden;box-shadow:var(--sh);transition:border-color .18s,transform .18s}
-.card:hover{border-color:var(--line-2)}
-.card::before{content:"";position:absolute;left:0;top:20px;bottom:20px;width:4px;border-radius:0 4px 4px 0}
-.card.gold::before{background:var(--green);box-shadow:0 0 16px rgba(124,109,247,.4)}
-.card.test::before{background:var(--text-2)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;margin-bottom:18px;box-shadow:var(--sh)}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 26px 20px;margin-bottom:18px;overflow:hidden;box-shadow:var(--sh);transition:border-color .2s,transform .2s,box-shadow .2s}
+.card:hover{border-color:var(--line-2);transform:translateY(-2px);box-shadow:var(--sh),0 0 0 1px rgba(124,109,247,.09)}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;opacity:0}
+.card.gold::before{background:linear-gradient(90deg,var(--green),var(--violet));opacity:1;box-shadow:0 2px 18px rgba(124,109,247,.5)}
+.card.test::before{background:var(--text-2);opacity:1}
 .card.archived{opacity:.5}
 .chead{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .titlecol{flex:1;min-width:210px}
 .reponame{font-weight:700;font-size:21px;margin:0;line-height:1.1;letter-spacing:-.025em;color:var(--text)}
-.kind{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:7px;white-space:nowrap;align-self:center;font-weight:700}
+.kind{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:999px;white-space:nowrap;align-self:center;font-weight:700}
 .kind.gold{color:var(--bg);background:var(--green)}.kind.test{color:var(--bg);background:var(--text-2)}
 .meta{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 0}
-.chip{font-family:var(--mono);font-size:10.5px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;display:inline-flex;gap:5px;align-items:center;font-weight:500}
+.chip{font-family:var(--mono);font-size:10.5px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;display:inline-flex;gap:5px;align-items:center;font-weight:500}
 .chip b{color:var(--text);font-weight:700}
 .chip.ver{color:var(--green);background:var(--ok-bg);border-color:transparent}.chip.unver{color:var(--warn);background:var(--warn-bg);border-color:transparent}
 .chip.path{font-weight:700;letter-spacing:.04em}
@@ -110,7 +111,7 @@ h2.mh{font-weight:700;font-size:28px;margin:20px 0 6px;letter-spacing:-.035em;co
 .chip.path.B{color:var(--bg);background:var(--text-2);border-color:var(--text-2)}
 .chip.path.AB{color:var(--bg);background:var(--green);border-color:var(--green-deep)}
 .links{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
-.links a{font-family:var(--mono);font-size:10.5px;color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 12px;transition:.15s;background:var(--surface-2)}
+.links a{font-family:var(--mono);font-size:10.5px;color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;transition:.16s;background:var(--surface-2)}
 .links a:hover{border-color:var(--green);color:var(--green);background:var(--green-tint)}
 .why{font-size:13.5px;color:var(--muted);line-height:1.55;margin:15px 0 4px}.why .lead{color:var(--text);font-weight:600}
 .sec{margin-top:18px;border-top:1px solid var(--line);padding-top:17px}
@@ -209,11 +210,11 @@ details.disc>*:last-child{padding-bottom:15px}
 .cfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
 .boardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
 /* buttons */
-.btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s;font-weight:600}
+.btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;transition:.16s;font-weight:600}
 .btn:hover{border-color:var(--green);color:var(--green);background:var(--green-tint)}
 .btn.warn:hover{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
-.btn.primary{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700}
-.btn.primary:hover{filter:brightness(1.08);color:var(--bg);background:var(--green)}
+.btn.primary{background:linear-gradient(135deg,var(--green),var(--green-deep));color:#fff;border-color:transparent;font-weight:700;box-shadow:0 6px 18px -6px rgba(124,109,247,.6)}
+.btn.primary:hover{filter:brightness(1.06);color:#fff;box-shadow:0 8px 22px -6px rgba(124,109,247,.78)}
 .btn.gold{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700}
 .btn.gold:hover{filter:brightness(1.08);color:var(--bg)}
 .btn:disabled{opacity:.5;cursor:wait}
@@ -411,8 +412,8 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .bstat .v{font-weight:800;font-size:18px;color:var(--text);letter-spacing:-.02em}
 .bstat .k{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);margin-top:2px}
 /* final verdict */
-.verdictchip{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:15px;padding:8px 15px;border-radius:12px;letter-spacing:.01em}
-.verdictchip.go{color:var(--bg);background:var(--green)}
+.verdictchip{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:15px;padding:9px 17px;border-radius:999px;letter-spacing:.01em}
+.verdictchip.go{color:#fff;background:linear-gradient(135deg,var(--green),var(--violet));box-shadow:0 6px 20px -8px rgba(124,109,247,.7)}
 .verdictchip.refine{color:var(--warn);background:var(--warn-bg);border:1px solid rgba(226,181,71,.45)}
 .verdictchip.nogo{color:var(--bad);background:var(--bad-bg);border:1px solid rgba(232,118,91,.45)}
 .verdictchip.risky{color:#f0a637;background:rgba(240,166,55,.12);border:1px solid rgba(240,166,55,.5)}
@@ -1849,24 +1850,32 @@ Think like a SENIOR ENGINEER on ${r.fullName}'s core team who wants to ship some
   - ${v.line}
   - ${div!=null?div+' interacting '+unit:'deep multi-subsystem structure'} + a deterministic offline core = room to host MANY large features.
   - Confirm this yourself: open the repo, read the core, and satisfy yourself it is genuinely large + deep enough to accept substantial features that need real cross-cutting implementation. If not, DROP it and pick a bigger repo.`;
+  const independentDiscovery =
+`**INDEPENDENT FEATURE DISCOVERY (the #1 rule -- do NOT get this wrong):**
+Do NOT hunt this repo for an existing issue, open PR, TODO, RFC, or roadmap item to implement -- that is the WRONG mode and it yields weak, already-taken, or bug-fix-shaped work. Instead study the repo ARCHITECTURE, capabilities, patterns and design philosophy deeply and -- as a senior maintainer responsible for the project future -- PROPOSE A NEW FEATURE OF YOUR OWN: "if I owned this repo, what substantial capability would I realistically ship next?" Issues / PRs / discussions / roadmap / TODOs are REFERENCE ONLY -- read them to learn what already exists, what was already proposed, what was REJECTED, the project direction, and its constraints. They are NOT the source of your feature. Your feature is your own maintainer-grade proposal derived from the code, used as a CANDIDATE SPEC for THIS Olympus challenge (never upstreamed). The candidate lead the models surfaced above is EVIDENCE the repo hides hard gaps, NOT your assignment -- verify it or propose something bigger of your own.`;
   const yourJob =
-`**YOUR JOB -- THE FEATURE DISCOVERY PROTOCOL (maintainer mindset, high bar; this briefing does NOT pick the feature for you):**
-Evaluate as an EXPERIENCED MAINTAINER evolving ${r.fullName} -- NOT a contributor inventing something to submit. The target is a NATURAL EVOLUTION of the project that fills a genuine gap and integrates cleanly. Quality over quantity: fewer exceptional candidates beats a longer list of weak ones.
-
-  1. DEEP RESEARCH. Read the core + architecture, CONTRIBUTING / philosophy / roadmap, recent commits, open AND closed PRs, and issue discussions. Learn what the maintainers actually want and how they build before proposing anything.
-  2. GENERATE up to 5 CANDIDATE features (fewer if fewer clear the bar). EACH must pass ALL of:
-     - genuinely valuable + aligned with the repo's long-term vision and philosophy;
-     - the kind of feature the maintainers would realistically accept or build themselves;
-     - does NOT already exist -- verify across the repo, open PRs, recent commits, roadmap, and closed issues; do not assume;
-     - follows the existing architecture, patterns, and coding standards; technically feasible with NO unnecessary complexity and NO breaking changes;
-     - clear, self-contained scope solving a real user/developer pain point; a genuine FEATURE (never a bug fix, refactor, cleanup, docs, dependency bump, cosmetic tweak, or config change);
-     - substantial: a clean implementation is NATURALLY ~650-850 LOC of production code (excluding tests / docs / generated code) -- which maps to the platform's 700+ agent-median floor. If you are padding to hit the number, you picked too small -- find a bigger one;
-     - AND our EXTRA bar (maintainer-acceptable is necessary but NOT sufficient): it also makes a HARD challenge -- the OBVIOUS approach is wrong, it sits ABOVE the helper layer, and a naive impl violates a non-guessable intermediate-state invariant, so it forces codebase discovery and lands pass <=20%.
-     For each candidate record: (a) title; (b) the problem it solves; (c) the implementation approach; (d) the EVIDENCE it does not already exist (exactly what you searched -- repo, PRs, commits, issues, roadmap); (e) why it is ~650-850 LOC; (f) why the maintainers would accept it (their philosophy / architecture / contribution patterns); (g) risks, dependencies, prerequisites.
-  3. SECOND-PASS VALIDATION -- be HARDER than step 2. Re-verify every survivor against all criteria; remove overlaps, anything with signs of already existing, and anything that no longer looks exceptional; re-check history / issues / PRs / roadmap / philosophy from a maintainer's eye.
-  4. RANK the survivors #1..#5 by value, impact, feasibility, originality, maintainer-acceptance, AND Olympus difficulty; explain why each earned its rank.
-  5. IMPLEMENT #1. GATE ZERO first: plagiarism (grep your API symbols; same-repo <0.5) + core-fit (no closed-unmerged PR of the same mechanism, no maintainer "userland / out-of-scope" stance). If #1 fails plagiarism, conflicts with the repo, or turns invalid mid-build, DISCARD it and advance to #2, then #3 -- always keep a vetted pipeline, never force a dead candidate.
-  6. Drive the chosen feature through ~/Desktop/olympus-workflow/ (01_analyze -> 04_create -> prompt_validation -> pre_submit_gate) and validate against those + ~/Desktop/olympus-experience/.`;
+`**THE FEATURE DISCOVERY PROTOCOL (maintainer mindset, high bar; the briefing does NOT pick the feature):**
+  1. DEEP RESEARCH. Read the core + architecture, CONTRIBUTING / philosophy, recent commits, and open+closed PRs/issues -- as REFERENCE ONLY (what exists / was rejected / the direction), never as your feature source.
+  2. GENERATE up to 5 CANDIDATE features (fewer if fewer clear the bar). EACH must be: genuinely valuable + aligned with the repo vision; the kind of feature the maintainers would build themselves; NOT already existing (verify across repo + open/closed PRs + commits + roadmap); following the existing architecture with no breaking changes; a genuine FEATURE (never a bug fix / refactor / cleanup / docs / config); SUBSTANTIAL -- a clean reference is NATURALLY ~750-1000 LOC of SOLUTION code (excluding tests/docs/generated), reached by PER-VARIANT divergence across 5+ existing code paths, NOT by adding public symbols or padding (if you cannot see how it reaches 750+ from real behaviour, it is too small); AND hard -- the OBVIOUS approach is wrong, it sits ABOVE the helper layer, a naive impl violates a non-guessable intermediate-state invariant, pass <=20%.
+     Record per candidate: title; problem; approach; EVIDENCE it does not exist (what you searched); why it is 750-1000 LOC; why maintainers accept it; risks.
+  3. SECOND-PASS VALIDATION -- harder than step 2: drop overlaps / already-existing / not-exceptional; re-check history + PRs + philosophy.
+  4. RANK #1..#5 by value, impact, feasibility, originality, acceptance, AND difficulty.
+  5. IMPLEMENT #1 via GATE ZERO (plagiarism <0.5 same-repo + core-fit: no closed-unmerged PR / userland stance). If it fails, advance to #2, then #3 -- keep a vetted pipeline.
+  6. Follow THE PASS TEMPLATE + PRECHECK-FIRST below, then drive it through ~/Desktop/olympus-workflow/ + validate against ~/Desktop/olympus-experience/.`;
+  const passTemplate =
+`**THE PASS TEMPLATE (distilled from 8 accepted projects -- follow it to pass first-try):**
+  1. GATE ZERO FIRST, before any code: same-repo grep of your API symbols = 0 hits (<0.5); search open+closed PRs/issues for the mechanism; read CONTRIBUTING; confirm a maintainer SEAM exists + no closed-unmerged PR of your idea. (3 projects lost multi-day pivots for skipping this: mangum 0.615, gorm 0.872.)
+  2. NAME the discovery gap AND COUNT its layers before building. List every simplification an agent will reach for + a lever to strip each. A close-to-known algorithm rarely clears <=20% on ONE layer (drizzle chunked needed offset->seek THEN non-unique-column PK auto-discovery).
+  3. Wire the feature into 5+ EXISTING code paths that each use a DIFFERENT pattern (tRPC = 7 adapters; drizzle = 4 dialect cores + the RQB sibling path). Reading each IS the MSG floor. Add >=2 silently-failing cross-cutting invariants.
+  4. Build the reference to 750-1000 LOC from REAL per-variant behaviour (per-dialect / per-adapter execution wrappers, storage/read-mode multiplication) -- NEVER a shared helper (kills LOC + difficulty), NEVER stray public helpers or export * (instant public-surface rejection). BEST shape: a feature that REQUIRES a cross-subsystem fix as its foundation (relation-agg JSON codec -> 29 files, naturally System-Level).
+  5. Description behavioural, 479-500 words, naming every callable signature name(arg1, arg2) once + every test-pinned value/shape, ZERO mechanism. Signatures are PERMANENT -- never strip them in a rewrite (tRPC went 0/7 when a voice-rewrite dropped onCleanup(input, ctx)).
+  6. Claim-to-test matrix (every sentence <-> test); run the pre-submit gates + F2P/P2P on clean worktrees (every NEW test MUST fail on base -- there is no P2P slot in test.patch).
+  7. Batch 10 Nova; READ solver patches between batches (one grep finds the next lever); land <=20% with >=1 solve.
+  LOC anchors (LOC / files / pass%): tRPC 1380/17/20, GORM 1208/11/9, drizzle-keyset 902/19, TypeORM 873/11/20, drizzle-flagset 819/10/20, relation-agg 718/29, chunked 744/15/20, mangum 696/9/9.`;
+  const precheckFirst =
+`**PRECHECK-FIRST (pass every platform gate on the FIRST try -- the fast path to the agent runs):**
+BEFORE image build: description <=500 words, TARGET 479-500 (all 8 accepted landed there); NO em-dashes, no hard-wrap at 70-85 chars (one unwrapped paragraph per physical line), no wall-of-text, no 4+ blank lines, no rationale ("so that" / "because"), no heading labels; run the non-ASCII grep after EVERY prose edit. Category "feature" -> correct opener verb (makes Solution-Quality + Aligned strict). Plagiarism <0.5 (OUR wall, not the platform 90%): grep your symbols = 0 hits, pick an UNMINED sub-domain, record the number. Only-necessary-information: strip repo-findable / default / over-specified / redundant + editorial framing. Aligned: every test-pinned name / value-shape / sentinel / arg-order STATED (passable from the description alone). Behavioural tests only -- if you cannot explain a test without naming an internal method/field, REPLACE it. Test-patch sanity: test.sh INSIDE test.patch as a "new file mode 100755" entry, DISJOINT base+new file lists, no solution code, no installs, zero comments; filenames hash-suffixed (feature_6hex_test.*), no shipd/datacurve; no URLs. Dockerfile: olympus-base-LANG:latest, WORKDIR /app, PINNED deps, NEVER run tests at build (warm with go vet / go build only), user EXACTLY "groupadd -g 1000 model && useradd -u 1000 -g model -m model", bash entrypoint.
+AFTER image build: F2P -- every NEW test FAILS on base (no P2P slot); guards lead with typeof x === 'function' + a positive canary, NEVER a bare .toThrow(). Test Fairness -- assert ONLY test-planted data tokens, never error-message structure / arg order / return type / sentinels / internal constants / concurrency start-order. Flakiness (3x clean + 3x patched, MANDATORY) -- no Date.now / Math.random / fixed setTimeout; poll with waitUntil; deterministic in-memory backends. Task Quality -- touch 3+ layers and MODIFY existing files. Solution Quality grades the REFERENCE + public surface + portability -- fix real ref bugs even when tests pass; audit every "composes with X" against X full lifecycle in ONE pass.`;
   const standingRules =
 `**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% of 10 runs * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
   const txt=
@@ -1891,7 +1900,13 @@ ${featureBlock}
 
 ${noveltyBlock}
 
+${independentDiscovery}
+
 ${yourJob}
+
+${passTemplate}
+
+${precheckFirst}
 
 **TIER: OLYMPUS** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under Olympus standards.
 
@@ -1901,16 +1916,6 @@ ${yourJob}
 ${standingRules}
 
 **THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files that must AGREE on a data format; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer. WARNING: a large API inventory (15-20+ symbols) is NOT difficulty -- it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality cascade.
-
-**VERIFY MANUALLY (Phase 1 -- the console cannot check these):**
-  1. Plagiarism: grep your planned API symbols in the repo (0 hits + platform <0.5 = green). Do this FIRST.
-  2. Closed issues / merged PRs / docs scope / maintainer philosophy / CONTRIBUTING scale -- discard if any block it.
-  3. Write the naive impl first and confirm it FAILS an intermediate-state invariant (prove the gap is load-bearing).
-  4. Flakiness (MANDATORY): deterministic suite; run F2P/P2P 3x each; fix any flip before submitting.
-  5. Coherence: one feature spanning 3+ subsystems reaching ${std.loc.split(' ')[0]} LOC and ${std.files} files without padding.
-
-**Field notes:**
-${tips}
 
 -> Next: pick the feature AS THE MAINTAINER (Selection Mindset), prove GATE ZERO + core-fit + that 700+ LOC follows naturally, then run your workflow prompts.
 --- END BRIEFING ---`;
