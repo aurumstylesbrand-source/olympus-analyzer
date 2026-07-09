@@ -103,6 +103,7 @@ async function analyzeRepo(repo, ref, token){
   const {tar, capped}=await fetchTar(url, token);
   const surface=new Set(); let methods=0,barrel=0,concrete=0,files=0;
   const variants={}; const baseHelpers={}; // dir -> concrete methods (free-helper signal)
+  const dirW={};  // per-subsystem code weight (LIVE) -> lets the judge target the heaviest ENGINE core
   const extCount={};
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,''); // strip the top tarball dir
@@ -111,6 +112,11 @@ async function analyzeRepo(repo, ref, token){
     if(f.data.length>400000) continue; // skip huge generated files
     const txt=f.data.toString('utf8'); const r=scanSymbols(txt, rel);
     r.symbols.forEach(s=>surface.add(s)); methods+=r.methods; barrel+=r.barrel; concrete+=r.concrete; files++;
+    // LIVE subsystem weight: group by the first 2 path segments (e.g. packages/compiler-cli,
+    // internal/linker, s2) so the judge can target the heaviest ENGINE core even when the repo has
+    // NO adapter/driver container folder (which is exactly the shape of a good engine repo).
+    { const seg=rel.split('/'); const dir = seg.length>1 ? seg.slice(0, Math.min(2, seg.length-1)).join('/') : '(root)';
+      const w = dirW[dir] || (dirW[dir]={files:0,symbols:0,methods:0}); w.files++; w.symbols+=r.count; w.methods+=r.methods; }
     const mm=rel.match(CONTAINER);
     if(mm){
       const kind=mm[2].toLowerCase();
@@ -122,6 +128,12 @@ async function analyzeRepo(repo, ref, token){
   }
   const freeHelperConcrete=Object.values(baseHelpers).reduce((a,b)=>a+b,0);
   const vk=Object.keys(variants);
+  // Heaviest LIVE subsystems (engine cores) by code weight -- the judge targets topDirs[0] when there
+  // is no container/adapter folder. This is the ENGINE-shaped path (no pre-stored hint needed).
+  const topDirs=Object.entries(dirW)
+    .map(([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods+w.files*2}))
+    .filter(d=>d.dir!=='(root)')
+    .sort((a,b)=>b.weight-a.weight).slice(0,8);
   // Scope guard: if almost no supported-language source was found AND a code language we cannot scan
   // (C/C++/Java/...) dominates the tree, this repo is out of scope -- the surface below is stray scripts.
   const domEntry=Object.entries(extCount).sort((a,b)=>b[1]-a[1])[0];
@@ -130,7 +142,7 @@ async function analyzeRepo(repo, ref, token){
   return {
     repo, ref, filesScanned: files,
     surface: surface.size, barrelReExports: barrel, methods, concreteMethods: concrete,
-    variantKinds: vk, variants,
+    variantKinds: vk, variants, topDirs,
     // freeHelperSignal now requires REAL base/abstract files with concrete methods (the global
     // concrete>=vk.length*10 branch fired false positives, e.g. gin: 0 base methods but signal=true).
     freeHelperSignal: vk.length>0 && freeHelperConcrete>=8,

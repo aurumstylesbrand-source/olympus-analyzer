@@ -1256,7 +1256,7 @@ async function analyzeSource(name){
     try{
       const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/analyze?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(branch||'HEAD'));
       if(d.error){extCache[key]={...extCache[key],source:{error:'backend: '+d.error}};paintDash();return;}
-      extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,freeHelperSignal:d.freeHelperSignal,outOfScope:d.outOfScope,dominantExt:d.dominantExt,at:Date.now()}};paintDash();return;
+      extCache[key]={...extCache[key],source:{surface:d.surface,barrel:d.barrelReExports,methods:d.methods,concrete:d.concreteMethods,filesRead:d.filesScanned,commit:d.ref,backend:true,variants:d.variants,topDirs:d.topDirs,partialScan:d.partialScan,freeHelperSignal:d.freeHelperSignal,outOfScope:d.outOfScope,dominantExt:d.dominantExt,at:Date.now()}};paintDash();return;
     }catch(e){extCache[key]={...extCache[key],source:{error:'backend unreachable ('+(e.message||'failed')+') — check the URL / CORS / that it runs outside the sandbox'}};paintDash();return;}
   }
   if(!c.treePaths||!c.treePaths.length){extCache[key]={...c,source:{error:'no tree available — read the repo live first (and run outside the sandbox)'}};paintDash();return;}
@@ -1497,6 +1497,9 @@ function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
   // an Olympus-hard feature. The operator never chooses it.
   const c=extCache[(r.fullName||'').toLowerCase()]||{};
   if(c.source&&c.source.variants){const v=c.source.variants;const best=Object.keys(v).filter(k=>v[k]&&((v[k].symbols||0)+(v[k].files||0))>0).sort((a,b)=>((v[b].symbols||0)+(v[b].files||0))-((v[a].symbols||0)+(v[a].files||0)))[0];if(best)return best;}
+  // ENGINE-shaped repos have no adapter/driver container folder -- target the heaviest LIVE subsystem
+  // (its engine core) from the live scan instead. No pre-stored hint needed.
+  if(c.source&&c.source.topDirs&&c.source.topDirs[0])return c.source.topDirs[0].dir;
   return (r.divKinds&&r.divKinds[0])||'';}
 // The layer the judge actually analyzes: the operator's override (needed for monorepos where the
 // real variant layer is not a folder the tree-walk detects) else the auto-detected top divergent kind.
@@ -1506,13 +1509,13 @@ function judgeBlock(r){
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers five questions VALUE-first — is there a wide space of valuable missing features, would maintainers accept one into core, and the three difficulty levers (free helpers, obvious approach wrong, naive-fails-an-invariant) — with code citations (model judgment, not proof).</div>`;
   if(!layer){
     const readLive=!!(c.live||(c.source&&!c.source.error));
-    return `<div class="honest"><b>No divergent layer auto-detected.</b> The judge points the model at a <b>container layer</b> — a folder of sibling variants (adapters / drivers / dialects / providers / parsers). `+
+    return `<div class="honest"><b>No subsystem detected yet.</b> The judge targets the repo's <b>heaviest live subsystem</b> (its engine core) &mdash; read from the live scan, NOT a sibling-variant / adapter folder (engines are judged on their core, not a catalog of variants). `+
       (readLive
-        ? `This repo was read live and none was found in its tree, so either its variants are not folder-based (monorepo packages or in-code branching — a known repo would carry a curated layer hint), or it genuinely lacks divergence. <b>A repo with no 5+ sibling variant paths is a weak Olympus candidate</b> (a known surface can't be made hard with edge cases) — this is a signal to prefer a repo with a clear variant folder, not a dead end you must judge.`
-        : `Open the repo above to <b>read it live</b> first so the tree can be scanned for that layer.`)+
+        ? `The repo was read live but no code-heavy subsystem surfaced &mdash; it is likely very small or flat, which is itself a weak signal (a thin, flat surface is hard to make Olympus-hard). Most real engines surface an engine core automatically.`
+        : `Open the repo above to <b>read it live</b> &mdash; the console then auto-targets its heaviest live subsystem for judging.`)+
       `</div>`;
   }
-  const head=`<div class="hint" style="margin:0 0 8px">Reading the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> layer &mdash; the heaviest divergent layer, auto-picked by the console. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">The model reads that layer's real code and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. You don't choose the layer or set the answers — the console narrows to the layer most likely to host an Olympus-hard feature a maintainer would take.</div></div>`;
+  const head=`<div class="hint" style="margin:0 0 8px">Reading the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> subsystem &mdash; the heaviest live subsystem (the engine core), auto-picked from the live scan. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">The model reads that subsystem's real code (live) and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. You don't choose the subsystem or set the answers &mdash; the console narrows to the engine core most likely to host an Olympus-hard feature a maintainer would take.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1839,7 +1842,7 @@ function genLaunch(){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},jd=(c.judge&&c.judge.data)||null,src=(c.source&&!c.source.error&&!c.source.loading)?c.source:null;
   const liveRead=!!(r.live&&r.commit);
   const div=repoDiv(r),unit=repoUnit(r),t=repoTier(r),std=standardsFor(t.tier),v=finalVerdict(r),judgedLayer=(c.judge&&c.judge.layer)||'';
-  const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'the heaviest divergent layer';
+  const kindsTxt=(r.divKinds&&r.divKinds.length)?r.divKinds.slice(0,6).join(', '):'its heaviest live subsystem (engine core)';
   // Removed everywhere user-facing: PROVEN ANGLE, ranked Best-fit / Generic angle brainstorm, Escalation
   // combinations, and the launch "Adjust angles" picker -- all asserted angles NOT read from the repo
   // (folder-name + accepted-precedent heuristics), which mislead the builder. Superseded by the Selection
@@ -1995,7 +1998,7 @@ function renderAcquire(){
     boardOpts=`<option value="${esc(analyzeSel)}" selected>${esc(analyzeSel)} · external${repoDiv(er)!=null?' · '+repoDiv(er)+'p':''}</option>`+boardOpts;
   }
   viewEl.innerHTML=`<h2 class="mh">Repo <em>analysis</em></h2>
-   <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live (metadata, commit, variant code-paths), measures the source, then the model assesses it. <b>Code-path count is only the precondition</b> — then the model reads the heaviest divergent layer and assesses the difficulty for you (no toggles to set). Divergence does not predict difficulty; whether the obvious approach is wrong and a naive impl fails an invariant does.</p>
+   <p class="lede">Paste any <b>owner/name</b> and the console reads the repo live (metadata, commit, and its engine subsystems), measures the source, then the model assesses it. <b>Subsystem weight is only the precondition</b> — then the model reads the heaviest live subsystem (the engine core) and assesses the difficulty for you (no toggles to set). Size does not predict difficulty; whether the obvious approach is wrong and a naive impl fails an invariant does.</p>
    <div class="panel">
      <div class="row2"><div class="field"><label>Analyze a known repo</label><select id="anRepo">${boardOpts}</select></div>
        <div class="field"><label>…or paste any owner/name</label><input id="anPaste" placeholder="owner/name then Enter" autocomplete="off" spellcheck="false"></div></div>
