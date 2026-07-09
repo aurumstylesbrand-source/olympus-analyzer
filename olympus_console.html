@@ -1509,9 +1509,12 @@ function judgeBlock(r){
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers five questions VALUE-first — is there a wide space of valuable missing features, would maintainers accept one into core, and the three difficulty levers (free helpers, obvious approach wrong, naive-fails-an-invariant) — with code citations (model judgment, not proof).</div>`;
   if(!layer){
     const readLive=!!(c.live||(c.source&&!c.source.error));
-    return `<div class="honest"><b>No subsystem detected yet.</b> The judge targets the repo's <b>heaviest live subsystem</b> (its engine core) &mdash; read from the live scan, NOT a sibling-variant / adapter folder (engines are judged on their core, not a catalog of variants). `+
+    const partial=!!(c.source&&c.source.partialScan);
+    return `<div class="honest"><b>No subsystem auto-detected.</b> The judge targets the repo's <b>heaviest live subsystem</b> (its engine core), read from the live scan &mdash; NOT a sibling-variant / adapter folder (engines are judged on their core, not a catalog of variants). `+
       (readLive
-        ? `The repo was read live but no code-heavy subsystem surfaced &mdash; it is likely very small or flat, which is itself a weak signal (a thin, flat surface is hard to make Olympus-hard). Most real engines surface an engine core automatically.`
+        ? (partial
+           ? `This is a <b>very large repo</b>: the live scan is memory-capped and was truncated before a code-heavy engine subsystem surfaced (its core is likely deeper in the tree). <b>Type the engine path in the field above</b> (e.g. <span class="mono">packages/compiler-cli</span>, <span class="mono">internal/linker</span>) &mdash; it is read LIVE.`
+           : `The repo was read live but no code-heavy subsystem surfaced &mdash; it is likely small or flat, which is itself a weak signal (a thin, flat surface is hard to make Olympus-hard).`)
         : `Open the repo above to <b>read it live</b> &mdash; the console then auto-targets its heaviest live subsystem for judging.`)+
       `</div>`;
   }
