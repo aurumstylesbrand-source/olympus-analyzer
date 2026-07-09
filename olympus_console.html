@@ -1320,7 +1320,7 @@ function estPass(r){
   }
   if(hard===2) return {lo:18,hi:30,label:'Proven Olympus structure — measured anchors land 20% (tRPC) to 30% (TypeORM); the <=20% ceiling is the TARGET to harden toward, not a floor that has been measured',cls:'ok',tier:'olympus'};
   if(hard===1) return {lo:22,hi:34,label:'Above the 20% Olympus ceiling — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
-  return {lo:40,hi:60,label:'Obvious approach works + no invariant — too easy; drop to Mars scale',cls:'warn',tier:'olympus',demote:true};
+  return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
   const e=estPass(r),W=460,H=66,padL=8,padR=8,innerW=W-padL-padR,y=26,bh=16;
@@ -1872,7 +1872,15 @@ function genLaunch(){
   const _cite=(o,verb)=>(o&&o.citations&&o.citations.length)?(' ('+verb+' '+o.citations[0]+')'):'';
   const _gapLine=v.high[1].ok?('  - The discovery gap (confirmed): '+clean(jd&&jd.approachWrong&&jd.approachWrong.reason)+_cite(jd&&jd.approachWrong,'start in')):('  - Discovery gap: NOT confirmed on the "'+judgedLayer+'" layer (model said "'+((jd&&jd.approachWrong||{}).verdict||'?')+'") -- engineer one, or re-run the judgment / judge a deeper layer.');
   const _invLine=v.high[2].ok?('  - The invariant to pin (confirmed): '+clean(jd&&jd.invariant&&jd.invariant.reason)+_cite(jd&&jd.invariant,'assert around')):('  - Invariant: NOT confirmed (model said "'+((jd&&jd.invariant||{}).verdict||'?')+'") -- design a feature whose naive impl violates an intermediate-state invariant.');
-  const featureBlock=jd?('**A CANDIDATE LEAD the free models surfaced from a REAL read (evidence, NOT a prescription -- verify it or find something bigger + more valuable):**\n'+_gapLine+'\n'+_invLine+'\n  - Altitude: '+String(v.altitudeNote||'').replace(/^[^:]*:\s*/,'')):'';
+  const featureBlock='';  // removed: the model-surfaced candidate lead anchored the builder instead of designing for Nova's failure
+  const novaBlock =
+`**THE DIFFICULTY NORTH STAR -- DESIGN FOR "NOVA FAILS, ORION SOLVES" (THIS, not LOC, is the goal):**
+Your challenge runs against ~10 Nova + Orion. You clear <=20% ONLY when the feature is so hard that Nova (fast, cheap, the MAJORITY of runs) mostly CANNOT solve it, while Orion (or at most 1-2 Novas) can. LOC does NOT make a feature hard -- Nova will happily write 900 transcribable lines. Design the difficulty around what Nova STRUCTURALLY cannot do (proven on every accepted project):
+  - Nova reads only 5-8 files, grabs the LOUDEST keyword, COMMITS to its first interpretation, and NEVER restructures => make the OBVIOUS first approach WRONG in a way that only surfaces DEEP in; Nova commits and fails, Orion restructures and passes.
+  - Nova tests END-STATES only => pin a non-guessable INTERMEDIATE-STATE invariant (count / ordering / lifecycle / visibility) the naive impl violates while passing every value check.
+  - Nova derives KNOWN algorithms correctly and FAST => NEVER rely on algorithmic difficulty; force an UNFAMILIAR sibling code path, or a cross-file agreement across 5-10 files Nova will not discover.
+  - Nova SKIM-reads and over-applies a label (mangum: read "lazy" as fully-lazy OR fully-eager, missed the eager-prelude/lazy-body middle) => build a two-phase / middle-ground contract where the naive single-reading is wrong.
+Proof: mangum 9% + gorm 9% + rclone 16.7% were ORION-ONLY (Nova 0/10); tRPC/drizzle/typeorm 20% had only 1-2 Nova solves. An ORION-ONLY solve is a WIN -- the platform only needs >=1 solver. Reverse-engineer a feature that hits >=1 Nova blind spot HARD; the 800+ LOC then follows because a genuinely cross-cutting, restructure-forcing feature is naturally large. If you are sizing for LOC instead of designing for Nova's failure, STOP -- that is the exact error that makes it too easy.`;
   const tips=TIPS.slice(0,5).map((tp,i)=>'  '+(i+1)+'. '+tp.h+' -- '+tp.b).join('\n');
   const noveltyBlock=noveltyBriefingBlock(r);
   const selectionMindset =
@@ -1890,11 +1898,11 @@ Do NOT hunt this repo for an existing issue, open PR, TODO, RFC, or roadmap item
 `**THE FEATURE DISCOVERY PROTOCOL (maintainer mindset, high bar; the briefing does NOT pick the feature):**
 You are building for OLYMPUS -- its standard is NON-NEGOTIABLE, and every candidate must COMPOSITELY meet ALL targets (800-1000 LOC + genuinely hard + valuable + maintainer-acceptable + deterministic), validated by YOU upfront so nothing collapses mid-build.
   1. DEEP RESEARCH. Read the core + architecture, CONTRIBUTING / philosophy, recent commits, and open+closed PRs/issues -- as REFERENCE ONLY (what exists / was rejected / the direction), never as your feature source.
-  2. GENERATE up to 5 CANDIDATE features (fewer if fewer clear the bar). EACH must be: genuinely valuable + aligned with the repo vision; the kind of feature the maintainers would build themselves; NOT already existing (verify across repo + open/closed PRs + commits + roadmap); following the existing architecture with no breaking changes; a genuine FEATURE, ENHANCEMENT, or OPTIMIZATION -- any of those three categories (never a bug fix / refactor / cleanup / docs / config change); SUBSTANTIAL -- a clean reference is COMPOSITELY ~800-1000 LOC of SOLUTION code (production only; tests/docs/generated do not count), reached by REAL composition: per-variant / per-dialect / per-adapter execution across 5+ existing code paths PLUS a sibling code path or a cross-subsystem prerequisite fix -- NEVER by padding or extra public symbols. VALIDATE UPFRONT: DECOMPOSE the estimate (name each production block + its rough size, summing to 800+) BEFORE you commit; if the honest sum is under 800, the feature is too small -- DISCARD it NOW, do not discover mid-build that it is only ~350 LOC; AND hard -- the OBVIOUS approach is wrong, it sits ABOVE the helper layer, a naive impl violates a non-guessable intermediate-state invariant, pass <=20%.
+  2. GENERATE up to 5 CANDIDATE features (fewer if fewer clear the bar). EACH must be: genuinely valuable + aligned with the repo vision; the kind of feature the maintainers would build themselves; NOT already existing (verify across repo + open/closed PRs + commits + roadmap); following the existing architecture with no breaking changes; a genuine FEATURE, ENHANCEMENT, or OPTIMIZATION -- any of those three categories (never a bug fix / refactor / cleanup / docs / config change); HARD FOR NOVA (the real bar, above everything) -- the feature must make Nova FAIL (obvious approach WRONG that only surfaces deep in / a non-guessable INTERMEDIATE-STATE invariant / an UNFAMILIAR sibling code path / a two-phase middle-ground contract -- see THE DIFFICULTY NORTH STAR) while Orion or 1-2 Novas can solve it, sitting ABOVE the helper layer, landing pass <=20%; and SUBSTANTIAL only as a CONSEQUENCE -- a genuinely Nova-hard, restructure-forcing feature is NATURALLY 800+ EFFECTIVE solution LOC (production only; comments / blank / generated / tests do NOT count). Decompose it upfront as a FLOOR CHECK (each production block + size, summing 800+); if it will not clear 800 from real cross-cutting behaviour it is too small -- but NEVER pick a feature FOR its size; pick it for the Nova blind-spot it exploits and the LOC follows.
      Record per candidate: title; problem; approach; EVIDENCE it does not exist (what you searched); the LOC DECOMPOSITION proving 800-1000 (each production block + its rough size); why maintainers accept it; risks.
   3. SECOND-PASS VALIDATION -- harder than step 2: drop overlaps / already-existing / not-exceptional; re-check history + PRs + philosophy.
   4. RANK #1..#5 by value, impact, feasibility, originality, acceptance, AND difficulty.
-  5. IMPLEMENT #1 via GATE ZERO (plagiarism <0.5 same-repo + core-fit: no closed-unmerged PR / userland stance). If it fails, advance to #2, then #3 -- keep a vetted pipeline.
+  5. IMPLEMENT #1 via GATE ZERO (plagiarism <0.5 same-repo + core-fit: no closed-unmerged PR / userland stance). If it fails, advance to #2, then #3. A pivot MUST be to a feature that is HARDER for Nova and equally acceptable -- NEVER a downgrade, and there is NO 'submit as Mars' option. If none of your 5 clear the Nova bar, the REPO is too weak -- pick a stronger repo; do not water the challenge down.
   6. Follow THE PASS TEMPLATE + PRECHECK-FIRST below, then drive it through ~/Desktop/olympus-workflow/ + validate against ~/Desktop/olympus-experience/.`;
   const passTemplate =
 `**THE PASS TEMPLATE (distilled from 8 accepted projects -- follow it to pass first-try):**
@@ -1941,7 +1949,7 @@ ${capacityWhy}
 
 ${modelBlock}
 
-${featureBlock}
+${novaBlock}
 
 ${noveltyBlock}
 
