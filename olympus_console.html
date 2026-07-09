@@ -725,20 +725,10 @@ const GAP_TYPES=[
  {k:'Unfamiliar sibling path',d:'A second builder/family agents must re-discover after learning the first. (drizzle: relational query builder vs select builders.)'},
  {k:'Non-guessable invariant',d:'A data/algorithm assumption the naive form makes and gets wrong by default. (drizzle: a non-unique ordering column forcing PK auto-discovery.)'}
 ];
-const DRIZZLE_INTEL=`RQB IS MANDATORY for Olympus difficulty. Select-builder-only never reached <=30%; span BOTH the 4 select builders AND the 3 RQB query.ts paths. RQB uses a different code path: callback where/orderBy resolved via getOperators/getOrderByOperators, SQL via buildRelationalQuery* with JSON aggregation, mapRelationalRow for nested results.
-PER-DIALECT DIVERGENCE is the LOC driver, not shared helpers: sqlite prepareOneTimeQuery.all() (sync); pg Neon auth token; mysql mode:'planetscale'; singlestore RQB stubbed (db.query={}). Do NOT collapse into shared helpers.
-config.where in RQB can be a function (table)=>SQL — cannot compose with and(); branch on typeof config.where==='function'.
-exports.test.ts auto-discovers every new src/ file -> new solution files show as unexpected extras. Skip via --testNamePattern in test.sh base mode.
-GUARD TESTS with bare .toThrow() pass without solution (TypeError satisfies it). Add expect(typeof method).toBe('function') first.
-TWO difficulty layers: single-column seek on a unique column is derivable; the compound PK-tiebreak via getTableColumns + .primary on a NON-unique ordering column is the discriminating layer.
-Portable SQL only: no IS NOT DISTINCT FROM; emulate (col IS NULL) for MySQL/SingleStore vs native NULLS LAST for PG/SQLite.
-ENV: pnpm --no-frozen-lockfile (drizzle-kit self-references an unpublished prerelease — strip from package.json AND all 3 lockfile locations). Offline backends: better-sqlite3 + pglite only. PGlite WASM fills V8 heap non-deterministically (NODE_OPTIONS can't fix); put pglite suite LAST, one shared beforeAll boot; ~1 verifier timeout per 10 runs is the floor.
-Read solver patches after EVERY batch; grep for the non-guessable symbol; 0/N used it -> that's the next lever. 131.5 median msgs is borderline (target 150+) — deepen the gap.
-ACCEPTED on this repo (AVOID): keyset/cursor pagination; chunked / async-iterable batch iteration.`;
-// SEED_VERSION 21 board: DEEP-SUBSYSTEM repos (difficulty = a hard invariant, NOT 5+ sibling adapters).
+// SEED_VERSION 38 board (10 ENGINE-shaped repos): difficulty = a hard invariant in a stateful engine core, NOT 5+ sibling adapters.
 // The number here is the count of INTERACTING subsystems (the depth signal), not flat variant folders.
-const DIVMAP={'dream-num/univer':15,'graphql/graphql-js':12,'ianstormtaylor/slate':12,'gohugoio/hugo':34,'facebook/docusaurus':30,'fabricjs/fabric.js':12,'go-jet/jet':8,'anchore/syft':39,'gonum/gonum':16,'blevesearch/bleve':7,'fyne-io/fyne':10,'VictoriaMetrics/VictoriaMetrics':12,'golang/go':30,'microsoft/TypeScript':40,'excalidraw/excalidraw':20,'angular/angular':30,'vuejs/core':20,'evanw/esbuild':15,};
-const DIVUNIT={'dream-num/univer':'formula-engine subsystems','graphql/graphql-js':'engine subsystems + rules','ianstormtaylor/slate':'document-model subsystems','gohugoio/hugo':'tpl namespaces + engines','facebook/docusaurus':'plugin/loader packages','fabricjs/fabric.js':'graphics/parse subsystems','go-jet/jet':'query-map subsystems','anchore/syft':'ecosystem catalogers','gonum/gonum':'numeric subsystems','blevesearch/bleve':'search subsystems','fyne-io/fyne':'layout/widget subsystems','VictoriaMetrics/VictoriaMetrics':'engine lib packages','golang/go':'stdlib engine packages','microsoft/TypeScript':'compiler subsystems','excalidraw/excalidraw':'scene/element subsystems','angular/angular':'compiler/typecheck subsystems','vuejs/core':'reactivity/compiler subsystems','evanw/esbuild':'linker/parser subsystems',};
+const DIVMAP={'anchore/syft':39,'blevesearch/bleve':7,'fyne-io/fyne':10,'VictoriaMetrics/VictoriaMetrics':12,'golang/go':30,'microsoft/TypeScript':40,'excalidraw/excalidraw':20,'angular/angular':30,'vuejs/core':20,'evanw/esbuild':15};
+const DIVUNIT={'anchore/syft':'ecosystem catalogers','blevesearch/bleve':'search subsystems','fyne-io/fyne':'layout/widget subsystems','VictoriaMetrics/VictoriaMetrics':'engine lib packages','golang/go':'stdlib engine packages','microsoft/TypeScript':'compiler subsystems','excalidraw/excalidraw':'scene/element subsystems','angular/angular':'compiler/typecheck subsystems','vuejs/core':'reactivity/compiler subsystems','evanw/esbuild':'linker/parser subsystems'};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
 function topAngles(r,n){
@@ -767,23 +757,26 @@ function comboFor(r){
     return `One feature spanning ${k} load-bearing concerns. Confirm each genuinely raises the discovery gap before building.`;};
   return specs.map(ix=>{const angs=ix.map(i=>t[i]).filter(Boolean);return angs.length>=2?{angles:angs,why:why(angs)}:null;}).filter(Boolean);
 }
+// ENGINE BENCH -- verified alternates + engines benched from the 10-repo board (SEED 38).
+// All ENGINE-shaped (a stateful interdependent core, obvious approach wrong), permissive, Go/TS.
+// Promote pushes onto the board (guarded by isBlacklisted). NONE here is blacklisted.
 const POOL=[
- {fullName:'caddyserver/caddy',url:'https://github.com/caddyserver/caddy',lang:'Go',license:'Apache-2.0',stars:'~73k',div:12,unit:'modules',path:'A',why:'~12 divergent server modules (strict count), each its own subsystem. Pure Path A — just under the 15 floor, so needs a depth invariant on top.',gap:'module lifecycle + the caddyhttp middleware chain'},
- {fullName:'honojs/hono','url':'https://github.com/honojs/hono',lang:'TypeScript',license:'MIT',stars:'~31k',div:9,unit:'runtime adapters',path:'A',why:'9 runtime adapters, each a different integration. Pure Path A — under the 15 floor.',gap:'cross-adapter streaming / cleanup invariants'},
- {fullName:'ent/ent',url:'https://github.com/ent/ent',lang:'Go',license:'Apache-2.0',stars:'~17k',div:2,unit:'dialect backends',why:'Codegen + a layered hook/interceptor/privacy runtime — ordering invariants the naive impl violates.',gap:'hook/interceptor ordering contract'},
- {fullName:'uptrace/bun',url:'https://github.com/uptrace/bun',lang:'Go',license:'BSD-2-Clause',stars:'~4k',div:7,unit:'SQL dialects',path:'A',why:'Five divergent SQL dialects plus a query builder. Pure Path A.',gap:'per-dialect SQL generation + relation eager-loading'},
- {fullName:'mikro-orm/mikro-orm',url:'https://github.com/mikro-orm/mikro-orm',lang:'TypeScript',license:'MIT',stars:'~9k',div:5,unit:'DB platforms',path:'A',why:'Five divergent platforms with unit-of-work. Pure Path A (4th ORM — watch plagiarism).',gap:'identity-map / unit-of-work flush ordering'},
- {fullName:'vitejs/vite',url:'https://github.com/vitejs/vite',lang:'TypeScript',license:'MIT',stars:'~81k',div:6,unit:'plugin hooks / modes',path:'A',why:'Plugin hook system + esbuild/rollup backends + dev/build/ssr modes. Strong cross-category divergence.',gap:'dev-server vs build-time transform parity'},
- {fullName:'apollographql/apollo-server',url:'https://github.com/apollographql/apollo-server',lang:'TypeScript',license:'MIT',stars:'~13k',div:9,unit:'plugins',why:'Request-lifecycle plugin system — lifecycle ordering invariants.',gap:'plugins share one interface — lifecycle ordering invariant'}
+ {fullName:'facebook/ent',url:'https://github.com/ent/ent',lang:'Go',license:'Apache-2.0',stars:'~17k',why:'ENGINE: dialect/sql/sqlgraph graph->SQL query compiler -- an edge traversal must emit the correct join/step ordering per relation direction (inverse M2O of an O2M, join-table steps for M2M); a per-field string-concat is wrong. The accepted-winner ORM archetype.',gap:'sqlgraph step-ordering + entql predicate compilation'},
+ {fullName:'xyflow/xyflow',url:'https://github.com/xyflow/xyflow',lang:'TypeScript',license:'MIT',stars:'~37.5k',why:'ENGINE: @xyflow/system store reconciler -- transitive absolute-position + z-index propagation down the parent-child tree; naive map-node-to-position breaks nested/grouped nodes. Site in @xyflow/system, NOT the React/DOM renderer.',gap:'store reconciler + edge geometry invariant'},
+ {fullName:'babel/babel',url:'https://github.com/babel/babel',lang:'TypeScript',license:'MIT',stars:'~44k',why:'ENGINE only in babel-traverse scope/binding (NOT the 108-plugin catalog): bindings must re-register / invalidate in the right order after an AST mutation; mutate-then-read-scope is wrong. Site strictly in babel-traverse / babel-parser.',gap:'traverse scope/binding re-crawl contract (avoid plugins)'},
+ {fullName:'dream-num/univer',url:'https://github.com/dream-num/univer',lang:'TypeScript',license:'Apache-2.0',stars:'~13.8k',why:'ENGINE: formula dependency + recalc engine (engine-formula pkg) -- dirty-propagation order + spill/ref invariants. Benched from the board for space, recoverable.',gap:'formula dependency-graph recalc order'},
+ {fullName:'graphql/graphql-js',url:'https://github.com/graphql/graphql-js',lang:'TypeScript',license:'MIT',stars:'~20.4k',why:'ENGINE: execution + validation engine -- field collection across fragments / @skip / @include + coercion; a naive top-down walk breaks on overlapping fragments across abstract types. Benched, recoverable.',gap:'execution field-collection + coercion invariant'},
+ {fullName:'gonum/gonum',url:'https://github.com/gonum/gonum',lang:'Go',license:'BSD-3-Clause',stars:'~8.4k',why:'ENGINE: optimize reverse-communication engine -- deferred MajorIteration (nextMajor) + accumulating eval validity bitmask; a naive same-call impl converges but violates the op-sequence protocol. Benched, recoverable.',gap:'optimize reverse-comm op-sequence protocol'},
+ {fullName:'go-jet/jet',url:'https://github.com/go-jet/jet',lang:'Go',license:'Apache-2.0',stars:'~3.7k',why:'ENGINE: qrm row-to-object-graph mapper -- one-to-many joins must dedup the parent via a derived groupKey; naive per-row append emits duplicate parents. Benched, recoverable.',gap:'qrm cross-row object-identity invariant'}
 ];
 function poolPanel(){
   const used=new Set(state.used.map(s=>s.toLowerCase()));
   const items=POOL.map(p=>{const on=used.has(p.fullName.toLowerCase());
     return `<div class="checkrow"><span class="lamp pass"></span><div class="checkbody">
-      <div class="checkname">${esc(p.fullName)} <span class="tag">${p.lang} · ${p.license} · ${p.stars} · divergence ${p.div} · Path ${p.path}</span></div>
+      <div class="checkname">${esc(p.fullName)} <span class="tag">${p.lang} · ${p.license} · ${p.stars} · ENGINE</span></div>
       <div class="checkdetail">${esc(p.why)}</div><div class="checkfix">${esc(p.gap)}</div>
       <div style="margin-top:8px;display:flex;gap:8px"><button class="btn" data-an="${p.fullName}">Analyze</button>${on?'<span class="stat" style="align-self:center">on board ✓</span>':`<button class="btn" data-poolprom="${p.fullName}">Promote → Olympus</button>`}</div></div></div>`;}).join('');
-  return `<div class="panel"><div class="seclbl" style="margin-bottom:12px">Verified candidate pool <span class="mono">pre-checked, real divergence — analyze or promote</span></div>${items}</div>`;
+  return `<div class="panel"><div class="seclbl" style="margin-bottom:12px">Engine bench <span class="mono">verified alternates + engines benched from the 10-repo board — analyze or promote</span></div>${items}</div>`;
 }
 
 /* ---------- doctrine ---------- */
@@ -924,9 +917,10 @@ const SEED_OLYMPUS={batch:1,repos:[
    A('Tree-shaking + scope hoisting over the part graph','Consistency','dead-code elimination + hoisting need the whole-program part graph, not file-local analysis -- an interdependent stateful invariant'),
    A('CommonJS/ESM interop wrapping + deterministic symbol renaming (internal/renamer)','Serialization','CJS/ESM interop + minified renaming must agree on one shared numbering; single-threaded InnerIndex assignment keeps it deterministic')]),
 ]};
-// All 6 audited 2026-06-27 against live GitHub + determinism: Go/TS-primary, permissive, active,
-// deterministic (or scopeable to an offline core). Replaces the prior unvalidated set (dropped
-// ky = network/HTTP-flaky, zerolog = unvalidated, casbin = unvalidated).
+// SEED 38 (2026-07-09): the FINAL 10 = 7 big ENGINES (golang/go, microsoft/TypeScript, excalidraw,
+// angular, vuejs/core, esbuild, fyne) + 3 smaller-capable engines (VictoriaMetrics, syft, bleve).
+// All Go/TS-primary, permissive, active, deterministic engine core (ENGINE not catalog). Saturation is
+// user-platform-checked (not a seed filter). 8 catalog/engine repos benched (see ENGINE BENCH / POOL).
 const SEED_MARS={batch:1,repos:[]};
 // BLACKLIST -- dumped/rejected repos that must NEVER appear on the board again. load() prunes these
 // from every tier + the used list on EVERY load, so a stale localStorage entry from an old seed
@@ -1042,7 +1036,7 @@ function renderBoard(){
   if(activeTier==='olympus'){
     html+=`<div class="panel" style="border-color:var(--green-deep);background:linear-gradient(180deg,var(--green-tint),transparent)">
       <div class="seclbl" style="color:var(--green)">★ drizzle-team/drizzle-orm — retired, success story</div>
-      <p style="margin:6px 0 0;font-size:13.5px;color:var(--text-2)">The repo that proved the system: <b>4 accepted submissions</b> (keyset/cursor pagination, chunked async-iterable iteration, and more). Retired from the active board so we stop overlapping our own accepted work — kept here as the baseline that earned the trust. New work runs on the repos below.</p></div>`;
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--text-2)">The repo that proved the system: <b>3 accepted submissions</b> (keyset/cursor pagination, chunked async-iterable iteration, relation aggregations). Retired from the active board so we stop overlapping our own accepted work — kept here as the baseline that earned the trust. New work runs on the repos below.</p></div>`;
   }
   html+=data.repos.map((r,i)=>repoCard(r,i)).join('');
   if(total>0&&done===total){
@@ -1228,7 +1222,7 @@ function scanSymbols(text,path){
       else if(m=ln.match(/^export\s+(?:type\s+)?\{([^}]*)\}/))m[1].split(',').forEach(p=>{const nm=p.trim().split(/\s+as\s+/).pop().trim();if(nm&&nm!=='type')add(nm);});
       else if(/^export\s+(?:type\s+)?\*\s+from/.test(ln))barrel++;
       else if(m=ln.match(/^(?:module\.)?exports\.([A-Za-z0-9_$]+)\s*=/))add(m[1]);
-      if(/^(?:\t+| {2,})(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concreteMethods++;}
+      if(/^(?:\t+| {2})(?:public\s+|async\s+|abstract\s+)?[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*[:{]/.test(ln)&&!/^\s*\/\//.test(ln)&&!/\b(if|for|while|switch|return|catch|constructor)\b/.test(ln)){methods++;if(!/abstract\s/.test(ln)&&/\{/.test(ln))concreteMethods++;}
     });
   } else if(L==='go'){
     lines.forEach(ln=>{let m;
@@ -1308,7 +1302,7 @@ function estPass(r){
       ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the <=30% ceiling but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
       : {lo:18,hi:30,label:'Solid Mars structure (within the <=30% ceiling)',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:18,hi:30,label:'Proven Olympus structure — measured anchors land 20% (tRPC) to 30% (TypeORM); the <=20% ceiling is the TARGET to harden toward, not a floor that has been measured',cls:'ok',tier:'olympus'};
+  if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); <=20% is the HARD ceiling (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
   if(hard===1) return {lo:22,hi:34,label:'Above the 20% Olympus ceiling — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
@@ -1431,7 +1425,7 @@ function wireScreen(r){
 // Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
 // effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
 // utility folder. These point the judge at the layer that actually carries the divergence.
-const CURATED_JUDGE_LAYERS={'dream-num/univer':['engine-formula','functions','interpreter'],'graphql/graphql-js':['validation','execution','language'],'ianstormtaylor/slate':['slate','transforms','interfaces'],'gohugoio/hugo':['tpl','markup','related'],'facebook/docusaurus':['docusaurus-mdx-loader','docusaurus-plugin-content-blog','docusaurus-utils-validation'],'fabricjs/fabric.js':['parser','color','filters'],'go-jet/jet':['qrm','generator','sqlbuilder'],'anchore/syft':['cataloger','pkg','format'],'gonum/gonum':['mat','stat','graph'],'blevesearch/bleve':['scorer','mapping','search'],'fyne-io/fyne':['layout','widget','data'],'VictoriaMetrics/VictoriaMetrics':['mergeset','encoding','streamaggr'],'golang/go':['template','types','encoding'],'microsoft/TypeScript':['checker','moduleResolution','compiler'],'excalidraw/excalidraw':['element','scene','math'],'angular/angular':['typecheck','render3','compiler-cli'],'vuejs/core':['reactivity','compiler-core','runtime-core'],'evanw/esbuild':['linker','graph','renamer'],};
+const CURATED_JUDGE_LAYERS={'anchore/syft':['cataloger','pkg','format'],'blevesearch/bleve':['scorer','mapping','search'],'fyne-io/fyne':['layout','widget','data'],'VictoriaMetrics/VictoriaMetrics':['mergeset','encoding','streamaggr'],'golang/go':['template','types','encoding'],'microsoft/TypeScript':['checker','moduleResolution','compiler'],'excalidraw/excalidraw':['element','scene','math'],'angular/angular':['typecheck','render3','compiler-cli'],'vuejs/core':['reactivity','compiler-core','runtime-core'],'evanw/esbuild':['linker','graph','renamer']};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
 
 /* ===== NOVELTY GATE (the traefik lesson) =====
@@ -1440,15 +1434,7 @@ function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCa
    known to be under active open-PR work at vetting (2026-07). noveltyScan() matches these live against
    the repo's OPEN pull-request + issue titles fetched in fetchRepoActivity(). */
 const NOVELTY_KEYWORDS={
- 'dream-num/univer':{angle:['formula','function','recalc','spill','reference','dependency','interpreter'],taken:[],note:'WIDE FRESH-LANE (Excel formula engine, hundreds of functions). MONOREPO -- scope to engine-formula package. Pick a function-family or engine-core invariant; re-scan PRs/issues for YOUR feature'},
- 'graphql/graphql-js':{angle:['validation','execution','rule','coercion','printer','schema','defer'],taken:[],note:'WIDE single-package (language+type+validation(~40 rules)+execution+utilities). Pick a validation rule / execution-semantics gap / utility; re-scan PRs/issues for it'},
- 'ianstormtaylor/slate':{angle:['transform','operation','normalize','path','point','range','node'],taken:[],note:'WIDE FRESH-LANE (DOM-free rich-text doc model). Scope to packages/slate (no rendering). Pick a transform or normalization invariant; re-scan PRs/issues for it'},
- 'gohugoio/hugo':{angle:['template','markup','related','taxonomy','output','shortcode','resource','pageparser'],taken:[],note:'WIDE CAPACITY (34 tpl namespaces + markup + related-index + resources). HIGH SATURATION (88k, famous) -- SCOPE to a NON-OBVIOUS subsystem (related/ inverted-index, pageparser lexer, tpl/collections), NOT markdown; platform-check submission count + re-scan PRs/issues for YOUR feature'},
- 'facebook/docusaurus':{angle:['plugin','mdx','sidebar','blog','sitemap','redirect','i18n','validation','pagination'],taken:[],note:'WIDE CAPACITY (30+ packages). MONOREPO -- SCOPE to ONE package (utils-validation, plugin-content-blog pagination, mdx-loader); do NOT whole-repo read (502). MED saturation -- platform-check; re-scan PRs/issues for YOUR feature'},
- 'fabricjs/fabric.js':{angle:['svg','parse','transform','gradient','geometry','serializ','filter'],taken:[],note:'WIDE FRESH-DOMAIN CAPACITY (SVG parse + geometry + color + filters + serialization). Pick a non-obvious gap in the pure deterministic core (avoid live-canvas raster); re-scan open PRs/issues for YOUR feature'},
- 'go-jet/jet':{angle:['qrm','mapping','groupKey','relation','identity','scan'],taken:[],note:'NOVA-HARD CORE = qrm row-to-object-graph mapping (cross-row identity invariant). GATE ZERO: the mapper EXISTS -- feature must be an ADJACENT new mapping capability, not a reimplementation; re-scan open/closed PRs first'},
  'anchore/syft':{angle:['cataloger','purl','spdx','cyclonedx','relationship'],taken:[],note:'WIDE CAPACITY (39 catalogers + cross-cutting); no prescribed angle (lowers collision). Pick a NON-OBVIOUS feature then re-scan open PRs + closed issues for YOUR angle; avoid the obvious add-ecosystem-X'},
- 'gonum/gonum':{angle:['spline','factorization','optimize','graph','kd-tree','quadrature'],taken:[],note:'WIDE CAPACITY (16 unrelated numeric subsystems). Pick a missing algorithm in ONE subpackage; re-scan PRs/issues for it'},
  'blevesearch/bleve':{angle:['bm25','per-field','k1','scoring model','similarity'],taken:['vector similarity','knn','scoring_model global'],note:'per-field tunable BM25 (k1/b) genuinely absent (BM25_k1/b are package-global vars; ScoringModel is index-global) -- deep-read validated 2026-07-05; PR #2113 left an in-code TODO to make the multipliers configurable (maintainer-sanctioned); AVOID the FieldMapping.Similarity vector-metric naming trap; 0 open PRs on BM25'},
  'fyne-io/fyne':{angle:['layout','measure','min-size','arrange','binding','constraint'],taken:[],note:'NOVA-HARD CORE = two-phase measure-then-arrange layout constraint solver (nested/wrapping containers) + data-binding order; site in layout/widget/data, NOT driver/ (GPU/OS flaky). ENGINE not catalog. Re-scan open PRs first'},
  'VictoriaMetrics/VictoriaMetrics':{angle:['mergeset','merge','encoding','codec','streamaggr','gorilla'],taken:[],note:'NOVA-HARD CORE = lib/mergeset shared-prefix/metaindex merge invariant + lib/encoding bit-stream codecs; site in self-contained engine libs, NOT networked apps/. ENGINE not catalog. Re-scan open PRs first'},
@@ -1904,7 +1890,7 @@ You are building for OLYMPUS -- its standard is NON-NEGOTIABLE, and every candid
   5. IMPLEMENT #1 via GATE ZERO (plagiarism <0.5 same-repo + core-fit: no closed-unmerged PR / userland stance). If it fails, advance to #2, then #3. A pivot MUST be to a feature that is HARDER for Nova and equally acceptable -- NEVER a downgrade, and there is NO 'submit as Mars' option. If none of your 5 clear the Nova bar, the REPO is too weak -- pick a stronger repo; do not water the challenge down.
   6. Follow THE PASS TEMPLATE + PRECHECK-FIRST below, then drive it through ~/Desktop/olympus-workflow/ + validate against ~/Desktop/olympus-experience/.`;
   const passTemplate =
-`**THE PASS TEMPLATE (distilled from 8 accepted projects -- follow it to pass first-try):**
+`**THE PASS TEMPLATE (distilled from 9 accepted projects -- follow it to pass first-try):**
   1. GATE ZERO FIRST, before any code: same-repo grep of your API symbols = 0 hits (<0.5); search open+closed PRs/issues for the mechanism; read CONTRIBUTING; confirm a maintainer SEAM exists + no closed-unmerged PR of your idea. (3 projects lost multi-day pivots for skipping this: mangum 0.615, gorm 0.872.)
   2. NAME the discovery gap AND COUNT its layers before building. List every simplification an agent will reach for + a lever to strip each. A close-to-known algorithm rarely clears <=20% on ONE layer (drizzle chunked needed offset->seek THEN non-unique-column PK auto-discovery).
   3. Wire the feature into 5+ EXISTING code paths that each use a DIFFERENT pattern (tRPC = 7 adapters; drizzle = 4 dialect cores + the RQB sibling path). Reading each IS the MSG floor. Add >=2 silently-failing cross-cutting invariants.
@@ -1916,7 +1902,7 @@ You are building for OLYMPUS -- its standard is NON-NEGOTIABLE, and every candid
   NOTE the LOC that is graded is SOLUTION/production code, NOT test count -- do not chase a test number; the composition (per-variant execution + sibling path + a required cross-subsystem fix) is what drives both the LOC and the many behavioural tests a broad feature naturally needs.`;
   const precheckFirst =
 `**PRECHECK-FIRST (pass every platform gate on the FIRST try -- the fast path to the agent runs):**
-BEFORE image build: description <=500 words, TARGET 479-500 (all 8 accepted landed there); NO em-dashes, no hard-wrap at 70-85 chars (one unwrapped paragraph per physical line), no wall-of-text, no 4+ blank lines, no rationale ("so that" / "because"), no heading labels; run the non-ASCII grep after EVERY prose edit. Category "feature" -> correct opener verb (makes Solution-Quality + Aligned strict). Plagiarism <0.5 (OUR wall, not the platform 90%): grep your symbols = 0 hits, pick an UNMINED sub-domain, record the number. Only-necessary-information: strip repo-findable / default / over-specified / redundant + editorial framing. Aligned: every test-pinned name / value-shape / sentinel / arg-order STATED (passable from the description alone). Behavioural tests only -- if you cannot explain a test without naming an internal method/field, REPLACE it. Test-patch sanity: test.sh INSIDE test.patch as a "new file mode 100755" entry, DISJOINT base+new file lists, no solution code, no installs, zero comments; filenames hash-suffixed (feature_6hex_test.*), no shipd/datacurve; no URLs. Dockerfile: olympus-base-LANG:latest, WORKDIR /app, PINNED deps, NEVER run tests at build (warm with go vet / go build only), user EXACTLY "groupadd -g 1000 model && useradd -u 1000 -g model -m model", bash entrypoint.
+BEFORE image build: description <=500 words, TARGET 479-500 (the accepted projects landed there); NO em-dashes, no hard-wrap at 70-85 chars (one unwrapped paragraph per physical line), no wall-of-text, no 4+ blank lines, no rationale ("so that" / "because"), no heading labels; run the non-ASCII grep after EVERY prose edit. Category "feature" -> correct opener verb (makes Solution-Quality + Aligned strict). Plagiarism <0.5 (OUR wall, not the platform 90%): grep your symbols = 0 hits, pick an UNMINED sub-domain, record the number. Only-necessary-information: strip repo-findable / default / over-specified / redundant + editorial framing. Aligned: every test-pinned name / value-shape / sentinel / arg-order STATED (passable from the description alone). Behavioural tests only -- if you cannot explain a test without naming an internal method/field, REPLACE it. Test-patch sanity: test.sh INSIDE test.patch as a "new file mode 100755" entry, DISJOINT base+new file lists, no solution code, no installs, zero comments; filenames hash-suffixed (feature_6hex_test.*), no shipd/datacurve; no URLs. Dockerfile: olympus-base-LANG:latest, WORKDIR /app, PINNED deps, NEVER run tests at build (warm with go vet / go build only), user EXACTLY "groupadd -g 1000 model && useradd -u 1000 -g model -m model", bash entrypoint.
 AFTER image build: F2P -- every NEW test FAILS on base (no P2P slot); guards lead with typeof x === 'function' + a positive canary, NEVER a bare .toThrow(). Test Fairness -- assert ONLY test-planted data tokens, never error-message structure / arg order / return type / sentinels / internal constants / concurrency start-order. Flakiness (3x clean + 3x patched, MANDATORY) -- no Date.now / Math.random / fixed setTimeout; poll with waitUntil; deterministic in-memory backends. Task Quality -- touch 3+ layers and MODIFY existing files. Solution Quality grades the REFERENCE + public surface + portability -- fix real ref bugs even when tests pass; audit every "composes with X" against X full lifecycle in ONE pass.`;
   const latestLessons =
 `**LATEST ACCEPTED-PROJECT LESSONS (Jul 2026 -- highest priority; these reflect the CURRENT platform):**
@@ -1987,11 +1973,6 @@ function resolveRepo(name){
   if(p){const base={fullName:p.fullName,url:p.url,lang:p.lang,license:p.license,stars:p.stars,path:p.path,divergence:p.div,areas:[{area:p.gap,angle:p.path.indexOf('A')>=0?'Adapter Abstraction':'Lifecycle Hooks Multi-Consumer',why:p.why}],why:p.why,tier:'candidate'};const e=extCache[name.toLowerCase()];return e?{...base,...e}:base;}
   const base={fullName:name,url:'https://github.com/'+name,lang:'?',license:'?',stars:'?',path:'',divergence:null,areas:[],why:'',tier:'external'};
   const e=extCache[name.toLowerCase()];return e?{...base,...e}:base;
-}
-function divChart(div){
-  const v=div||0,max=Math.max(40,v);const bar=Math.round((v/max)*100),thr=Math.round((15/max)*100);
-  return `<div class="chart"><div class="bartrack"><div class="barfill" style="width:${bar}%"></div><div class="thr" style="left:${thr}%"></div></div>
-    <div class="chartlbl"><span>divergence <b>${div!=null?div:'?'}</b></span><span>Olympus floor = 15</span></div></div>`;
 }
 // Matches the PLATFORM allowed-license list exactly: MIT / BSD* / Apache* / BSL-1.0(Boost) / CC-BY* /
 // BLAS / GNU-all-permissive. NOT allowed (common traps): NOASSERTION (non-standard LICENSE file, e.g.
@@ -2442,9 +2423,10 @@ function wirePool(){
   viewEl.querySelectorAll('[data-an]').forEach(b=>b.addEventListener('click',()=>{selectRepo(b.dataset.an);window.scrollTo({top:0,behavior:'smooth'});}));
   viewEl.querySelectorAll('[data-poolprom]').forEach(b=>b.addEventListener('click',async()=>{
     const p=POOL.find(x=>x.fullName===b.dataset.poolprom);if(!p)return;
+    if(isBlacklisted(p.fullName))return;
     if(state.used.map(s=>s.toLowerCase()).includes(p.fullName.toLowerCase()))return;
-    const nr=repo(p.fullName,p.url,p.lang,p.license,p.stars,true,'gold',p.why,p.path,[{area:p.gap,angle:p.path.indexOf('A')>=0?'Adapter Abstraction':'Lifecycle Hooks Multi-Consumer',why:p.why}]);
-    nr.divergence=p.div;nr.source='pool';state.olympus.repos.push(nr);state.used=dedupe([...state.used,p.fullName]);
+    const nr=repo(p.fullName,p.url,p.lang,p.license,p.stars,true,'gold',p.why,'A',[{area:p.gap,angle:'Invariant Enforcement',why:p.why}]);
+    nr.source='pool';state.olympus.repos.push(nr);state.used=dedupe([...state.used,p.fullName]);
     await persistTier('olympus');await persistUsed();renderAcquire();
   }));
 }
