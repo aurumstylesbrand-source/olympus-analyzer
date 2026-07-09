@@ -4,16 +4,36 @@
 const https = require('https');
 const zlib = require('zlib');
 
-function fetchBuf(url, token, redirects=0){
+// MEMORY-BOUNDED streaming tarball reader. The old code buffered the WHOLE .tar.gz then
+// gunzipSync'd it -- for mega repos (golang/go, microsoft/TypeScript, angular: 100-300MB
+// uncompressed) that OOM-crashed the 512MB Render instance, which then broke analysis for
+// EVERY repo until the container restarted (the "Failed to fetch" the console reported).
+// Now: stream the response THROUGH gunzip and STOP once we have MAX_UNZIP bytes of the tar
+// (the tarball is a valid prefix; untar() stops at the last complete block). Memory is capped
+// regardless of repo size, so the server never crashes. This stays 100% LIVE (codeload fetch).
+const MAX_GZ    = 80*1024*1024;   // hard stop on compressed bytes downloaded
+const MAX_UNZIP = 55*1024*1024;   // hard stop on uncompressed tar bytes held in memory
+
+function fetchTar(url, token, redirects=0){
   return new Promise((resolve, reject)=>{
     const headers={'User-Agent':'olympus-analyzer'};
     if(token) headers['Authorization']='Bearer '+token;
     https.get(url, {headers}, res=>{
       if([301,302,307].includes(res.statusCode) && res.headers.location && redirects<5){
-        res.resume(); return resolve(fetchBuf(res.headers.location, token, redirects+1));
+        res.resume(); return resolve(fetchTar(res.headers.location, token, redirects+1));
       }
       if(res.statusCode!==200){ res.resume(); return reject(new Error('HTTP '+res.statusCode+' for '+url)); }
-      const chunks=[]; res.on('data',c=>chunks.push(c)); res.on('end',()=>resolve(Buffer.concat(chunks)));
+      const gunzip=zlib.createGunzip();
+      const chunks=[]; let unz=0, gz=0, done=false, capped=false;
+      const finish=()=>{ if(done)return; done=true; try{res.destroy();}catch(_){} try{gunzip.destroy();}catch(_){} resolve({tar:Buffer.concat(chunks), capped}); };
+      res.on('data', c=>{ gz+=c.length; if(gz>MAX_GZ){ capped=true; finish(); } });
+      res.on('error', e=>{ if(!done){ done=true; reject(e); } });
+      gunzip.on('data', c=>{ unz+=c.length; chunks.push(c); if(unz>=MAX_UNZIP){ capped=true; finish(); } });
+      // gunzip 'error' fires when we destroy the stream mid-inflate -> that's expected once capped;
+      // only a real inflate error before any data is a failure.
+      gunzip.on('error', e=>{ if(!done){ if(chunks.length) finish(); else reject(e); } });
+      gunzip.on('end', finish);
+      res.pipe(gunzip);
     }).on('error', reject);
   });
 }
@@ -80,8 +100,7 @@ const CODE_EXT=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|c|cc|cpp|cxx|h|hh|hpp|
 
 async function analyzeRepo(repo, ref, token){
   const url='https://codeload.github.com/'+repo+'/tar.gz/'+ref;
-  const gz=await fetchBuf(url, token);
-  const tar=zlib.gunzipSync(gz);
+  const {tar, capped}=await fetchTar(url, token);
   const surface=new Set(); let methods=0,barrel=0,concrete=0,files=0;
   const variants={}; const baseHelpers={}; // dir -> concrete methods (free-helper signal)
   const extCount={};
@@ -117,21 +136,24 @@ async function analyzeRepo(repo, ref, token){
     freeHelperSignal: vk.length>0 && freeHelperConcrete>=8,
     freeHelperConcreteMethods: freeHelperConcrete,
     dominantExt, outOfScope,
-    note: (outOfScope ? 'OUT OF SCOPE: only '+files+' supported-language files found; the repo looks dominated by .'+dominantExt+' (an unsupported language for this scanner). The numbers below are stray scripts, not the real codebase. ' : '')+'Surface/method/variant counts are a full-repo regex scan (vendored / test / asset dirs excluded). freeHelperSignal is a HEURISTIC, not proof. Approach-wrong and invariant-fails are NOT computed here (behavioural reasoning; use an LLM pass).'
+    partialScan: !!capped,
+    note: (outOfScope ? 'OUT OF SCOPE: only '+files+' supported-language files found; the repo looks dominated by .'+dominantExt+' (an unsupported language for this scanner). The numbers below are stray scripts, not the real codebase. ' : '')+(capped ? 'LARGE REPO: scanned a bounded '+files+'-file live sample (the tarball prefix, memory-capped so the server cannot OOM) -- counts are a representative live sample, not the whole tree. ' : '')+'Surface/method/variant counts are a live regex scan (vendored / test / asset dirs excluded). freeHelperSignal is a HEURISTIC, not proof. Approach-wrong and invariant-fails are NOT computed here (behavioural reasoning; use an LLM pass).'
   };
 }
 // Download + extract a repo tarball at an exact ref and return source files as
 // { path, text } (top tarball dir stripped, tests/huge files skipped). Reused by /judge.
 async function loadRepoFiles(repo, ref, token){
   const url='https://codeload.github.com/'+repo+'/tar.gz/'+ref;
-  const gz=await fetchBuf(url, token);
-  const tar=zlib.gunzipSync(gz);
-  const out=[];
+  const {tar}=await fetchTar(url, token);
+  const out=[]; let bytes=0;
+  const MAX_TEXT=18*1024*1024;       // cap the source text handed to the judge (LLM context is finite)
   for(const f of untar(tar)){
     const rel=f.name.replace(/^[^/]+\//,'');
     if(skipPath(rel)) continue;       // excludes vendored/test/asset files in every language
     if(f.data.length>400000) continue;
-    out.push({path:rel, text:f.data.toString('utf8')});
+    const text=f.data.toString('utf8');
+    bytes+=text.length; if(bytes>MAX_TEXT) break;
+    out.push({path:rel, text});
   }
   return out;
 }
