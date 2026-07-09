@@ -132,7 +132,7 @@ async function analyzeRepo(repo, ref, token){
   // is no container/adapter folder. Weight favours symbols+methods (real logic) over raw file count, so a
   // dense engine core outranks a big-but-shallow UI/catalog surface. UI / docs / build / example dirs are
   // excluded (they are the derivable/easy surface, not the Nova-hard engine). No pre-stored hint needed.
-  const TOPDIR_SKIP=/(^|\/)(ui|web-?ui|vmui|frontend|front-?end|adev|website|www|site|docs?|examples?|demos?|playground|devtools|dev-infra|scripts?|tools?|benchmarks?|integration|e2e|fixtures?|assets?|public|templates?)(\/|$)/i;
+  const TOPDIR_SKIP=/(^|\/)(ui|web-?ui|vmui|frontend|front-?end|adev|\.?ng-dev|website|www|site|docs?|examples?|demos?|playground|devtools|dev-infra|scripts?|tools?|benchmarks?|integration|e2e|apptest|harness|test-?runner|dts-test|packages-private|fixtures?|assets?|public|templates?)(\/|$)/i;
   const topDirs=Object.entries(dirW)
     .map(([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods*2}))
     .filter(d=>d.dir!=='(root)' && d.files>=2 && !TOPDIR_SKIP.test('/'+d.dir+'/'))

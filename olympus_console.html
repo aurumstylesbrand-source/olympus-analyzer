@@ -1515,7 +1515,12 @@ function judgeBlock(r){
         : `Open the repo above to <b>read it live</b> &mdash; the console then auto-targets its heaviest live subsystem for judging.`)+
       `</div>`;
   }
-  const head=`<div class="hint" style="margin:0 0 8px">Reading the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> subsystem &mdash; the heaviest live subsystem (the engine core), auto-picked from the live scan. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button><div class="hint" style="margin-top:5px">The model reads that subsystem's real code (live) and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. You don't choose the subsystem or set the answers &mdash; the console narrows to the engine core most likely to host an Olympus-hard feature a maintainer would take.</div></div>`;
+  const cand=((c.source&&c.source.topDirs)||[]).slice(0,6);
+  const chips=cand.length?`<div class="hint" style="margin-top:6px">Detected live subsystems (click one to judge it): ${cand.map(d=>`<button class="btn" data-jlayer="${esc(d.dir)}" style="padding:2px 8px;font-size:12px">${esc(d.dir)}</button>`).join(' ')}</div>`:'';
+  const head=`<div class="hint" style="margin:0 0 8px">Judging the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> subsystem &mdash; the heaviest live engine core, auto-picked from the live scan. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button>
+    <div class="setrow" style="margin-top:6px;align-items:center;gap:6px"><span class="hint">Judge a specific subsystem (path fragment, read LIVE):</span> <input id="judgeLayerIn" value="${esc(layer)}" placeholder="e.g. internal/relationship" style="flex:1;min-width:150px"> <button class="btn" id="judgeLayerSet">Use</button></div>
+    ${chips}
+    <div class="hint" style="margin-top:5px">The model reads that subsystem's real code (live) and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. The console auto-picks the heaviest live engine core; if it landed on a UI/catalog surface or a huge repo truncated before the core, type or click the real engine core above &mdash; it is read LIVE either way.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
   if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
   if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
@@ -1535,6 +1540,14 @@ function judgeBlock(r){
     return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('value',fr,'featureRichness')}${row('acceptance',af,'acceptanceFit')}${row('helpers',fh,'freeHelpers')}${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="hint" style="margin-top:8px">↑ VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) answer the main goal (can it host MANY features a maintainer would take); the difficulty three (helpers / approach / invariant) auto-fill the difficulty screen and feed the <b>Final verdict</b> below. ${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
   }
   return head;
+}
+// Operator override: point the judge at a specific subsystem (path fragment). The judge STILL reads
+// that subsystem's code LIVE (via /judge inLayer) -- this only chooses WHICH live subsystem to judge,
+// for when the auto-pick lands on a UI/catalog surface or a truncated huge repo.
+function setJudgeLayer(name, layer){
+  const key=(name||'').toLowerCase(), c=extCache[key]||{}, v=String(layer||'').trim();
+  extCache[key]={...c, judgeLayerOverride:v, judge:undefined}; // clear cached judgment -> re-judge the new layer
+  paintDash();
 }
 async function runJudge(name){
   const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r);
@@ -2269,6 +2282,8 @@ function paintDash(){
     <div class="cfoot"><span class="hint">tier: ${_t2.tier} &middot; gap: ${gapTypeFor(r)}</span>${unknown?'<a href="#" id="anVerify" class="hint" style="color:var(--green)">Verify tree ↻</a>':''}</div>
   </div></div></div>`;
   wireScreen(r);
+  const jls=document.getElementById('judgeLayerSet');if(jls)jls.addEventListener('click',()=>{const el=document.getElementById('judgeLayerIn');setJudgeLayer(r.fullName,el?el.value:'');});
+  document.querySelectorAll('[data-jlayer]').forEach(b=>b.addEventListener('click',()=>setJudgeLayer(r.fullName,b.dataset.jlayer)));
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
   const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
