@@ -128,11 +128,14 @@ async function analyzeRepo(repo, ref, token){
   }
   const freeHelperConcrete=Object.values(baseHelpers).reduce((a,b)=>a+b,0);
   const vk=Object.keys(variants);
-  // Heaviest LIVE subsystems (engine cores) by code weight -- the judge targets topDirs[0] when there
-  // is no container/adapter folder. This is the ENGINE-shaped path (no pre-stored hint needed).
+  // Heaviest LIVE subsystems (engine cores) by LOGIC DENSITY -- the judge targets topDirs[0] when there
+  // is no container/adapter folder. Weight favours symbols+methods (real logic) over raw file count, so a
+  // dense engine core outranks a big-but-shallow UI/catalog surface. UI / docs / build / example dirs are
+  // excluded (they are the derivable/easy surface, not the Nova-hard engine). No pre-stored hint needed.
+  const TOPDIR_SKIP=/(^|\/)(ui|web-?ui|vmui|frontend|front-?end|adev|website|www|site|docs?|examples?|demos?|playground|devtools|dev-infra|scripts?|tools?|benchmarks?|integration|e2e|fixtures?|assets?|public|templates?)(\/|$)/i;
   const topDirs=Object.entries(dirW)
-    .map(([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods+w.files*2}))
-    .filter(d=>d.dir!=='(root)')
+    .map(([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods*2}))
+    .filter(d=>d.dir!=='(root)' && d.files>=2 && !TOPDIR_SKIP.test('/'+d.dir+'/'))
     .sort((a,b)=>b.weight-a.weight).slice(0,8);
   // Scope guard: if almost no supported-language source was found AND a code language we cannot scan
   // (C/C++/Java/...) dominates the tree, this repo is out of scope -- the surface below is stray scripts.
