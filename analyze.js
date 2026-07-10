@@ -133,10 +133,12 @@ async function analyzeRepo(repo, ref, token){
   // dense engine core outranks a big-but-shallow UI/catalog surface. UI / docs / build / example dirs are
   // excluded (they are the derivable/easy surface, not the Nova-hard engine). No pre-stored hint needed.
   const TOPDIR_SKIP=/(^|\/)(ui|web-?ui|vmui|frontend|front-?end|adev|\.?ng-dev|website|www|site|docs?|examples?|demos?|playground|devtools|dev-infra|scripts?|tools?|benchmarks?|integration|e2e|apptest|harness|test-?runner|dts-test|packages-private|fixtures?|assets?|public|templates?)(\/|$)/i;
-  const topDirs=Object.entries(dirW)
-    .map(([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods*2}))
-    .filter(d=>d.dir!=='(root)' && d.files>=2 && !TOPDIR_SKIP.test('/'+d.dir+'/'))
-    .sort((a,b)=>b.weight-a.weight).slice(0,8);
+  const mk=([dir,w])=>({dir, files:w.files, symbols:w.symbols, methods:w.methods, weight:w.symbols+w.methods*2});
+  const ents=Object.entries(dirW).filter(([dir])=>dir!=='(root)');
+  let topDirs=ents.filter(([dir,w])=>w.files>=2 && !TOPDIR_SKIP.test('/'+dir+'/')).map(mk).sort((a,b)=>b.weight-a.weight).slice(0,8);
+  // Fallback: if the filter removed everything (a repo whose code lives only in ui/docs/-named dirs, or a
+  // truncated giant), still surface SOMETHING so the judge has a live subsystem instead of "no subsystem".
+  if(!topDirs.length) topDirs=ents.map(mk).sort((a,b)=>b.weight-a.weight).slice(0,8);
   // Scope guard: if almost no supported-language source was found AND a code language we cannot scan
   // (C/C++/Java/...) dominates the tree, this repo is out of scope -- the surface below is stray scripts.
   const domEntry=Object.entries(extCount).sort((a,b)=>b[1]-a[1])[0];

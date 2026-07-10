@@ -1507,6 +1507,7 @@ function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};re
 function judgeBlock(r){
   const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
   if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers five questions VALUE-first — is there a wide space of valuable missing features, would maintainers accept one into core, and the three difficulty levers (free helpers, obvious approach wrong, naive-fails-an-invariant) — with code citations (model judgment, not proof).</div>`;
+  const ovInput=`<div class="setrow" style="margin-top:6px;align-items:center;gap:6px"><span class="hint">Judge a specific subsystem (path fragment, read LIVE):</span> <input id="judgeLayerIn" value="${esc(layer||'')}" placeholder="e.g. internal/relationship" style="flex:1;min-width:150px"> <button class="btn" id="judgeLayerSet">Use</button></div>`;
   if(!layer){
     const readLive=!!(c.live||(c.source&&!c.source.error));
     const partial=!!(c.source&&c.source.partialScan);
@@ -1516,12 +1517,12 @@ function judgeBlock(r){
            ? `This is a <b>very large repo</b>: the live scan is memory-capped and was truncated before a code-heavy engine subsystem surfaced (its core is likely deeper in the tree). <b>Type the engine path in the field above</b> (e.g. <span class="mono">packages/compiler-cli</span>, <span class="mono">internal/linker</span>) &mdash; it is read LIVE.`
            : `The repo was read live but no code-heavy subsystem surfaced &mdash; it is likely small or flat, which is itself a weak signal (a thin, flat surface is hard to make Olympus-hard).`)
         : `Open the repo above to <b>read it live</b> &mdash; the console then auto-targets its heaviest live subsystem for judging.`)+
-      `</div>`;
+      ovInput+`</div>`;
   }
   const cand=((c.source&&c.source.topDirs)||[]).slice(0,6);
   const chips=cand.length?`<div class="hint" style="margin-top:6px">Detected live subsystems (click one to judge it): ${cand.map(d=>`<button class="btn" data-jlayer="${esc(d.dir)}" style="padding:2px 8px;font-size:12px">${esc(d.dir)}</button>`).join(' ')}</div>`:'';
   const head=`<div class="hint" style="margin:0 0 8px">Judging the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> subsystem &mdash; the heaviest live engine core, auto-picked from the live scan. <b>Free</b> 2-3 model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button>
-    <div class="setrow" style="margin-top:6px;align-items:center;gap:6px"><span class="hint">Judge a specific subsystem (path fragment, read LIVE):</span> <input id="judgeLayerIn" value="${esc(layer)}" placeholder="e.g. internal/relationship" style="flex:1;min-width:150px"> <button class="btn" id="judgeLayerSet">Use</button></div>
+    ${ovInput}
     ${chips}
     <div class="hint" style="margin-top:5px">The model reads that subsystem's real code (live) and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. The console auto-picks the heaviest live engine core; if it landed on a UI/catalog surface or a huge repo truncated before the core, type or click the real engine core above &mdash; it is read LIVE either way.</div></div>`;
   if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
@@ -2278,7 +2279,7 @@ function paintDash(){
   document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'variant')} layer and judges VALUE + ACCEPTANCE + the 3 difficulty levers (helpers / approach / invariant) with code citations &mdash; you don't set it by hand</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
+    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'engine core')} LIVE and judges VALUE + ACCEPTANCE + the 3 difficulty levers (helpers / approach / invariant) with code citations &mdash; auto-picked from the live scan, override in the panel if it misses</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ variant paths the feature writes from scratch</span></div>${chartsHtml}</div>
     ${gated}
