@@ -5,7 +5,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const { analyzeRepo, loadRepoFiles, CONTAINER } = require('./analyze.js');
+const { analyzeRepo, loadRepoFiles, loadRepoDir, CONTAINER } = require('./analyze.js');
 
 // Minimal .env loader (dependency-free): populate process.env from a local .env if present, so
 // `node server.js` works locally without exporting vars. Real host env vars always take precedence.
@@ -183,8 +183,13 @@ const PROMPT_FULL = { mv:12, mvc:12000, ma:8, mac:8000 };   // big-context model
 const PROMPT_SMALL = { mv:3, mvc:3500, ma:2, mac:2500, noRubric:true };
 // Download the repo, isolate the variant layer + the layer above, and assemble both prompt sizes.
 async function buildJudgeContext(repo, ref, layer){
-  const files = await loadRepoFiles(repo, ref, TOKEN);
-  const variant = files.filter(f => inLayer(f.path, layer));
+  // Targeted first: fetch ONLY the requested subsystem at ANY depth via the tree + raw (reaches engine cores
+  // the memory-bounded tarball prefix never sees, e.g. angular packages/compiler-cli). Fall back to the
+  // whole-repo bounded scan + inLayer filter if the targeted fetch finds nothing.
+  let files, variant = [];
+  try { variant = await loadRepoDir(repo, ref, layer, TOKEN); } catch(_){}
+  if(variant.length){ files = variant; }
+  else { files = await loadRepoFiles(repo, ref, TOKEN); variant = files.filter(f => inLayer(f.path, layer)); }
   if(!variant.length) throw new Error('no files matched layer "'+layer+'" (try a path fragment or container kind like "adapters")');
   const variantDirs = new Set(variant.map(f => dirOf(f.path)));
   const variantPaths = new Set(variant.map(f => f.path));
@@ -536,8 +541,13 @@ function scanSignals(files, signals){
   return hits;
 }
 async function judgeHeuristic(repo, ref, layer){
-  const files = await loadRepoFiles(repo, ref, TOKEN);
-  const variant = files.filter(f => inLayer(f.path, layer));
+  // Targeted first: fetch ONLY the requested subsystem at ANY depth via the tree + raw (reaches engine cores
+  // the memory-bounded tarball prefix never sees, e.g. angular packages/compiler-cli). Fall back to the
+  // whole-repo bounded scan + inLayer filter if the targeted fetch finds nothing.
+  let files, variant = [];
+  try { variant = await loadRepoDir(repo, ref, layer, TOKEN); } catch(_){}
+  if(variant.length){ files = variant; }
+  else { files = await loadRepoFiles(repo, ref, TOKEN); variant = files.filter(f => inLayer(f.path, layer)); }
   if(!variant.length) throw new Error('no files matched layer "'+layer+'" (try a path fragment or container kind like "adapters")');
   const variantDirs = new Set(variant.map(f => dirOf(f.path)));
   const variantPaths = new Set(variant.map(f => f.path));

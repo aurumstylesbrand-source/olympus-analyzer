@@ -38,6 +38,55 @@ function fetchTar(url, token, redirects=0){
   });
 }
 
+// --- Trees-API path (full coverage at any depth, for HUGE repos the bounded tarball truncates) ---
+function fetchJSON(url, token){
+  return new Promise((resolve,reject)=>{
+    const headers={'User-Agent':'olympus-analyzer','Accept':'application/vnd.github+json'};
+    if(token) headers['Authorization']='Bearer '+token;
+    https.get(url,{headers},res=>{
+      if([301,302,307].includes(res.statusCode)&&res.headers.location){res.resume();return resolve(fetchJSON(res.headers.location,token));}
+      if(res.statusCode!==200){res.resume();return reject(new Error('HTTP '+res.statusCode+' for '+url));}
+      const ch=[]; res.on('data',c=>ch.push(c)); res.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(ch).toString('utf8')));}catch(e){reject(e);}});
+    }).on('error',reject);
+  });
+}
+// Bounded single-file text fetch (raw.githubusercontent.com) -- caps per-file bytes so one huge file can't blow memory.
+function fetchText(url, token, maxBytes){
+  maxBytes = maxBytes||400000;
+  return new Promise((resolve,reject)=>{
+    const headers={'User-Agent':'olympus-analyzer'}; if(token) headers['Authorization']='Bearer '+token;
+    https.get(url,{headers},res=>{
+      if([301,302,307].includes(res.statusCode)&&res.headers.location){res.resume();return resolve(fetchText(res.headers.location,token,maxBytes));}
+      if(res.statusCode!==200){res.resume();return reject(new Error('HTTP '+res.statusCode));}
+      let buf='',n=0,done=false;
+      res.on('data',c=>{ n+=c.length; if(!done) buf+=c.toString('utf8'); if(n>maxBytes){done=true; try{res.destroy();}catch(_){} resolve(buf);} });
+      res.on('end',()=>{ if(!done) resolve(buf); });
+      res.on('error',e=>{ if(!done) reject(e); });
+    }).on('error',reject);
+  });
+}
+const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+// Full recursive file tree (paths + sizes only, ONE lightweight call -- no content, no truncation from our cap).
+async function repoTree(repo, ref, token){
+  const j=await fetchJSON('https://api.github.com/repos/'+repo+'/git/trees/'+encodeURIComponent(ref)+'?recursive=1', token);
+  return { tree:(j&&j.tree)||[], truncated:!!(j&&j.truncated) };
+}
+// TARGETED subsystem load: fetch ONLY the files under `dir` (path fragment), at ANY depth, via the tree + raw.
+// Reaches engine cores the bounded tarball prefix never sees (e.g. angular packages/compiler-cli). Capped for the LLM.
+async function loadRepoDir(repo, ref, dir, token){
+  const low=String(dir||'').replace(/^\/+|\/+$/g,'').toLowerCase();
+  if(!low) return [];
+  const {tree}=await repoTree(repo, ref, token);
+  const want=tree.filter(t=>t.type==='blob' && t.size>0 && t.size<400000 && !skipPath(t.path) && t.path.toLowerCase().includes(low))
+    .sort((a,b)=> a.path.length - b.path.length); // shallower (core) files first
+  const out=[]; let bytes=0;
+  for(const t of want){
+    if(out.length>=80 || bytes>2500000) break;
+    try{ const text=await fetchText('https://raw.githubusercontent.com/'+repo+'/'+encodeURIComponent(ref)+'/'+encPath(t.path), token, 400000); bytes+=text.length; out.push({path:t.path, text}); }catch(_){}
+  }
+  return out;
+}
+
 // minimal tar reader (USTAR): yields {name, data} for regular files
 function* untar(buf){
   let off=0;
@@ -139,6 +188,18 @@ async function analyzeRepo(repo, ref, token){
   // Fallback: if the filter removed everything (a repo whose code lives only in ui/docs/-named dirs, or a
   // truncated giant), still surface SOMETHING so the judge has a live subsystem instead of "no subsystem".
   if(!topDirs.length) topDirs=ents.map(mk).sort((a,b)=>b.weight-a.weight).slice(0,8);
+  // Full-coverage augmentation: for a CAPPED (huge) repo the tarball PREFIX misses late-alphabetical dirs
+  // (e.g. angular packages/compiler-cli). Rank the WHOLE tree by source-file count -- one lightweight Trees
+  // API call -- so the real engine cores surface even when the streamed scan truncated before them.
+  if(capped){
+    try{
+      const {tree}=await repoTree(repo, ref, token);
+      const tw={};
+      for(const t of tree){ if(t.type!=='blob'||skipPath(t.path)) continue; const seg=t.path.split('/'); const dir=seg.length>1?seg.slice(0,Math.min(2,seg.length-1)).join('/'):'(root)'; if(dir==='(root)'||TOPDIR_SKIP.test('/'+dir+'/')) continue; tw[dir]=(tw[dir]||0)+1; }
+      const td=Object.entries(tw).filter(([,c])=>c>=3).map(([dir,c])=>({dir, files:c, symbols:0, methods:0, weight:c})).sort((a,b)=>b.files-a.files).slice(0,10);
+      if(td.length) topDirs=td;   // full-tree ranking beats the truncated-prefix ranking for huge repos
+    }catch(_){}
+  }
   // Scope guard: if almost no supported-language source was found AND a code language we cannot scan
   // (C/C++/Java/...) dominates the tree, this repo is out of scope -- the surface below is stray scripts.
   const domEntry=Object.entries(extCount).sort((a,b)=>b[1]-a[1])[0];
@@ -175,4 +236,4 @@ async function loadRepoFiles(repo, ref, token){
   return out;
 }
 
-module.exports={analyzeRepo, scanSymbols, loadRepoFiles, CONTAINER};
+module.exports={analyzeRepo, scanSymbols, loadRepoFiles, loadRepoDir, repoTree, CONTAINER};
