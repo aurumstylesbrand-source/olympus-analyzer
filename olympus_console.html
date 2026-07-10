@@ -1278,7 +1278,7 @@ async function analyzeSource(name){
   paintDash();
 }
 function recommendScreen(r){
-  const t=repoTier(r), kinds=(r.divKinds||[]), k0=(kinds[0]||'variant');
+  const t=repoTier(r), kinds=(r.divKinds||[]), k0=(kinds[0]||'engine core');
   return {
     helpers:{rec:'none',feasible:true,why:'aim a layer ABOVE the '+k0+' helpers — if the feature can call per-'+k0+' helpers for free it solves at ~80% (the TreeRepository trap)'},
     approach:{rec:t.approachFeasible?'wrong':'works',feasible:t.approachFeasible,why:t.approachFeasible
@@ -1788,7 +1788,7 @@ async function dropRepo(name){
 function deriveAreas(r){
   if((r.areas||[]).length) return r.areas;
   const kinds=r.divKinds||[]; if(!kinds.length) return [];
-  const k0=(kinds[0]||'variant'), sing=k0.replace(/s$/,''), best=topAngles(r,3);
+  const k0=(kinds[0]||'engine core'), sing=k0.replace(/s$/,''), best=topAngles(r,3);
   return [
     {area:'A unified '+best[0]+' operation across every '+sing, angle:best[0], why:'CANDIDATE: every '+sing+' would implement it; a silent gap on one path is the kind of failing test that creates the discovery gap -- confirm via backend /judge, do not assume'},
     {area:'Possible cross-'+sing+' invariant -- '+best[1], angle:best[1], why:'CANDIDATE invariant inferred from the '+k0+' folder names + angle ranking, NOT measured -- confirm a naive impl actually violates it (backend /judge) before treating it as the gap'},
@@ -2255,9 +2255,9 @@ function paintDash(){
   } else if(c&&c.calibrating){
     gated=`<div class="genwait"><div class="calibrate"><div class="loadring"></div><div><b>Calibrating the verdict…</b><div class="calsteps"><div class="calstep on">Reading the live report — model consensus + source + ${div} code paths</div><div class="calstep on">Cross-referencing the accepted-project rubric (current Jun 2026 platform checks)</div><div class="calstep on">Weighing the structural levers, deriving go / refine / no-go</div></div></div></div></div>`;
   } else if(!analysisRun){
-    gated=`<div class="genwait"><b>Live report ready — judged the ${esc(judgedLayer||'variant')} layer${srcRead?', source measured':''}, ${div} code paths.</b><span class="hint">Run the analysis: the console weighs the model consensus against the accepted-project rubric, returns a <b>final verdict</b> (go / refine / no-go), then generates the report-specific angles, combinations, strong areas, insights and standards.</span><button class="btn primary" id="anRunAnalysis" style="margin-top:10px">Run analysis →</button></div>`;
+    gated=`<div class="genwait"><b>Live report ready — judged the ${esc(judgedLayer||'engine core')}${srcRead?', source measured':''}, ${div} code paths.</b><span class="hint">Run the analysis: the console weighs the model consensus against the accepted-project rubric, returns a <b>final verdict</b> (go / refine / no-go), then generates the report-specific angles, combinations, strong areas, insights and standards.</span><button class="btn primary" id="anRunAnalysis" style="margin-top:10px">Run analysis →</button></div>`;
   } else {
-    gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'variant')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div);
+    gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'engine core')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div);
   }
   const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_fv=finalVerdict(r);
   const _vchip=`<span class="verdictchip ${_fv.vclass}" style="font-size:15px">${esc(_fv.verdict)}</span>`;
