@@ -442,6 +442,8 @@ async function judgeViaEnsemble(repo, ref, layer){
     const out = shapeJudgment(repo, ref, layer, ctx, { featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable,
       disclaimer:'Single model ('+m.label+'). Not proof.'+(errors.length?' (other provider failed: '+errors.join('; ')+')':'') }, 'llm:'+m.model);
     out.panel = fuseOlympus(members);
+    out.members = members.map(m => ({ label:m.label, model:m.model, tier:(m.tier===2?2:1), primary:m.primary||false, featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable }));
+    out.question = ctx.prompt;   // the exact prompt each model received (proof)
     if(errors.length) out.providerErrors = errors;
     return out;
   }
@@ -509,6 +511,7 @@ async function judgeViaEnsemble(repo, ref, layer){
   out.agreement = { featureRichness:frr.agreement, acceptanceFit:faf.agreement, freeHelpers:fh.agreement, approachWrong:fa.agreement, invariant:fi.agreement };
   out.panel = panel;
   out.synthesized = synthesized;
+  out.question = ctx.prompt;   // the exact prompt each model received (proof of what was asked)
   if(errors.length) out.providerErrors = errors;
   return out;
 }
@@ -682,7 +685,18 @@ http.createServer(async (req, res) => {
     // wins; else a model API call when a key is set; else a FREE heuristic rubric-signal scan.
     try {
       const wantPrompt = u.searchParams.get('mode') === 'prompt';
-      if (!wantPrompt && fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
+      const wantFresh = u.searchParams.get('fresh') === '1';   // bypass cache -> genuinely re-run the models
+      const only = u.searchParams.get('only');                 // re-ask ONE model live (proof it reads live now)
+      if (only) {
+        const ctx = await buildJudgeContext(repo, ref, layer);
+        const p = PROVIDERS.find(x => x.label.toLowerCase() === only.toLowerCase());
+        if (!p) { res.writeHead(400); return res.end(JSON.stringify({ error: 'unknown model "'+only+'" (try one of: '+PROVIDERS.map(x=>x.label).join(', ')+')' })); }
+        const m = await withDeadline(judgeOneModel(p, p.small ? ctx.promptSmall : ctx.prompt), 55000, p.label);
+        res.writeHead(200); return res.end(JSON.stringify({ ok:true, only:true,
+          member:{ label:m.label, model:m.model, featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant, olympusViable:m.olympusViable },
+          question: ctx.prompt, variantFiles: ctx.variantFiles, at: Date.now() }));
+      }
+      if (!wantPrompt && !wantFresh && fs.existsSync(jf)) { const b = JSON.parse(fs.readFileSync(jf,'utf8')); b.cached = true; res.writeHead(200); return res.end(JSON.stringify(b)); }
       if (wantPrompt) {
         const ctx = await buildJudgeContext(repo, ref, layer);
         res.writeHead(200); return res.end(JSON.stringify({

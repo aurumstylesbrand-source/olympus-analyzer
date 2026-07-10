@@ -242,6 +242,10 @@ details.disc>*:last-child{padding-bottom:15px}
 @keyframes sp{to{transform:rotate(360deg)}}
 /* drawer */
 .drawer{position:fixed;inset:0;z-index:60;background:rgba(5,6,8,.6);backdrop-filter:blur(4px);display:none;justify-content:flex-end}
+.pmodal{position:fixed;inset:0;z-index:80;background:rgba(5,6,8,.72);backdrop-filter:blur(5px);display:flex;justify-content:center;align-items:flex-start;padding:38px 16px;overflow:auto}
+.pmodal-card{background:var(--surface-2,#12151b);border:1px solid var(--line-2,#2a2f39);border-radius:12px;max-width:920px;width:100%;padding:20px 22px;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+.pm-model{border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:7px 0;background:var(--surface-3,#0d1014)}
+.pm-cite{font-family:var(--mono);font-size:11px;color:var(--green);word-break:break-all}
 .drawer.open{display:flex}
 .drawer-inner{width:min(600px,96vw);height:100%;overflow:auto;background:var(--bg-2);border-left:1px solid var(--line);padding:28px}
 .drawer h3{font-weight:700;font-size:22px;margin:0 0 4px;letter-spacing:-.03em}
@@ -1539,8 +1543,8 @@ function judgeBlock(r){
     const isHeur=src.indexOf('heuristic')>=0, isEns=src.indexOf('ensemble')>=0;
     const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':isEns?'✓ centralized model consensus':'✓ model judgment';
     const agBadge=k=>{const a=d.agreement&&d.agreement[k];return a?` <span class="chip ${a==='full'?'ver':'unver'}">${a==='full'?'all agree':a==='split'?'models disagree':'split'}</span>`:'';};
-    const row=(lbl,o,k)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${agBadge(k)} ${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}</div></div>`;
-    const members=(d.members&&d.members.length)?`<details class="disc"><summary>Per-model verdicts (${d.members.map(m=>esc(m.label)).join(' + ')})</summary>`+d.members.map(m=>`<div class="hint" style="margin:6px 0"><b>${esc(m.label)}</b> &mdash; richness: ${esc((m.featureRichness||{}).verdict||'?')} &middot; acceptance: ${esc((m.acceptanceFit||{}).verdict||'?')} &middot; helpers: ${esc((m.freeHelpers||{}).verdict||'?')} &middot; approach: ${esc((m.approachWrong||{}).verdict||'?')} &middot; invariant: ${esc((m.invariant||{}).verdict||'?')}</div>`).join('')+`</details>`:'';
+    const row=(lbl,o,k)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${agBadge(k)} ${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}${(d.members&&d.members.length)?' <a href="#" class="hint" data-proof="'+k+'" style="color:var(--green)">view proof \u2197</a>':''}</div></div>`;
+    const members=(d.members&&d.members.length)?`<div style="margin-top:8px"><button class="btn" data-proof="all">\ud83d\udd0d Per-model proof, citations &amp; re-run \u2197</button> <span class="hint">${d.members.length} model(s) read the live ${esc(layer||'')} code</span></div>`:'';
     return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('value',fr,'featureRichness')}${row('acceptance',af,'acceptanceFit')}${row('helpers',fh,'freeHelpers')}${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="hint" style="margin-top:8px">↑ VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) answer the main goal (can it host MANY features a maintainer would take); the difficulty three (helpers / approach / invariant) auto-fill the difficulty screen and feed the <b>Final verdict</b> below. ${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
   }
   return head;
@@ -1553,17 +1557,66 @@ function setJudgeLayer(name, layer){
   extCache[key]={...c, judgeLayerOverride:v, judge:undefined}; // clear cached judgment -> re-judge the new layer
   paintDash();
 }
-async function runJudge(name){
+async function runJudge(name, fresh){
   const key=name.toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r);
   if(!state.analyzer||!layer)return;
   const ref=c.commit||c.defaultBranch||'HEAD';
   extCache[key]={...c,judge:{loading:true,layer}};paintDash();
   try{
-    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer));
+    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer)+(fresh?'&fresh=1':''));
     if(d.error){extCache[key]={...extCache[key],judge:{error:'backend: '+d.error,layer}};paintDash();return;}
     if(d.needsJudgment){extCache[key]={...extCache[key],judge:{prompt:d.prompt,layer}};paintDash();return;}
     extCache[key]={...extCache[key],judge:{data:d,layer}};applyJudge(name);
   }catch(e){extCache[key]={...extCache[key],judge:{error:'backend unreachable ('+(e.message||'failed')+')',layer}};paintDash();}
+}
+// ---- Per-model PROOF modal: the exact question + each model's live answer + citations + re-ask/re-run ----
+const PROOF_LEVERS=[['featureRichness','VALUE — rich, valuable missing-feature space'],['acceptanceFit','ACCEPTANCE — a maintainer would take it into core'],['freeHelpers','DIFFICULTY — free helpers (transcribe-once path)'],['approachWrong','DIFFICULTY — obvious approach is wrong'],['invariant','DIFFICULTY — a naive impl fails an invariant'],['olympusViable','PANEL — Olympus-viable overall']];
+function closeProof(){const m=document.getElementById('pmodal');if(m)m.remove();}
+function showProof(name, dim){
+  window.__proofName=name; window.__proofDim=dim||'all';
+  const key=(name||'').toLowerCase(), c=extCache[key]||{}, j=c.judge||{}, d=j.data;
+  if(!d){return;}
+  const only=(dim&&dim!=='all'); const dims=only?PROOF_LEVERS.filter(l=>l[0]===dim):PROOF_LEVERS;
+  const members=d.members||[];
+  const agLabel=a=>a==='full'?'ALL AGREE':a==='split'?'MODELS DISAGREE':a==='partial'?'PARTIAL':'';
+  const body=dims.map(([k,lbl])=>{
+    const fused=d[k]||{}, ag=(d.agreement&&d.agreement[k])||'';
+    const per=members.map(m=>{const o=m[k]||{};return `<div class="pm-model"><b>${esc(m.label)}</b> <span class="hint">${esc(m.model||'')}${m.primary?' · primary':''}</span> &mdash; <b style="color:var(--green)">${esc(o.verdict||'?')}</b>
+      <div style="margin-top:3px">${esc(o.reason||'(no reason returned)')}</div>
+      ${(o.citations&&o.citations.length)?'<div class="pm-cite" style="margin-top:4px">live cites: '+o.citations.map(esc).join(', ')+'</div>':'<div class="hint" style="margin-top:4px;color:var(--warn)">no citation returned</div>'}
+      <div style="margin-top:6px"><button class="btn" data-reask="${esc(m.label)}" style="padding:2px 8px;font-size:12px">re-ask ${esc(m.label)} live \u21bb</button></div></div>`;}).join('');
+    return `<div style="margin:14px 0"><div class="seclbl">${esc(lbl)} ${ag?`<span class="chip ${ag==='full'?'ver':'unver'}">${agLabel(ag)}</span>`:''}</div>
+      <div class="hint" style="margin:4px 0">consensus: <b>${esc(fused.verdict||'?')}</b> &mdash; ${esc(fused.reason||'')}</div>
+      ${per||'<div class="hint">no per-model data (single-model or heuristic scan)</div>'}</div>`;
+  }).join('');
+  const q=d.question?`<details class="disc" style="margin:10px 0"><summary>The exact question each model received (proof of what was asked)</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:320px;overflow:auto;margin:6px 0 0">${esc(d.question)}</pre></details>`:'';
+  const errs=(d.providerErrors&&d.providerErrors.length)?`<div class="hint" style="color:var(--warn);margin-top:6px">provider errors: ${d.providerErrors.map(esc).join(' | ')}</div>`:'';
+  closeProof();
+  const el=document.createElement('div'); el.id='pmodal'; el.className='pmodal';
+  el.innerHTML=`<div class="pmodal-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><div class="seclbl">Per-model proof &mdash; ${esc(name)} <span class="hint">/ ${esc(j.layer||'')}</span></div><div style="display:flex;gap:8px"><button class="btn" id="pmRerun">Re-run all (fresh) \u21bb</button><button class="btn" id="pmClose">Close \u2715</button></div></div>
+    <div class="hint" style="margin-bottom:4px">${members.length} model(s): ${members.map(m=>esc(m.label)).join(' + ')||'—'}. Each answer is that model reading the LIVE ${esc(j.layer||'')} code; the cited file paths are the proof it read live.</div>
+    ${only?`<div class="hint"><a href="#" id="pmAll" style="color:var(--green)">show all levers \u2195</a></div>`:''}
+    ${q}${body}${errs}
+    <div id="proofReask" class="hint" style="margin-top:8px"></div></div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)closeProof();});
+  const cl=document.getElementById('pmClose'); if(cl)cl.onclick=closeProof;
+  const rr=document.getElementById('pmRerun'); if(rr)rr.onclick=()=>{closeProof();runJudge(name,true);};
+  const pa=document.getElementById('pmAll'); if(pa)pa.onclick=e=>{e.preventDefault();showProof(name,'all');};
+  el.querySelectorAll('[data-reask]').forEach(b=>b.addEventListener('click',()=>reAskModel(name,b.dataset.reask)));
+}
+async function reAskModel(name, label){
+  const key=(name||'').toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r),ref=c.commit||c.defaultBranch||'HEAD';
+  const box=document.getElementById('proofReask'); if(box)box.innerHTML='<span class="spin"></span> re-asking '+esc(label)+' live at '+esc(layer)+'\u2026';
+  try{
+    const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer)+'&only='+encodeURIComponent(label));
+    if(d&&d.member){
+      const jd=(extCache[key].judge||{}).data;
+      if(jd){ jd.members=jd.members||[]; const i=jd.members.findIndex(m=>m.label===d.member.label); if(i>=0)jd.members[i]=d.member; else jd.members.push(d.member); }
+      showProof(name, window.__proofDim||'all');
+      const nb=document.getElementById('proofReask'); if(nb)nb.innerHTML='<span style="color:var(--green)">'+esc(label)+' re-answered LIVE just now \u2713 (row updated above)</span>';
+    } else if(box){ box.innerHTML='<span style="color:var(--warn)">'+esc((d&&d.error)||'failed')+'</span>'; }
+  }catch(e){ if(box)box.innerHTML='<span style="color:var(--warn)">'+esc(e.message||'failed')+'</span>'; }
 }
 // Deeper (optional, still free): fetch the paste-ready prompt for a Claude chat instead of the heuristic.
 async function runJudgePrompt(name){
@@ -2288,6 +2341,7 @@ function paintDash(){
   wireScreen(r);
   const jls=document.getElementById('judgeLayerSet');if(jls)jls.addEventListener('click',()=>{const el=document.getElementById('judgeLayerIn');setJudgeLayer(r.fullName,el?el.value:'');});
   document.querySelectorAll('[data-jlayer]').forEach(b=>b.addEventListener('click',()=>setJudgeLayer(r.fullName,b.dataset.jlayer)));
+  document.querySelectorAll('[data-proof]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();showProof(r.fullName,b.dataset.proof);}));
   const jr=document.getElementById('judgeRun');if(jr)jr.addEventListener('click',()=>runJudge(r.fullName));
   const jpb=document.getElementById('judgePromptBtn');if(jpb)jpb.addEventListener('click',()=>runJudgePrompt(r.fullName));
   const jcp=document.getElementById('judgeCopy');if(jcp)jcp.addEventListener('click',()=>{const t=document.getElementById('judgePrompt');if(t&&navigator.clipboard)navigator.clipboard.writeText(t.value);jcp.textContent='Copied ✓';setTimeout(()=>jcp.textContent='Copy prompt',1400);});
