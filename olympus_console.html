@@ -1572,8 +1572,19 @@ async function runJudge(name, fresh){
 // ---- Per-model PROOF modal: the exact question + each model's live answer + citations + re-ask/re-run ----
 const PROOF_LEVERS=[['featureRichness','VALUE — rich, valuable missing-feature space'],['acceptanceFit','ACCEPTANCE — a maintainer would take it into core'],['freeHelpers','DIFFICULTY — free helpers (transcribe-once path)'],['approachWrong','DIFFICULTY — obvious approach is wrong'],['invariant','DIFFICULTY — a naive impl fails an invariant'],['olympusViable','PANEL — Olympus-viable overall']];
 function closeProof(){const m=document.getElementById('pmodal');if(m)m.remove();}
+// Summarize a raw provider-error string into a short human reason (no raw JSON dumps in the UI).
+function shortProvErr(e){
+  const t=String(e||''); const label=(t.split(':')[0]||'provider').trim();
+  const why = /429|rate.?limit/i.test(t) ? 'rate-limited (free tier) — retry shortly'
+    : /empty (model )?content|empty response|no content/i.test(t) ? 'empty response'
+    : /JSON|Expected .,. or/i.test(t) ? 'returned malformed JSON'
+    : (/(HTTP \d{3})/.exec(t)||[])[1] || 'failed';
+  return {label, why};
+}
 function showProof(name, dim){
   window.__proofName=name; window.__proofDim=dim||'all';
+  window.__reaskLoading=window.__reaskLoading||new Set(); window.__reaskErr=window.__reaskErr||{};
+  const loading=window.__reaskLoading, rerr=window.__reaskErr;
   const key=(name||'').toLowerCase(), c=extCache[key]||{}, j=c.judge||{}, d=j.data;
   if(!d){return;}
   const only=(dim&&dim!=='all'); const dims=only?PROOF_LEVERS.filter(l=>l[0]===dim):PROOF_LEVERS;
@@ -1581,24 +1592,31 @@ function showProof(name, dim){
   const agLabel=a=>a==='full'?'ALL AGREE':a==='split'?'MODELS DISAGREE':a==='partial'?'PARTIAL':'';
   const body=dims.map(([k,lbl])=>{
     const fused=d[k]||{}, ag=(d.agreement&&d.agreement[k])||'';
-    const per=members.map(m=>{const o=m[k]||{};return `<div class="pm-model"><b>${esc(m.label)}</b> <span class="hint">${esc(m.model||'')}${m.primary?' · primary':''}</span> &mdash; <b style="color:var(--green)">${esc(o.verdict||'?')}</b>
-      <div style="margin-top:3px">${esc(o.reason||'(no reason returned)')}</div>
-      ${(o.citations&&o.citations.length)?'<div class="pm-cite" style="margin-top:4px">live cites: '+o.citations.map(esc).join(', ')+'</div>':'<div class="hint" style="margin-top:4px;color:var(--warn)">no citation returned</div>'}
-      <div style="margin-top:6px"><button class="btn" data-reask="${esc(m.label)}" style="padding:2px 8px;font-size:12px">re-ask ${esc(m.label)} live \u21bb</button></div></div>`;}).join('');
+    const per=members.map(m=>{
+      const head=`<b>${esc(m.label)}</b> <span class="hint">${esc(m.model||'')}${m.primary?' · primary':''}</span>`;
+      if(loading.has(m.label)) return `<div class="pm-model" style="opacity:.75">${head} &mdash; <span class="spin"></span> <span class="hint">re-asking live at ${esc(j.layer||'')}\u2026</span></div>`;
+      const o=m[k]||{}, er=rerr[m.label];
+      return `<div class="pm-model">${head} &mdash; <b style="color:var(--green)">${esc(o.verdict||'?')}</b>
+        <div style="margin-top:3px">${esc(o.reason||'(no reason returned)')}</div>
+        ${(o.citations&&o.citations.length)?'<div class="pm-cite" style="margin-top:4px">live cites: '+o.citations.map(esc).join(', ')+'</div>':'<div class="hint" style="margin-top:4px;color:var(--warn)">no citation returned</div>'}
+        ${er?'<div class="hint" style="color:var(--warn);margin-top:4px">re-ask failed: '+esc(er)+'</div>':''}
+        <div style="margin-top:6px"><button class="btn" data-reask="${esc(m.label)}" style="padding:2px 8px;font-size:12px">re-ask ${esc(m.label)} live \u21bb</button></div></div>`;
+    }).join('');
     return `<div style="margin:14px 0"><div class="seclbl">${esc(lbl)} ${ag?`<span class="chip ${ag==='full'?'ver':'unver'}">${agLabel(ag)}</span>`:''}</div>
       <div class="hint" style="margin:4px 0">consensus: <b>${esc(fused.verdict||'?')}</b> &mdash; ${esc(fused.reason||'')}</div>
       ${per||'<div class="hint">no per-model data (single-model or heuristic scan)</div>'}</div>`;
   }).join('');
   const q=d.question?`<details class="disc" style="margin:10px 0"><summary>The exact question each model received (proof of what was asked)</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:320px;overflow:auto;margin:6px 0 0">${esc(d.question)}</pre></details>`:'';
-  const errs=(d.providerErrors&&d.providerErrors.length)?`<div class="hint" style="color:var(--warn);margin-top:6px">provider errors: ${d.providerErrors.map(esc).join(' | ')}</div>`:'';
+  const errItems=(d.providerErrors||[]).map(shortProvErr);
+  const errs=errItems.length?`<details class="disc" style="margin-top:10px"><summary>${errItems.length} provider(s) failed \u2014 free-tier flakiness; the consensus used the ${members.length} that answered</summary>`+errItems.map(e=>`<div class="hint" style="margin:3px 0"><b>${esc(e.label)}</b> \u2014 ${esc(e.why)}</div>`).join('')+`</details>`:'';
+  const prev=document.getElementById('pmodal'); const scroll=prev?prev.scrollTop:0;
   closeProof();
   const el=document.createElement('div'); el.id='pmodal'; el.className='pmodal';
   el.innerHTML=`<div class="pmodal-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><div class="seclbl">Per-model proof &mdash; ${esc(name)} <span class="hint">/ ${esc(j.layer||'')}</span></div><div style="display:flex;gap:8px"><button class="btn" id="pmRerun">Re-run all (fresh) \u21bb</button><button class="btn" id="pmClose">Close \u2715</button></div></div>
-    <div class="hint" style="margin-bottom:4px">${members.length} model(s): ${members.map(m=>esc(m.label)).join(' + ')||'—'}. Each answer is that model reading the LIVE ${esc(j.layer||'')} code; the cited file paths are the proof it read live.</div>
+    <div class="hint" style="margin-bottom:4px">${members.length} model(s): ${members.map(m=>esc(m.label)).join(' + ')||'\u2014'}. Each answer is that model reading the LIVE ${esc(j.layer||'')} code; the cited file paths are the proof it read live.</div>
     ${only?`<div class="hint"><a href="#" id="pmAll" style="color:var(--green)">show all levers \u2195</a></div>`:''}
-    ${q}${body}${errs}
-    <div id="proofReask" class="hint" style="margin-top:8px"></div></div>`;
-  document.body.appendChild(el);
+    ${q}${body}${errs}</div>`;
+  document.body.appendChild(el); el.scrollTop=scroll;
   el.addEventListener('click',e=>{if(e.target===el)closeProof();});
   const cl=document.getElementById('pmClose'); if(cl)cl.onclick=closeProof;
   const rr=document.getElementById('pmRerun'); if(rr)rr.onclick=()=>{closeProof();runJudge(name,true);};
@@ -1606,17 +1624,17 @@ function showProof(name, dim){
   el.querySelectorAll('[data-reask]').forEach(b=>b.addEventListener('click',()=>reAskModel(name,b.dataset.reask)));
 }
 async function reAskModel(name, label){
+  window.__reaskErr=window.__reaskErr||{}; delete window.__reaskErr[label];
+  window.__reaskLoading=window.__reaskLoading||new Set(); window.__reaskLoading.add(label);
+  showProof(name, window.__proofDim||'all');   // spinner shows ON that model's own row (in place)
   const key=(name||'').toLowerCase(),c=extCache[key]||{},r=resolveRepo(name),layer=judgeLayerOf(r),ref=c.commit||c.defaultBranch||'HEAD';
-  const box=document.getElementById('proofReask'); if(box)box.innerHTML='<span class="spin"></span> re-asking '+esc(label)+' live at '+esc(layer)+'\u2026';
   try{
     const d=await bfetch(state.analyzer.replace(/\/$/,'')+'/judge?repo='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&layer='+encodeURIComponent(layer)+'&only='+encodeURIComponent(label));
-    if(d&&d.member){
-      const jd=(extCache[key].judge||{}).data;
-      if(jd){ jd.members=jd.members||[]; const i=jd.members.findIndex(m=>m.label===d.member.label); if(i>=0)jd.members[i]=d.member; else jd.members.push(d.member); }
-      showProof(name, window.__proofDim||'all');
-      const nb=document.getElementById('proofReask'); if(nb)nb.innerHTML='<span style="color:var(--green)">'+esc(label)+' re-answered LIVE just now \u2713 (row updated above)</span>';
-    } else if(box){ box.innerHTML='<span style="color:var(--warn)">'+esc((d&&d.error)||'failed')+'</span>'; }
-  }catch(e){ if(box)box.innerHTML='<span style="color:var(--warn)">'+esc(e.message||'failed')+'</span>'; }
+    if(d&&d.member){ const jd=(extCache[key].judge||{}).data; if(jd){ jd.members=jd.members||[]; const i=jd.members.findIndex(m=>m.label===d.member.label); if(i>=0)jd.members[i]=d.member; else jd.members.push(d.member); } }
+    else { window.__reaskErr[label]=(d&&d.error?shortProvErr(label+': '+d.error).why:'no answer returned'); }
+  }catch(e){ window.__reaskErr[label]=(e.message||'failed'); }
+  window.__reaskLoading.delete(label);
+  if(document.getElementById('pmodal') && window.__proofName===name) showProof(name, window.__proofDim||'all'); // fresh answer in place
 }
 // Deeper (optional, still free): fetch the paste-ready prompt for a Claude chat instead of the heuristic.
 async function runJudgePrompt(name){
