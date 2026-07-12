@@ -1398,7 +1398,7 @@ function sourceReadBanner(r){
     const concrete=src.concrete!=null?src.concrete:(src.methods!=null?src.methods:'?'), surface=src.surface!=null?src.surface:'?', files=src.filesRead!=null?src.filesRead:'?';
     return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> (backend, full repo) — <b>${files}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${concrete}</b> concrete methods &rarr; ${helperSig}. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
   }
-  return `<div class="honest">Source not measured yet ${state.analyzer?'(auto-runs on analyze)':'— set the Analyzer backend in Settings'}. <a href="#" id="srcRead" style="color:var(--green)">Read source live</a> to measure the surface + variant layers.</div>`;
+  return `<div class="honest">Source not measured yet ${state.analyzer?'(auto-runs on analyze)':'— set the Analyzer backend in Settings'}. <a href="#" id="srcRead" style="color:var(--green)">Read source live</a> to measure the surface + engine subsystems.</div>`;
 }
 function difficultyReadout(r){
   // SAME levers + count as the final verdict (one source of truth) — no more 1/3-vs-2/3 mismatch.
