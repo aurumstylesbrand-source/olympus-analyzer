@@ -165,7 +165,7 @@ ${JUDGE_STANDARD ? `
 ${JUDGE_STANDARD}
 === END STANDARD ===
 ` : ''}
-THE VARIANT LAYER (${variant.length} files, ${variantDirs.size} dirs):
+THE TARGET SUBSYSTEM -- the engine core (${variant.length} files, ${variantDirs.size} dirs):
 ${blob(variant, sz.mv, sz.mvc)}
 
 THE LAYER ABOVE + ANY BASE / ABSTRACT / DEFAULT FILES (${above.length} files -- check these for a shared base that implements the contract):
@@ -419,7 +419,7 @@ function fuseOlympus(members){
 }
 // Optional synthesis: one model reads both verdicts and writes a reconciled, centralized reason.
 async function judgeSynthesize(provider, repo, layer, members){
-  const prompt = `Two independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
+  const prompt = `${members.length} independent models judged the "${layer}" layer of ${repo}. Reconcile them into ONE centralized judgment.
 
 `+members.map(m => `MODEL ${m.label}:\n`+JSON.stringify({ featureRichness:m.featureRichness, acceptanceFit:m.acceptanceFit, freeHelpers:m.freeHelpers, approachWrong:m.approachWrong, invariant:m.invariant })).join('\n\n')+`
 
@@ -567,6 +567,8 @@ async function judgeHeuristic(repo, ref, layer){
   return {
     repo, ref, layer, source:'heuristic', variantFiles:variant.length, aboveFiles:above.length,
     freeHelpers:{ verdict: helperHit ? 'free helpers present' : 'unclear', reason: helperHit ? 'a shared base/abstract class with reusable methods is present in this layer ('+helperHit.path+') -- a feature built here could reuse it (EASY); aim a layer ABOVE it' : 'no obvious shared base/abstract helper class detected by the scan (cannot confirm without a code read)', citations: helperHit ? [helperHit.path] : [] },
+    featureRichness:{ verdict:'unclear', reason:'heuristic regex scan cannot judge value/feature-richness -- needs the model panel', citations:[] },
+    acceptanceFit:{ verdict:'unclear', reason:'heuristic regex scan cannot judge maintainer acceptance -- needs the model panel', citations:[] },
     approachWrong:{ verdict: aHits.length>=3 ? 'likely yes' : aHits.length>=1 ? 'unclear' : 'no', reason: reason(aHits,'approach-wrong'), citations: cite(aHits) },
     invariant:{ verdict: iHits.length>=2 ? 'likely yes' : iHits.length>=1 ? 'unclear' : 'no', reason: reason(iHits,'invariant'), citations: cite(iHits) },
     olympusViable:{ verdict: 'risky', reason: 'A regex scan cannot judge Olympus viability (whether a SOTA-hard, non-prescriptive, deterministic, unsolved feature exists). Defaulting to "risky" -- run the model panel for a real verdict.', citations: [] },
@@ -591,7 +593,7 @@ const TIER_PLAN = { olympus:{gold:3,test:2}, mars:{gold:4,test:3} };
 async function generateRepos(tier, used){
   const plan = TIER_PLAN[tier]; const need = plan.gold + plan.test;
   const guide = tier==='olympus'
-    ? 'OLYMPUS: prefer repos with 5+ adapters/dialects/backends each a DIFFERENT pattern AND a discovery-gap sibling code path, OR deep concurrency/type systems. Must support 700+ agent LOC across 6+ existing files.'
+    ? 'OLYMPUS guide: propose ONLY repos whose core is a stateful interdependent ENGINE (query compiler/planner/mapper/merge/type-checker/codec) with a DETERMINISTIC offline core, 30k+ LOC of the primary language, permissive licence, 500+ stars, active -- AND novelty headroom: recent community-authored FEATURE merges, no proposal/RFC gate, no feature freeze. Must support 800-1000 effective solution LOC across 6+ files. Never propose catalog repos (independent plugins/operators) or distributed runtimes.'
     : 'MARS: clean public API, 5-15 files, clear behavioural contracts. Challenging but more solvable.';
   const sys = `You curate GitHub repos for the ${tier} tier of an AI coding-challenge pipeline. Return ONLY a raw JSON array, no prose/fences. Exactly ${need} objects: ${plan.gold} "kind":"gold" and ${plan.test} "kind":"test". Constraints: PRIMARY language Go or TypeScript only (never JS-primary); permissive licence (MIT/Apache-2.0/BSD); 500+ stars; commit within 12 months; production-grade. Pass-rate targets are now STRICTER: Olympus <=20%, Mars <=30%. "Verify Flakiness" is a MANDATORY platform check, so strongly prefer repos with deterministic, non-flaky test suites (no time/network/order-dependent tests, no WASM-heap flakiness). ${guide} NEVER include any repo in this exclusion list: ${(used||[]).join(', ')}. Keys per object: fullName, url, lang, license, stars (e.g. "~12k"), kind, why (<=22 words).`;
   const resp = await anthropicMessages({

@@ -18,7 +18,7 @@ exists in it, meeting ALL of:
    must require 5-10 files to agree on a data format / intermediate-state invariant.
 2. SMALL SURFACE, hard BEHAVIOUR: 1-2 new public symbols. A feature needing 15-20+ new
    symbols is prescriptive and fails Description/Aligned/Fairness checks.
-3. NOT ALREADY SOLVED: no open/merged PR and no existing API already does it (the #1
+3. NOT ALREADY SOLVED: no open/merged PR and no existing API already does it (the #1 Also DEAD if: a maintainer-authored or milestoned issue covers the mechanism; an in-flight CL exists in the repo's REAL review venue (Go = Gerrit); or the repo is proposal-gated / feature-frozen / a roadmap monoculture where community features do not merge.
    rejection reason). Fits the project's philosophy (a maintainer would plausibly merge it).
 4. DETERMINISTICALLY TESTABLE OFFLINE: strong hidden tests that 100% FAIL at the base commit
    and 100% PASS after the solution, with NO network/time/randomness/order dependence
@@ -26,8 +26,8 @@ exists in it, meeting ALL of:
    services / DBs / network is a POOR fit unless a real offline core exists to scope to.
 5. SOLVABLE: at least one strong agent can solve it from the description + repo alone.
 
-Accepted envelope: Olympus pass rate <=20% of 10 runs; ~700+ LOC solution across 6+ files;
-description 490-500 words, ASCII, behavioural, non-prescriptive (names WHAT not HOW).
+Accepted envelope: Olympus pass rate <=20% of 10 runs; 800-1000 LOC (700 platform floor) solution across 6+ files;
+description 479-500 words, ASCII, behavioural, non-prescriptive (names WHAT not HOW).
 
 olympusViable verdict:
 - "yes"   = a strong, hard, deterministic, unsolved feature clearly exists here.
