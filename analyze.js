@@ -104,7 +104,7 @@ function* untar(buf){
   }
 }
 
-function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';return 'other';}
+function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';if(/\.java$/.test(path))return 'java';return 'other';}
 function scanSymbols(text,path){
   const L=langOf(path),lines=text.split('\n'),sym=new Set();let methods=0,barrel=0,concrete=0;
   const add=n=>{if(n&&n.length>1&&n!=='from'&&n!=='type')sym.add(n);};
@@ -126,6 +126,10 @@ function scanSymbols(text,path){
       else if(m=ln.match(/^type\s+([A-Z][A-Za-z0-9_]*)\s+(?:struct|interface)/))add(m[1]);});
   } else if(L==='rust'){lines.forEach(ln=>{let m;if(m=ln.match(/^\s*pub\s+(?:async\s+)?fn\s+([A-Za-z0-9_]+)/)){add(m[1]);methods++;concrete++;}else if(m=ln.match(/^\s*pub\s+(?:struct|trait|enum)\s+([A-Za-z0-9_]+)/))add(m[1]);});}
   else if(L==='py'){lines.forEach(ln=>{let m;if(m=ln.match(/^def\s+([A-Za-z0-9_]+)/))add(m[1]);else if(m=ln.match(/^class\s+([A-Za-z0-9_]+)/))add(m[1]);else if(m=ln.match(/^\s{4}def\s+([A-Za-z0-9_]+)/)){methods++;concrete++;}});}
+  else if(L==='java'){lines.forEach(ln=>{let m;
+    if(m=ln.match(/^\s*(?:public|protected)\s+(?:final\s+|abstract\s+|static\s+|sealed\s+)*(?:class|interface|enum|record)\s+([A-Za-z0-9_]+)/))add(m[1]);
+    else if(/^\s+(?:public|protected)\s+(?:static\s+|final\s+|synchronized\s+|abstract\s+|default\s+|<[^>]*>\s+)*[A-Za-z0-9_<>\[\],.\s]+\s+[a-zA-Z][A-Za-z0-9_]*\s*\(/.test(ln)&&!/\b(if|for|while|switch|catch|new|return)\s*\(/.test(ln)){methods++;if(!/\babstract\b/.test(ln))concrete++;}
+  });}
   return {lang:L,symbols:[...sym],count:sym.size,methods,barrel,concrete};
 }
 
@@ -140,11 +144,11 @@ const CONTAINER=/(^|\/)(adapters?|drivers?|dialects?|providers?|backends?|handle
 //    Python test_*.py/conftest.py leaked into the surface AND the judge context).
 const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/;
 const SKIP_DIR=/(^|\/)(vendor|node_modules|third[_-]?party|deps|dist|build|out|target|\.venv|venv|site-packages|bower_components|webui|web-ui|frontend|docs?|website|examples?|samples?|fixtures?|testdata|test-data|benchmarks?|coverage|\.git|\.github)(\/)/i;
-const TEST_FILE=/(\.(test|spec)\.|_test\.(go|rs|py)$|(^|\/)test_[^/]*\.py$|(^|\/)conftest\.py$|(^|\/)__tests__(\/)|(^|\/)tests?(\/)|\.d\.ts$)/i;
+const TEST_FILE=/(\.(test|spec)\.|_test\.(go|rs|py)$|(^|\/)test_[^/]*\.py$|(^|\/)conftest\.py$|(^|\/)__tests__(\/)|(^|\/)tests?(\/)|\.d\.ts$|Tests?\.java$|(^|\/)src\/test\/)/i;
 function skipPath(rel){ return !SRC.test(rel) || SKIP_DIR.test('/'+rel) || TEST_FILE.test(rel); }
 // Language-scope guard: detect a repo dominated by an UNSUPPORTED language (e.g. redis = C) so the
 // console can warn instead of scoring stray scripts as a real surface.
-const SUPPORTED=new Set(['ts','tsx','js','jsx','mjs','cjs','mts','cts','go','rs','py']);
+const SUPPORTED=new Set(['ts','tsx','js','jsx','mjs','cjs','mts','cts','go','rs','py','java']);
 const CODE_EXT=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|c|cc|cpp|cxx|h|hh|hpp|hxx|java|cs|rb|php|swift|kt|kts|scala|mm|ex|exs|erl|clj|hs|ml|dart|lua)$/i;
 
 async function analyzeRepo(repo, ref, token){

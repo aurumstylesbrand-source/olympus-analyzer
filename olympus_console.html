@@ -1450,7 +1450,7 @@ function sourceReadBanner(r){
   const c=extCache[(r.fullName||'').toLowerCase()]||{},src=c.source;
   if(src&&src.loading) return `<div class="honest"><span class="spin"></span>Reading the full source live at the pinned commit…</div>`;
   if(src&&src.error) return `<div class="honest" style="color:var(--warn)">⚠ Source read failed: ${esc(src.error)} <a href="#" id="srcRead" style="color:var(--green)">retry</a></div>`;
-  if(src&&src.outOfScope) return `<div class="honest" style="color:var(--warn)">⚠ <b>Out of scope:</b> the backend found almost no Go / TS / JS / Python / Rust source — this repo looks dominated by <span class="mono">.${esc(src.dominantExt||'?')}</span> (unsupported by the scanner). The measured numbers are stray scripts, not the real codebase. Pick a Go / TypeScript repo. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
+  if(src&&src.outOfScope) return `<div class="honest" style="color:var(--warn)">⚠ <b>Out of scope:</b> the backend found almost no Go / TS / JS / Java / Python / Rust source — this repo looks dominated by <span class="mono">.${esc(src.dominantExt||'?')}</span> (unsupported by the scanner). The measured numbers are stray scripts, not the real codebase. Pick a Go / TypeScript / JavaScript / Java / Rust repo. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
   if(src){
     const helperSig=(src.freeHelperSignal!=null?src.freeHelperSignal:(src.concrete>=8))?'free per-variant helpers likely present':'no obvious free helpers (heuristic)';
     const concrete=src.concrete!=null?src.concrete:(src.methods!=null?src.methods:'?'), surface=src.surface!=null?src.surface:'?', files=src.filesRead!=null?src.filesRead:'?';
@@ -1782,7 +1782,7 @@ function finalVerdict(r){
   // by an unsupported language, e.g. C). Any verdict off stray scripts would be meaningless.
   if(c.source&&c.source.outOfScope){
     return {verdict:'OUT OF SCOPE',vclass:'nogo',
-      line:'The scanner found almost no Go / TypeScript / JS / Python / Rust source — this repo looks dominated by an unsupported language ('+esc(c.source.dominantExt||'?')+'). The measured surface is stray scripts, not the real codebase, so no verdict is meaningful. Pick a Go / TypeScript repo (the platform also allows Python / Rust / C++ / Java, but this console scores Go/TS-shaped divergence).',
+      line:'The scanner found almost no Go / TypeScript / JS / Java / Python / Rust source — this repo looks dominated by an unsupported language ('+esc(c.source.dominantExt||'?')+'). The measured surface is stray scripts, not the real codebase, so no verdict is meaningful. Pick a Go / TypeScript / JavaScript / Java / Rust repo (all platform-supported lanes; see platform_spec for lane mechanics).',
       high:[{k:'Capacity (subsystem breadth)',ok:false,d:'out of scope'},{k:'Discovery gap',ok:false,d:'out of scope'},{k:'Invariant',ok:false,d:'out of scope'}],highPass:0,altitudeNote:'',manual:[],confidence:'',risk:''};
   }
   const nv=o=>{const z=((o&&o.verdict)||'').toLowerCase().trim();
