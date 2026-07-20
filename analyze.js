@@ -142,7 +142,7 @@ const CONTAINER=/(^|\/)(adapters?|drivers?|dialects?|providers?|backends?|handle
 //    counted modules/vector-sets/examples demo scripts);
 //  - TEST files in EVERY language (the old regex was JS/TS-only, so Go *_test.go, Rust *_test.rs,
 //    Python test_*.py/conftest.py leaked into the surface AND the judge context).
-const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py)$/;
+const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|java)$/;
 const SKIP_DIR=/(^|\/)(vendor|node_modules|third[_-]?party|deps|dist|build|out|target|\.venv|venv|site-packages|bower_components|webui|web-ui|frontend|docs?|website|examples?|samples?|fixtures?|testdata|test-data|benchmarks?|coverage|\.git|\.github)(\/)/i;
 const TEST_FILE=/(\.(test|spec)\.|_test\.(go|rs|py)$|(^|\/)test_[^/]*\.py$|(^|\/)conftest\.py$|(^|\/)__tests__(\/)|(^|\/)tests?(\/)|\.d\.ts$|Tests?\.java$|(^|\/)src\/test\/)/i;
 function skipPath(rel){ return !SRC.test(rel) || SKIP_DIR.test('/'+rel) || TEST_FILE.test(rel); }
