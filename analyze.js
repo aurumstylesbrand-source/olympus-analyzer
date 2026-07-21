@@ -104,7 +104,7 @@ function* untar(buf){
   }
 }
 
-function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';if(/\.java$/.test(path))return 'java';return 'other';}
+function langOf(path){if(/\.[cm]?tsx?$/.test(path))return 'ts';if(/\.[cm]?jsx?$/.test(path))return 'js';if(/\.go$/.test(path))return 'go';if(/\.rs$/.test(path))return 'rust';if(/\.py$/.test(path))return 'py';if(/\.java$/.test(path))return 'java';if(/\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$/.test(path))return 'cpp';return 'other';}
 function scanSymbols(text,path){
   const L=langOf(path),lines=text.split('\n'),sym=new Set();let methods=0,barrel=0,concrete=0;
   const add=n=>{if(n&&n.length>1&&n!=='from'&&n!=='type')sym.add(n);};
@@ -142,13 +142,13 @@ const CONTAINER=/(^|\/)(adapters?|drivers?|dialects?|providers?|backends?|handle
 //    counted modules/vector-sets/examples demo scripts);
 //  - TEST files in EVERY language (the old regex was JS/TS-only, so Go *_test.go, Rust *_test.rs,
 //    Python test_*.py/conftest.py leaked into the surface AND the judge context).
-const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|java)$/;
+const SRC=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|java|c|cc|cpp|cxx|h|hh|hpp|hxx)$/;
 const SKIP_DIR=/(^|\/)(vendor|node_modules|third[_-]?party|deps|dist|build|out|target|\.venv|venv|site-packages|bower_components|webui|web-ui|frontend|docs?|website|examples?|samples?|fixtures?|testdata|test-data|benchmarks?|coverage|\.git|\.github)(\/)/i;
 const TEST_FILE=/(\.(test|spec)\.|_test\.(go|rs|py)$|(^|\/)test_[^/]*\.py$|(^|\/)conftest\.py$|(^|\/)__tests__(\/)|(^|\/)tests?(\/)|\.d\.ts$|Tests?\.java$|(^|\/)src\/test\/)/i;
 function skipPath(rel){ return !SRC.test(rel) || SKIP_DIR.test('/'+rel) || TEST_FILE.test(rel); }
 // Language-scope guard: detect a repo dominated by an UNSUPPORTED language (e.g. redis = C) so the
 // console can warn instead of scoring stray scripts as a real surface.
-const SUPPORTED=new Set(['ts','tsx','js','jsx','mjs','cjs','mts','cts','go','rs','py','java']);
+const SUPPORTED=new Set(['ts','tsx','js','jsx','mjs','cjs','mts','cts','go','rs','py','java','cpp']);
 const CODE_EXT=/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|go|rs|py|c|cc|cpp|cxx|h|hh|hpp|hxx|java|cs|rb|php|swift|kt|kts|scala|mm|ex|exs|erl|clj|hs|ml|dart|lua)$/i;
 
 async function analyzeRepo(repo, ref, token){
