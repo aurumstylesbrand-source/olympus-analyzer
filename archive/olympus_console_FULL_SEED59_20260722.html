@@ -2134,29 +2134,51 @@ GATE ZERO first -> name the discovery gap + COUNT its layers -> route through 5+
   - A DEAD-END IDEA IS NOT A DEAD REPO: if a feature idea collapses (unsound / too-small / already-merged), that is YOUR idea, not the repo. Pivot the IDEA or pick a DIFFERENT subsystem -- NEVER catastrophize a category's hardness into "the repo is weak." A vetted repo earns MULTIPLE excavation attempts across DIFFERENT subsystems before any repo-pivot. Do not give up on it easily.
   - AUTONOMY: the guides are the FLOOR, not the ceiling -- out-research them, form your own read. But every HARD LAW still binds (GATE-0 novelty, 800+ LOC, additive-solve/modify-existing, zero-comments, FP-genuine, repo philosophy + rejection-prevention). Sync your plan with the workflow prompts.`;
   const txt=
-`**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang} | **License:** ${r.license||'?'}
-**Repo URL:** ${r.url||'https://github.com/'+r.fullName}
+`**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
+
+---
 
 ## REPO BRIEFING -- ${r.fullName}
 
-**THIS REPO IS DEEP-VETTED + PLATFORM-CLEARED -- TRUSTED. There is NO valid excuse that it "cannot host an 800+ Olympus feature": we evaluated it and it works. Your job is to FIND the best feature in it, not to re-judge the repo.**
+> ${liveRead?'Read live (commit '+String(r.commit).slice(0,10)+').':'Assembled from curated data -- open in Analyze to refresh.'} This briefing gives you EVIDENCE (real free-model reads of the code + the live novelty gate) and tells you the repo is CAPABLE. It deliberately does NOT hand you "the best angle" -- the feature is YOURS to find by reading the repo like its maintainer, via the FEATURE DISCOVERY PROTOCOL below (deep research -> propose up to 5 candidates against a hard bar -> validate harder -> rank #1..#5 -> implement the top with a fallback pipeline). Treat every structural claim below as a lead to verify in-editor, never as fact.
+${licLine}
+${selectionMindset}
 
-- CLONE IT AND READ THE ENTIRE REPO YOURSELF (01_analyze.md EXCAVATION PROTOCOL): trace 2-3 real operation chains end-to-end, read the core across EVERY major subsystem (15+ files), mine the last 10-15 bug-fix PRs + closed issues. YOU find the strongest paths, the best angles, the best places to build a substantial Olympus-standard feature. The console hands you NO pre-chewed repo analysis on purpose -- reading the real code yourself beats any second-hand judgement (that is why direct-repo work is smoother -- do exactly that).
-- A DEAD-END IDEA IS NOT A DEAD REPO: if an idea collapses (unsound / too-small / already-merged), pivot the IDEA or excavate a DIFFERENT subsystem. A vetted repo earns MULTIPLE attempts across DIFFERENT subsystems before any repo-pivot. NEVER turn a category's hardness into "the repo is weak." Make it work -- do not give up on it easily.
-- AUTONOMY: form your own read, do your own research, out-research the guides. But every HARD LAW below binds.
+**REPO CAPACITY READ: ${v.verdict}** (${v.highPass}/3 difficulty levers; value + acceptance below${v.confidence?', confidence: '+v.confidence:''}) -- ${v.line}
+${leverLines}
+${v.risk?'  ! VERIFY BEFORE BUILDING: '+v.risk+'\n':''}
+${capacityWhy}
 
-**FOLLOW THE WORKFLOW (~/Desktop/olympus-workflow/ -- the full method + every law live there; this briefing only points):**
-STARTUP_PROMPT.md (the map) -> 01_analyze -> 02_verify -> 03_creation_prep -> 04_create -> prompt_validation -> pre_submit_gate (NO PAUSING between stages). Read prompt_difficulty.md + platform_spec.md + prestige/prestige_answers.md in full.
+${trustExcavate}
 
-**HARD LAWS (non-negotiable -- full detail in the workflow):**
-- GATE-0 NOVELTY (do it FIRST): search the EXACT mechanism across issues (check author + milestone) + open/merged/closed-unmerged PRs + the repo's real review venue; token-authenticate every query (file: /Users/mac/Downloads/olympus-analyzer/API KEY -- grep-extract, /rate_limit must be 200 or TELL THE USER). Exists / in-flight / maintainer-claimed / declined = pick a different idea. Pivots re-run this whole gate.
-- 800-1000 EFFECTIVE LOC (per-file decomposition + EARLY VERDICT stated at recommendation, never discovered mid-build). ADDITIVE-SOLVE: the feature must MODIFY existing behaviour (measure changed-vs-added), not add a new file beside an example.
-- The feature must make NOVA FAIL genuinely while Orion solves; pass <=20% of 10 with >=1 FP-GENUINE solve; ZERO env blockers. Follow the repo PHILOSOPHY + rejection-prevention (no declined class; not a spec-conformance engine).
-- ZERO-COMMENTS in solution + test patches (GATE 2Z). Tests 100% behavioural. Flakiness MANDATORY (6x clean + 6x patched). Description 479-500 words, behavioural.
+${modelBlock}
 
-**Standards:** pass ${std.pass} - LOC ${std.loc} - files ${std.files} - description ${std.desc} - ${std.msg} - Flakiness MANDATORY - plagiarism all <0.5.
+${novaBlock}
+
+${noveltyBlock}
+
+${independentDiscovery}
+
+${yourJob}
+
+${passTemplate}
+
+${precheckFirst}
+
+${latestLessons}
+
+**TIER: OLYMPUS** ${t.curated?'(curated)':'(assessed)'} -- ${t.why} Submit under Olympus standards.
+
+**Subsystem depth:** ${div!=null?div+' '+unit:'?'} (interacting subsystems = the CAPACITY signal, NOT the difficulty; the difficulty is the FEATURE you pick). **Layers:** ${kindsTxt}.
+
+**Standards (OLYMPUS):** pass ${std.pass} - LOC ${std.loc} - files ${std.files} - description ${std.desc} - ${std.msg} - Flakiness MANDATORY - plagiarism all <0.5.
+${standingRules}
+
+**THE DIFFICULTY MECHANISM (small surface, hard behaviour):** add only 1-2 new public symbols and put the difficulty in the BEHAVIOUR: (1) the OBVIOUS approach is WRONG (agents try, fail, re-read), invisible from the signature; (2) SCATTERED CONTEXT across 5-10 files that must AGREE on a data format; (3) an INTERMEDIATE-STATE invariant (count / ordering / lifecycle) a naive impl violates while passing value checks. Keep it ABOVE the helper layer. WARNING: a large API inventory (15-20+ symbols) is NOT difficulty -- it forces a prescriptive description and triggers the Aligned/Fairness/Description-Quality cascade.
+
+-> Next: pick the feature AS THE MAINTAINER (Selection Mindset), prove GATE ZERO + core-fit + that 800-1000 LOC follows naturally (DECOMPOSE it upfront -- name each production block + size summing to 800+; discard if under 800), then run your workflow prompts.
 --- END BRIEFING ---`;
-  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">STRIPPED briefing (by design): the repo is vetted + trusted; it hands you NO console analysis -- you clone + read the repo yourself and find the best feature. Points to the workflow for the full method + laws. Paste it to your project AI as the starting context.</p></div>`;
+  document.getElementById('lOut').innerHTML=`<div class="panel"><div class="boardhead"><h3 class="mh3">Repo briefing</h3><button class="btn" id="lCopy">Copy</button></div><div class="outbox">${esc(txt)}</div><p class="hint" style="margin-top:10px">Leads with the SELECTION MINDSET + capacity evidence + the model's real reads &amp; citations + the live novelty gate. It deliberately does NOT pick the feature -- that is yours to find as the maintainer. Drop it in after your STANDARDS block.</p></div>`;
   document.getElementById('lCopy').addEventListener('click',()=>{let ok=false;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);ok=true;}else{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}}catch(e){ok=false;}const b=document.getElementById('lCopy');b.textContent=ok?'Copied ✓':'Copy failed';setTimeout(()=>b.textContent='Copy',1400);});
 }
 
