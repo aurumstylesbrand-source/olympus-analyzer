@@ -2072,7 +2072,7 @@ function genLaunch(){
   const licLine=(r.license&&r.license!=='?'&&!permissive(r.license))?`\n**LICENSE WARNING:** ${r.license} is NOT on the platform allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*; NOT ISC / MPL / GPL / NOASSERTION) — likely DISQUALIFIED. Confirm before any work.\n`:'';
   const clean=z=>String(z||'').replace(/\[[^\]]*\]\s*/,'').replace(/\s+/g,' ').trim().slice(0,200);
   const fline=(lbl,o)=>(o&&o.verdict)?('  - '+lbl+': '+String(o.verdict).toUpperCase()+' — '+clean(o.reason)+((o.citations&&o.citations.length)?('\n    cites: '+o.citations.slice(0,5).join(', ')):'')):('  - '+lbl+': (run the assessment in Analyze)');
-  const modelBlock=jd?('**WHAT THE MODEL READ — the "'+judgedLayer+'" layer\'s real code (the evidence the verdict is built on):**\n'+fline('Feature richness (value + breadth)',jd.featureRichness)+'\n'+fline('Maintainer acceptance / core-fit',jd.acceptanceFit)+'\n'+fline('Free helpers (difficulty)',jd.freeHelpers)+'\n'+fline('Obvious approach wrong (difficulty)',jd.approachWrong)+'\n'+fline('Naive fails an invariant (difficulty)',jd.invariant)+'\n  Source: '+(jd.source||'model')+(jd.synthesized?', synthesis-reconciled':'')+'.'+(src?(' Surface '+src.surface+' symbols across '+src.filesRead+' files at '+String(src.commit||commit).slice(0,10)+'.'):'')):('**WHAT THE MODEL READ:** not run yet — open '+r.fullName+' in Analyze and Run the free judgment so the briefing carries the model findings + citations.');
+  const modelBlock=jd?('**SUPPLEMENTARY (reference, NOT your assignment) — a symbol-scan read of ONE auto-picked subsystem ("'+judgedLayer+'"). A symbol scan CANNOT see whether a category is already picked-clean or semantically soundness-trapped (the luau lesson: a confident "rich/welcomes" Compiler read hid that its optimizations were already-merged or unsound). Do NOT build here just because this reads well — EXCAVATE EVERY subsystem yourself (below) and verify by reading:**\n'+fline('Feature richness (value + breadth)',jd.featureRichness)+'\n'+fline('Maintainer acceptance / core-fit',jd.acceptanceFit)+'\n'+fline('Free helpers (difficulty)',jd.freeHelpers)+'\n'+fline('Obvious approach wrong (difficulty)',jd.approachWrong)+'\n'+fline('Naive fails an invariant (difficulty)',jd.invariant)+'\n  Source: '+(jd.source||'model')+(jd.synthesized?', synthesis-reconciled':'')+'.'+(src?(' Surface '+src.surface+' symbols across '+src.filesRead+' files at '+String(src.commit||commit).slice(0,10)+'.'):'')):('**WHAT THE MODEL READ:** not run yet — open '+r.fullName+' in Analyze and Run the free judgment so the briefing carries the model findings + citations.');
   const leverLines=v.high.map((x,i)=>{const jv=jd?String((i===1?(jd.approachWrong||{}).verdict:i===2?(jd.invariant||{}).verdict:'')||'').toLowerCase():'';const note=/unclear|\?|split/.test(jv)?' [models split -- re-run for a firmer read]':'';return '  - ['+(x.ok?'PASS':'MISS')+'] '+x.k+': '+x.d+note;}).join('\n');
   const _cite=(o,verb)=>(o&&o.citations&&o.citations.length)?(' ('+verb+' '+o.citations[0]+')'):'';
   const _gapLine=v.high[1].ok?('  - The discovery gap (confirmed): '+clean(jd&&jd.approachWrong&&jd.approachWrong.reason)+_cite(jd&&jd.approachWrong,'start in')):('  - Discovery gap: NOT confirmed on the "'+judgedLayer+'" layer (model said "'+((jd&&jd.approachWrong||{}).verdict||'?')+'") -- engineer one, or re-run the judgment / judge a deeper layer.');
@@ -2127,6 +2127,12 @@ GATE ZERO first -> name the discovery gap + COUNT its layers -> route through 5+
 `**LATEST ACCEPTED LESSONS: ~/Desktop/olympus-experience/ read NEWEST-FIRST is MANDATORY before selecting (READING PROTOCOL + the 10-row PRINCIPLE SHEET, shown). The newest debriefs are the current platform truth; this briefing deliberately does not duplicate them.**`;
   const standingRules =
 `**THE STANDING RULES (all bind):** 100% BEHAVIORAL tests (WHAT not HOW -- no impl details in the description) * 1-2 new public symbols whose BEHAVIOUR spans 6+ files * pass <=20% of 10 runs * >=1 strong solver * ZERO flaky (F2P: every new test FAILS without the solution) * the 6 deliverables * GATE ZERO plagiarism + core-fit BEFORE building.`;
+  const trustExcavate =
+`**THIS REPO IS DEEP-VETTED + PLATFORM-CLEARED -- TRUSTED. Your job is to FIND the strongest feature, not to re-judge the repo. Excavate it YOURSELF; do NOT anchor on any single subsystem named anywhere below.**
+  - SETTLED: this repo CAN host many great 800-1000 LOC features (multi-agent 6-check vet + your platform saturation check). The card's viable lanes + the supplementary model read below are REFERENCE, never a prescription.
+  - EXCAVATE EVERY major subsystem (01_analyze.md EXCAVATION PROTOCOL): trace 2-3 real operation chains, read 15+ core files, mine the last 10-15 bug-fix PRs. YOU decide where the best features live -- often the biggest/most-active subsystem, NOT the one the console auto-judged. (luau: the console kept pointing at Compiler; the real feature space was the Analysis type-checker -- 173 files, the largest subsystem, which the auto-pick skipped.)
+  - A DEAD-END IDEA IS NOT A DEAD REPO: if a feature idea collapses (unsound / too-small / already-merged), that is YOUR idea, not the repo. Pivot the IDEA or pick a DIFFERENT subsystem -- NEVER catastrophize a category's hardness into "the repo is weak." A vetted repo earns MULTIPLE excavation attempts across DIFFERENT subsystems before any repo-pivot. Do not give up on it easily.
+  - AUTONOMY: the guides are the FLOOR, not the ceiling -- out-research them, form your own read. But every HARD LAW still binds (GATE-0 novelty, 800+ LOC, additive-solve/modify-existing, zero-comments, FP-genuine, repo philosophy + rejection-prevention). Sync your plan with the workflow prompts.`;
   const txt=
 `**Repo:** ${r.fullName} | **Commit:** ${commit} | **Language:** ${r.lang}
 
@@ -2142,6 +2148,8 @@ ${selectionMindset}
 ${leverLines}
 ${v.risk?'  ! VERIFY BEFORE BUILDING: '+v.risk+'\n':''}
 ${capacityWhy}
+
+${trustExcavate}
 
 ${modelBlock}
 
