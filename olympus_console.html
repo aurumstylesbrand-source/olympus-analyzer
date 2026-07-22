@@ -1624,45 +1624,12 @@ function judgeLayer(r){const cl=curatedLayers(r);if(cl[0])return cl[0];
 // real variant layer is not a folder the tree-walk detects) else the auto-detected top divergent kind.
 function judgeLayerOf(r){const c=extCache[(r.fullName||'').toLowerCase()]||{};return (c.judgeLayerOverride&&String(c.judgeLayerOverride).trim())||judgeLayer(r);}
 function judgeBlock(r){
-  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{},j=c.judge||{},layer=judgeLayerOf(r);
-  if(!state.analyzer) return `<div class="honest">⚠ Set the <b>Analyzer backend URL</b> in Settings to use the model judgment pass. It answers five questions VALUE-first — is there a wide space of valuable missing features, would maintainers accept one into core, and the three difficulty levers (free helpers, obvious approach wrong, naive-fails-an-invariant) — with code citations (model judgment, not proof).</div>`;
-  const ovInput=`<div class="setrow" style="margin-top:6px;align-items:center;gap:6px"><span class="hint">Judge a specific subsystem (path fragment, read LIVE):</span> <input id="judgeLayerIn" value="${esc(layer||'')}" placeholder="e.g. internal/relationship" style="flex:1;min-width:150px"> <button class="btn" id="judgeLayerSet">Use</button></div>`;
-  if(!layer){
-    const readLive=!!(c.live||(c.source&&!c.source.error));
-    const partial=!!(c.source&&c.source.partialScan);
-    return `<div class="honest"><b>No subsystem auto-detected.</b> The judge targets the repo's <b>heaviest live subsystem</b> (its engine core), read from the live scan &mdash; NOT a sibling-variant / adapter folder (engines are judged on their core, not a catalog of variants). `+
-      (readLive
-        ? (partial
-           ? `This is a <b>very large repo</b>: the live scan is memory-capped and was truncated before a code-heavy engine subsystem surfaced (its core is likely deeper in the tree). <b>Type the engine path in the field above</b> (e.g. <span class="mono">packages/compiler-cli</span>, <span class="mono">internal/linker</span>) &mdash; it is read LIVE.`
-           : `The repo was read live but no code-heavy subsystem surfaced &mdash; it is likely small or flat, which is itself a weak signal (a thin, flat surface is hard to make Olympus-hard).`)
-        : `Open the repo above to <b>read it live</b> &mdash; the console then auto-targets its heaviest live subsystem for judging.`)+
-      ovInput+`</div>`;
-  }
-  const cand=((c.source&&c.source.topDirs)||[]).slice(0,6);
-  const chips=cand.length?`<div class="hint" style="margin-top:6px">Detected live subsystems (click one to judge it): ${cand.map(d=>`<button class="btn" data-jlayer="${esc(d.dir)}" style="padding:2px 8px;font-size:12px">${esc(d.dir)}</button>`).join(' ')}</div>`:'';
-  const head=`<div class="hint" style="margin:0 0 8px">Judging the <b style="color:var(--green)">${esc(layer||'(detecting…)')}</b> subsystem &mdash; the heaviest live engine core, auto-picked from the live scan. <b>Free</b> multi-model consensus. <button class="btn" id="judgeRun">${j.data?'Re-run':'Run free judgment'}</button> <button class="btn" id="judgePromptBtn">Deeper: paste a Claude chat</button>
-    ${ovInput}
-    ${chips}
-    <div class="hint" style="margin-top:5px">The model reads that subsystem's real code (live) and judges VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) + the three difficulty levers (helpers / approach / invariant), with citations. The console auto-picks the heaviest live engine core; if it landed on a UI/catalog surface or a huge repo truncated before the core, type or click the real engine core above &mdash; it is read LIVE either way.</div></div>`;
-  if(j.loading) return head+`<div class="honest"><span class="spin"></span>Reading the layer and asking the model…</div>`;
-  if(j.error) return head+`<div class="honest" style="color:var(--warn)">${esc(j.error)}</div>`;
-  if(j.prompt) return head+`<div class="honest">No model key on the backend — paste this prompt into any Claude chat, then paste its JSON answer back to cache it.
-      <textarea class="intelta" id="judgePrompt" readonly style="min-height:90px;margin-top:8px">${esc(j.prompt)}</textarea>
-      <div class="setrow"><button class="btn" id="judgeCopy">Copy prompt</button></div>
-      <label class="hint" style="display:block;margin-top:8px">Paste Claude's JSON answer:</label>
-      <textarea class="intelta" id="judgeAnswer" placeholder='{"featureRichness":{"verdict":"rich|some|thin","reason":"...","citations":["path"]},"acceptanceFit":{"verdict":"welcomes|neutral|declines","reason":"...","citations":["path"]},"freeHelpers":{...},"approachWrong":{...},"invariant":{...},"olympusViable":{...}}' style="min-height:80px"></textarea>
-      <div class="setrow"><button class="btn primary" id="judgeSave">Save judgment</button>${j.pasteErr?'<span class="hint" style="color:var(--warn)">'+esc(j.pasteErr)+'</span>':''}</div></div>`;
-  if(j.data){
-    const d=j.data,fr=d.featureRichness||{},af=d.acceptanceFit||{},fh=d.freeHelpers||{},aw=d.approachWrong||{},iv=d.invariant||{};
-    const src=String(d.source||'');
-    const isHeur=src.indexOf('heuristic')>=0, isEns=src.indexOf('ensemble')>=0;
-    const hdr=isHeur?'⚠ heuristic rubric-signal scan (regex, NOT a model judgment)':isEns?'✓ centralized model consensus':'✓ model judgment';
-    const agBadge=k=>{const a=d.agreement&&d.agreement[k];return a?` <span class="chip ${a==='full'?'ver':'unver'}">${a==='full'?'all agree':a==='split'?'models disagree':'split'}</span>`:'';};
-    const row=(lbl,o,k)=>`<div class="cvrow"><span class="cvtag" style="border-color:var(--green-deep);color:var(--green)">${lbl}</span><div class="cvbody"><span class="cvverdict">${esc(o.verdict||'?')}</span>${agBadge(k)} ${esc(o.reason||'')}${(o.citations&&o.citations.length)?'<div class="hint" style="margin-top:4px">cites: '+o.citations.map(esc).join(', ')+'</div>':''}${(d.members&&d.members.length)?' <a href="#" class="hint" data-proof="'+k+'" style="color:var(--green)">view proof \u2197</a>':''}</div></div>`;
-    const members=(d.members&&d.members.length)?`<div style="margin-top:8px"><button class="btn" data-proof="all">\ud83d\udd0d Per-model proof, citations &amp; re-run \u2197</button> <span class="hint">${d.members.length} model(s) read the live ${esc(layer||'')} code</span></div>`:'';
-    return head+`<div class="honest measured">${hdr} (${esc(d.source||'model')}${d.cached?', cached':''}${d.synthesized?', synthesis-reconciled':''}) — a suggestion you confirm, not proof.</div>${row('value',fr,'featureRichness')}${row('acceptance',af,'acceptanceFit')}${row('helpers',fh,'freeHelpers')}${row('approach',aw,'approachWrong')}${row('invariant',iv,'invariant')}${members}<div class="hint" style="margin-top:8px">↑ VALUE (rich feature space) + ACCEPTANCE (maintainer core-fit) answer the main goal (can it host MANY features a maintainer would take); the difficulty three (helpers / approach / invariant) auto-fill the difficulty screen and feed the <b>Final verdict</b> below. ${esc(d.disclaimer||'Model judgment, not proof.')}</div>`;
-  }
-  return head;
+  const key=(r.fullName||'').toLowerCase(),c=extCache[key]||{};
+  const readLive=!!(c.live||(c.source&&!c.source.error));
+  const cand=((c.source&&c.source.topDirs)||[]).map(d=>d.dir).slice(0,12);
+  if(!readLive) return `<div class="honest">Open the repo above to <b>read it live</b>. No AI judgment runs here (removed by design) &mdash; a symbol-scan verdict is weaker than reading the real code. You are the FEATURE OWNER: clone the repo, read every subsystem, and INVENT a feature. Assemble the lean briefing in <b>Launch</b>.</div>`;
+  const subs=cand.length?`<div class="hint" style="margin-top:6px"><b>Live subsystems</b> (from the live scan &mdash; read them ALL yourself, these are just where the code is): ${cand.map(esc).join(' &middot; ')}</div>`:`<div class="hint" style="margin-top:6px">The live scan surfaced no code-heavy subsystem (small / flat repo).</div>`;
+  return `<div class="honest measured">Read live${(c.source&&c.source.filesScanned)?' &mdash; '+c.source.filesScanned+' files, '+(c.source.surface||'?')+' symbols scanned':''}. <b>No AI judgment is run here (removed by design).</b> You are the FEATURE OWNER &mdash; do not gap-hunt; INVENT a substantial feature / enhancement / optimization that fits the repo's philosophy (a maintainer would merge). YOU own the scope: a genuine invention naturally needs 800+ LOC &mdash; never padded.</div>${subs}<div class="hint" style="margin-top:8px">&rarr; Open in <b>Launch</b> for the lean briefing (repo + commit + trust mandate + the workflow pipeline + hard laws). The deep read happens in YOUR project AI on the real repo, not here.</div>`;
 }
 // Operator override: point the judge at a specific subsystem (path fragment). The judge STILL reads
 // that subsystem's code LIVE (via /judge inLayer) -- this only chooses WHICH live subsystem to judge,
@@ -2141,7 +2108,8 @@ GATE ZERO first -> name the discovery gap + COUNT its layers -> route through 5+
 
 **THIS REPO IS DEEP-VETTED + PLATFORM-CLEARED -- TRUSTED. There is NO valid excuse that it "cannot host an 800+ Olympus feature": we evaluated it and it works. Your job is to FIND the best feature in it, not to re-judge the repo.**
 
-- CLONE IT AND READ THE ENTIRE REPO YOURSELF (01_analyze.md EXCAVATION PROTOCOL): trace 2-3 real operation chains end-to-end, read the core across EVERY major subsystem (15+ files), mine the last 10-15 bug-fix PRs + closed issues. YOU find the strongest paths, the best angles, the best places to build a substantial Olympus-standard feature. The console hands you NO pre-chewed repo analysis on purpose -- reading the real code yourself beats any second-hand judgement (that is why direct-repo work is smoother -- do exactly that).
+- YOU ARE THE FEATURE OWNER -- INVENT, do not gap-hunt. CLONE IT AND READ THE ENTIRE REPO YOURSELF (01_analyze.md EXCAVATION PROTOCOL): trace 2-3 real operation chains, read the core across EVERY major subsystem (15+ files), understand what the project IS and its philosophy. THEN think like a senior maintainer who owns it: "if I shipped a feature that does THIS + THIS + THIS, it would be genuinely valuable here and fit the project." That is INVENTION -- you are in charge of the feature AND its scope. Do NOT limit yourself to "what gap is missing" (gap-hunting yields small/taken/bug-shaped work); INVENT a substantial capability the maintainers would want and merge. The console hands you NO pre-chewed analysis on purpose -- reading the real code + inventing yourself beats any second-hand judgement.
+- LOC IS NEVER A BLOCKER -- you own the scope. A genuinely substantial invented feature NATURALLY needs 800-1000+ LOC because the behaviour genuinely requires it (real cross-subsystem logic) -- NEVER hardcoded, NEVER padded. If an idea is too small, INVENT A BIGGER, more valuable one; a repo this capable can host many large features. "The repo can't reach 800 LOC" is almost always "I picked too small an invention" -- pick a bigger one.
 - A DEAD-END IDEA IS NOT A DEAD REPO: if an idea collapses (unsound / too-small / already-merged), pivot the IDEA or excavate a DIFFERENT subsystem. A vetted repo earns MULTIPLE attempts across DIFFERENT subsystems before any repo-pivot. NEVER turn a category's hardness into "the repo is weak." Make it work -- do not give up on it easily.
 - AUTONOMY: form your own read, do your own research, out-research the guides. But every HARD LAW below binds.
 
@@ -2422,20 +2390,8 @@ function paintDash(){
   // + source measurements + code paths) — not from folder names alone.
   const hasReport=!!(c&&c.judge&&c.judge.data), srcRead=!!(c&&c.source&&!c.source.error&&!c.source.loading), analysisRun=!!(c&&c.analysisRun);
   const judgedLayer=(c&&c.judge&&c.judge.layer)||'';
-  let gated;
-  if(!state.analyzer){
-    gated=scDone
-      ? `<div class="genbar"><span class="hint">↓ Built from this repo's live data (<b>${div} paths</b> · ${esc(kindsLabel)}) + your screen answers. <b>Set the Analyzer backend</b> in Settings for the evidence-first flow (a model judgment grounds every answer).</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div)
-      : `<div class="genwait"><b>Answer the difficulty screen above to generate the results</b><span class="hint">— or set the Analyzer backend in Settings so the analysis is generated from a real model judgment instead of folder names + toggles.</span></div>`;
-  } else if(!hasReport){
-    gated=`<div class="genwait"><b>Run the live report first to activate the analysis.</b><span class="hint">The analysis is generated from EVIDENCE, not folder names: ${srcRead?'✓ source read':'• read source'} &middot; ${'• run the free model judgment (the Model judgment section above)'}. Once the judgment has run, "Run analysis" lights up and generates report-specific results.</span><button class="btn" disabled style="opacity:.45;margin-top:10px;cursor:not-allowed">Run analysis — gather the live report first</button></div>`;
-  } else if(c&&c.calibrating){
-    gated=`<div class="genwait"><div class="calibrate"><div class="loadring"></div><div><b>Calibrating the verdict…</b><div class="calsteps"><div class="calstep on">Reading the live report — model consensus + source + ${div} code paths</div><div class="calstep on">Cross-referencing the accepted-project rubric (current Jun 2026 platform checks)</div><div class="calstep on">Weighing the structural levers, deriving go / refine / no-go</div></div></div></div></div>`;
-  } else if(!analysisRun){
-    gated=`<div class="genwait"><b>Live report ready — judged the ${esc(judgedLayer||'engine core')}${srcRead?', source measured':''}, ${div} code paths.</b><span class="hint">Run the analysis: the console weighs the model consensus against the accepted-project rubric, returns a <b>final verdict</b> (go / refine / no-go), then generates the report-specific angles, combinations, strong areas, insights and standards.</span><button class="btn primary" id="anRunAnalysis" style="margin-top:10px">Run analysis →</button></div>`;
-  } else {
-    gated=verdictCard(r)+`<div class="genbar"><span class="hint">↓ Generated from the live report: judged <b>${esc(judgedLayer||'engine core')}</b> &middot; <b>${div} paths</b>${srcRead?' &middot; source measured':''} + the consensus.</span><a href="#" id="anRerun">↻ Re-run analysis</a></div>`+analysisResults(r,div);
-  }
+  // STRIPPED (user decision 2026-07-22): NO console verdict/analysis. Read live -> open in Launch.
+  const gated=`<div class="genbar" style="text-align:center;padding:14px"><b>Read live. No console verdict here &mdash; by design.</b><div class="hint" style="margin-top:6px">You are the FEATURE OWNER: clone the repo, read every subsystem yourself, and INVENT a substantial feature / enhancement / optimization that fits the philosophy (never gap-hunt, never pad). <b>Open in Launch</b> for the lean briefing.</div><button class="btn primary" style="margin-top:10px" onclick="location.hash='#launch'">Open in Launch →</button></div>`;
   const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_fv=finalVerdict(r);
   const _vchip=`<span class="verdictchip ${_fv.vclass}" style="font-size:15px">${esc(_fv.verdict)}</span>`;
   const _levers=_fv.high.map(x=>`<div class="asidelever"><span class="vlamp ${x.ok?'pass':'fail'}"></span>${esc(x.k.split('(')[0].split('—')[0].trim())}</div>`).join('');
@@ -2456,8 +2412,7 @@ function paintDash(){
   document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
     ${srcBanner}${tierBanner(r)}<div class="fit ${fit.v}"><span class="fitdot"></span>${esc(fit.t)}</div>
     <div class="sec"><div class="seclbl">Live activity <span class="hint">real-time from GitHub &mdash; recent commits, open PRs &amp; issues; flags when the repo has moved past your analysed commit</span></div>${liveActivityPanel(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty assessment <span class="hint">the model reads the ${esc(judgedLayer||'engine core')} LIVE and judges VALUE + ACCEPTANCE + the 3 difficulty levers (helpers / approach / invariant) with code citations &mdash; auto-picked from the live scan, override in the panel if it misses</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
-    <div class="sec"><div class="seclbl">Difficulty read-out <span class="hint">the levers the model found &mdash; readiness, not a measured pass-rate</span></div>${difficultyReadout(r)}</div>
+    <div class="sec"><div class="seclbl">Live repo scan <span class="hint">the repo is read live (metadata, subsystems). NO AI judgment &mdash; you are the feature owner; invent the feature by reading the real code. The briefing lives in Launch.</span></div>${sourceReadBanner(r)}${judgeBlock(r)}</div>
     <div class="sec"><div class="seclbl">Code paths <span class="hint">precondition only &mdash; 5+ interacting subsystems the feature threads through</span></div>${chartsHtml}</div>
     ${gated}
     <div class="cfoot"><span class="hint">tier: ${_t2.tier} &middot; gap: ${gapTypeFor(r)}</span>${unknown?'<a href="#" id="anVerify" class="hint" style="color:var(--green)">Verify tree ↻</a>':''}</div>
