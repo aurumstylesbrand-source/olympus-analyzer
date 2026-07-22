@@ -1882,6 +1882,22 @@ function finalVerdict(r){
       : ovv==='yes' ? 'the panel also likes your current angle' : 'run the panel for a per-angle read';
     line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch at <=20% -- capacity says the repo can carry that, not that this one feature will.';
   }
+  else if(t.curated){
+    // CURATED BOARD REPO: deep-vetted (our 6-check standard) + user-platform-cleared. That verdict is
+    // AUTHORITATIVE and far deeper than a live 3-model quick read. The panel CONFIRMS a feature LANE;
+    // it NEVER re-decides a board repo (fixes the "console contradicts the vetted board" defect).
+    verdict='BOARD-GRADE (curated)'; vclass='go';
+    const laneRead = !jd ? 'Run the panel to confirm your chosen feature lane.'
+      : (ovv==='risky'||ovv==='no') ? 'NOTE: the live 3-model read on the AUTO-PICKED "'+layerName+'" subsystem was skeptical ('+ovv+') -- that is a per-LANE signal on a generically-picked subsystem, NOT a repo verdict. Pick the ACTUAL Olympus lane named on the card and confirm helpers=none + obvious-approach-wrong there.'
+      : 'The live panel agrees the read is workable ('+(gapOk?'obvious approach wrong':'')+(invOk?', naive fails an invariant':'')+').';
+    line='DEEP-VETTED + platform-cleared board repo -- passed our 6-check standard (multi-author core, absorption-proof, declined-flagship-clear, not a spec-engine; two worked 800+ decompositions on record). The card names the VIABLE lanes and what to avoid -- BUILD THERE. '+laneRead+' The live panel below is lane CONFIRMATION, not a repo re-decision.';
+    return {verdict,vclass,line,high,highPass,altitudeNote:'',manual:[
+      'Confirm your feature lane matches a VIABLE lane on the card (not an avoid-lane / claimed / spec-conformance lane).',
+      'ADDITIVE-SOLVE: the feature must MODIFY existing behavior, not add a new file beside an example (changed-vs-added ratio).',
+      'Run GATE-0 novelty on your exact mechanism (token-authenticated) + confirm 800+ effective LOC decomposition BEFORE building.',
+      'Plagiarism: grep your API symbols in the repo (<0.5). Flakiness MANDATORY (6x clean + 6x patched).'
+    ],confidence:'high',risk:'',olympusViable:ovv,panel:panelV,cap:cap,curated:true};
+  }
   else if(cap && cap.cap==='thin'){ verdict='RISKY (thin repo)'; vclass='risky'; line=cap.line+(jd&&ovReason?' Panel on the angle: '+ovReason.slice(0,200):''); }
   else if(!jd){ verdict='Run the assessment'; vclass='pending'; line='The verdict is computed from the model panel + the accepted-project rubric. Run the assessment first (the panel reads the layer against the Olympus standard).'; }
   else if(ovv==='no' || (panelV&&panelV.vetoed)){ verdict='NO-GO'; vclass='nogo'; line='The model PANEL judged this repo NOT Olympus-grade'+(panelV&&panelV.vetoed?' (VETOED: '+panelV.topNo+' -- both top-2 primary judges said no)':'')+'. '+ovReason.slice(0,300)+' It only yields transcribable / easy features, or is not deterministically testable, or is already solved. Drop it and pick a stronger repo.'; }
