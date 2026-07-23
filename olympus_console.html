@@ -568,7 +568,7 @@ const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 // Best-first working order (evidence-based: headroom strength x engine quality x caveat weight, audits 2026-07-13).
 // Sorted at load; #1 = start your next project here. Non-seed (promoted) repos keep insertion order after these.
-const BOARD_RANK={'duckdb/duckdb':1,'babylonjs/babylon.js':2,'zarr-developers/zarr-python':3,'image-rs/image':4,'luau-lang/luau':5,'tortoise/tortoise-orm':6,'knex/knex':7,'j-f-liu/lopdf':8};
+const BOARD_RANK={'duckdb/duckdb':1,'babylonjs/babylon.js':2,'zarr-developers/zarr-python':3,'visgl/deck.gl':4,'image-rs/image':5,'openrewrite/rewrite':6,'luau-lang/luau':7,'tortoise/tortoise-orm':8,'knex/knex':9,'j-f-liu/lopdf':10};
 const boardRankOf=r=>BOARD_RANK[String((r&&r.fullName)||r||'').toLowerCase()]||99;
 
 /* ---------- 100 feature angles ---------- */
@@ -749,8 +749,8 @@ const GAP_TYPES=[
 ];
 // SEED_VERSION 40 board (9 ENGINE-shaped repos): difficulty = a hard invariant in a stateful engine core, NOT 5+ sibling adapters.
 // The number here is the count of INTERACTING subsystems (the depth signal), not flat variant folders.
-const DIVMAP={'image-rs/image':8,'luau-lang/luau':6,'J-F-Liu/lopdf':5,'duckdb/duckdb':7,'zarr-developers/zarr-python':5,'tortoise/tortoise-orm':5,'knex/knex':12,'BabylonJS/Babylon.js':8,};
-const DIVUNIT={'image-rs/image':'image-codec subsystems','luau-lang/luau':'compiler/VM subsystems','J-F-Liu/lopdf':'PDF-engine subsystems','duckdb/duckdb':'query-engine subsystems','zarr-developers/zarr-python':'storage-engine subsystems','tortoise/tortoise-orm':'ORM-engine subsystems','knex/knex':'SQL dialects','BabylonJS/Babylon.js':'scene-graph CPU subsystems',};
+const DIVMAP={'visgl/deck.gl':9,'openrewrite/rewrite':10,'image-rs/image':8,'luau-lang/luau':6,'J-F-Liu/lopdf':5,'duckdb/duckdb':7,'zarr-developers/zarr-python':5,'tortoise/tortoise-orm':5,'knex/knex':12,'BabylonJS/Babylon.js':8,};
+const DIVUNIT={'visgl/deck.gl':'layer x backend x projection subsystems','openrewrite/rewrite':'per-language LST/printer subsystems','image-rs/image':'image-codec subsystems','luau-lang/luau':'compiler/VM subsystems','J-F-Liu/lopdf':'PDF-engine subsystems','duckdb/duckdb':'query-engine subsystems','zarr-developers/zarr-python':'storage-engine subsystems','tortoise/tortoise-orm':'ORM-engine subsystems','knex/knex':'SQL dialects','BabylonJS/Babylon.js':'scene-graph CPU subsystems',};
 function repoDiv(r){if(!r)return null;if(r.divergence!=null)return r.divergence;const k=(r.fullName||'').toLowerCase();return (k in DIVMAP)?DIVMAP[k]:null;}
 function repoUnit(r){const k=(r.fullName||'').toLowerCase();return DIVUNIT[k]||'code paths';}
 function topAngles(r,n){
@@ -955,6 +955,18 @@ repo('image-rs/image','https://github.com/image-rs/image','Rust','Apache-2.0','5
    A('format-agnostic streaming/tiled decode contract','State Machine','incremental row/tile delivery must be implemented per codec container layout; a whole-image shortcut passes end-state pixel checks but breaks streaming'),
    A('cross-format color/bit-depth transcode pipeline','Invariant Enforcement','gamut/alpha/premultiplication rules diverge per format; a per-codec fix desyncs siblings'),
    A('animation frame-graph disposal/blend semantics','Serialization','GIF/WebP/APNG have differing frame models; disposal+blend must agree across the animated formats'),
+  ]),
+repo('visgl/deck.gl','https://github.com/visgl/deck.gl','TypeScript','MIT','14.3k',true,'gold',
+  'FRESH BOARD (SEED 61; structure-shaped-hunt 2026-07-23 -- USER: PLATFORM-CHECK before first use): GPU DATA-VIZ engine -- dozens of LAYERS (Scatterplot/Arc/Path/Polygon/GeoJson/Hexagon/Grid/Heatmap/Contour/Trips/Tile/Terrain/PointCloud) x 2 GPU BACKENDS (WebGL2 + WebGPU via luma.gl) x multiple COORDINATE SYSTEMS (Web Mercator/Globe/Orthographic/FirstPerson) x binary attribute encodings. STRUCTURE GOLD (boa-safe: a behavior x N layers x backends x projections = LOC cannot collapse). VERIFIED: 7+ recurring core (Pessimistress/ibgreen/felixpalmer/1chandu/ajduberstein...), no 1-2 lane owner, MIT, active. DETERMINISM: attribute/coordinate math is CPU-testable offline -- keep features in the data/attribute/coordinate layers, NEVER raw shader output. CAVEATS: run the prior-art kill-switch on the exact mechanism.','A',[
+   A('partial attribute-diffing incremental update across layers + both GPU backends','State Machine','only changed sub-ranges must re-upload correctly per layer type and backend; a full re-upload passes end-state pixels but breaks incremental correctness'),
+   A('picking + binning under Web Mercator vs Globe vs Cartesian for aggregation layers','Invariant Enforcement','aggregation layers re-bin in screen vs world space; per-projection fixes desync the shared aggregation path'),
+   A('cross-layer clipping/masking (one layer masks others)','Serialization','the mask must thread the shared shader modules + each layer draw; a per-layer patch breaks sibling layers'),
+  ]),
+repo('openrewrite/rewrite','https://github.com/openrewrite/rewrite','Java','Apache-2.0','3.6k',true,'gold',
+  'FRESH BOARD (SEED 61; structure-shaped-hunt 2026-07-23, re-promoted RESERVE -- USER: PLATFORM-CHECK + GATE-0 EXTRA HARD first): source-refactoring engine -- per-language LOSSLESS SEMANTIC TREE + byte-exact PRINTER modules: Java/Kotlin/Groovy + XML/YAML/JSON/Properties/HCL/TOML/Maven-POM/Gradle (~10+ parse+print variants, each its OWN tree + whitespace reproduction). STRUCTURE GOLD (a behavior x N language printers = LOC cannot collapse). VERIFIED: excellent spread (jkschneider/knutwannheden/sambsnyd/traceyyoshima/timtebeek... 8+ recurring). DETERMINISM: LST round-trip is offline + byte-exact. LOUD CAVEATS: HIGH COLLISION -- Moderne staff merge ~600 PRs/2.5mo + a public recipe catalog, so GATE-0 must be EXTRA aggressive (avoid any shipped recipe); gradle multi-JDK build = ENV WEIGHT, so use the Docker-optional law (let the PLATFORM build the image). Anchor features in the LST/printer SEAMS, never the recipe catalog.','A',[
+   A('formatting-preservation invariant when a transform reshapes nodes','Invariant Enforcement','the lossless-print obligation lands in EVERY language printer; a per-language fix breaks siblings'),
+   A('cross-language code-insertion/template primitive rendering valid syntax per target','State Machine','Java vs Kotlin vs Groovy syntax divergence forces per-variant work; a single-language impl mis-renders the others'),
+   A('markers/attribution propagation through parse -> transform -> print across formats','Serialization','attribution must survive the round-trip in each format module; end-state text checks miss dropped markers'),
   ]),
 ]};
 // SEED 40 (2026-07-13): 9 HEADROOM-VERIFIED engines (angular, excalidraw, gqlgen, fyne, VictoriaMetrics,
@@ -1472,7 +1484,7 @@ function wireScreen(r){
 // Curated judge-layer hints: monorepos hide their real divergent layer (sequelize dialects,
 // effect @effect/sql) as packages the tree-walk can't flag, so the auto-detected kind is a stray
 // utility folder. These point the judge at the layer that actually carries the divergence.
-const CURATED_JUDGE_LAYERS={'image-rs/image':['src/codecs','src/color.rs','src/animation.rs'],'luau-lang/luau':['Compiler', 'CodeGen', 'Analysis'],'J-F-Liu/lopdf':['src'],'duckdb/duckdb':['src/execution', 'src/optimizer', 'src/storage'],'zarr-developers/zarr-python':['src/zarr/core'],'tortoise/tortoise-orm':['tortoise'],'knex/knex':['lib/dialects','lib/query','lib/schema'],'BabylonJS/Babylon.js':['packages/dev/core/src/FlowGraph','packages/dev/core/src/Animations','packages/dev/core/src/Materials/Node'],};
+const CURATED_JUDGE_LAYERS={'visgl/deck.gl':['modules/core/src','modules/layers/src','modules/aggregation-layers/src'],'openrewrite/rewrite':['rewrite-java/src/main','rewrite-core/src/main','rewrite-yaml/src/main'],'image-rs/image':['src/codecs','src/color.rs','src/animation.rs'],'luau-lang/luau':['Compiler', 'CodeGen', 'Analysis'],'J-F-Liu/lopdf':['src'],'duckdb/duckdb':['src/execution', 'src/optimizer', 'src/storage'],'zarr-developers/zarr-python':['src/zarr/core'],'tortoise/tortoise-orm':['tortoise'],'knex/knex':['lib/dialects','lib/query','lib/schema'],'BabylonJS/Babylon.js':['packages/dev/core/src/FlowGraph','packages/dev/core/src/Animations','packages/dev/core/src/Materials/Node'],};
 function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCase()]||[];}
 
 /* ===== NOVELTY GATE (the traefik lesson) =====
@@ -1481,6 +1493,8 @@ function curatedLayers(r){return CURATED_JUDGE_LAYERS[(r.fullName||'').toLowerCa
    known to be under active open-PR work at vetting (2026-07). noveltyScan() matches these live against
    the repo's OPEN pull-request + issue titles fetched in fetchRepoActivity(). */
 const NOVELTY_KEYWORDS={
+  'visgl/deck.gl':{angle:['layer','attribute','coordinate','picking','aggregation','mask'],taken:[],note:'FRESH TS 2026-07-23 (structure-shaped hunt). Multi-layer x 2 GPU backends x projections = boa-SAFE. Keep tests on CPU-side attribute/coordinate math, never raw shader output. USER platform-check first.'},
+  'openrewrite/rewrite':{angle:['lst','printer','marker','template','visitor','format'],taken:['shipped recipes (public catalog -- HIGH COLLISION, avoid)'],note:'FRESH Java 2026-07-23 (re-promoted reserve). Per-language LST/printer = boa-SAFE spread. GATE-0 EXTRA HARD (Moderne staff ~600 PRs/2.5mo). ENV WEIGHT (gradle multi-JDK) -> Docker-optional law, platform builds. Anchor in LST/printer seams. USER platform-check first.'},
   'image-rs/image':{angle:['codec','decode','encode','color','animation','bit-depth'],taken:[],note:'FRESH Rust 2026-07-23 (structure-shaped-hunt survivor + verified reserve). ~15 codec backends = boa-SAFE spread. Codecs split across sibling crates -- decompose the seam ACROSS crates at GATE-0. Run the prior-art kill-switch on the exact mechanism. USER platform-check before first use.'},
   
 
