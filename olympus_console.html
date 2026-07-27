@@ -1451,7 +1451,9 @@ function sourceReadBanner(r){
   if(src){
     const helperSig=(src.freeHelperSignal!=null?src.freeHelperSignal:(src.concrete>=8))?'free per-variant helpers likely present':'no obvious free helpers (heuristic)';
     const concrete=src.concrete!=null?src.concrete:(src.methods!=null?src.methods:'?'), surface=src.surface!=null?src.surface:'?', files=src.filesRead!=null?src.filesRead:'?';
-    return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> (backend, full repo) — <b>${files}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${concrete}</b> concrete methods &rarr; ${helperSig}. <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
+    const scope = src.partialScan ? '(backend, bounded live sample — large repo, prefix only)' : '(backend, full repo)';
+    const caveat = src.partialScan ? ` <span style="color:var(--warn)">⚠ surface/method/helper counts are a representative live sample of a large repo, not the whole tree${src.note?': '+esc(src.note):''}.</span>` : '';
+    return `<div class="honest measured"><span class="livedot on" style="width:7px;height:7px"></span> <b>Source read live</b> ${scope} — <b>${files}</b> files at <span class="mono">${esc(String(src.commit||'').slice(0,10))}</span>. Measured: surface <b>${surface}</b>${src.barrel?' (+'+src.barrel+' barrel)':''} symbols, <b>${concrete}</b> concrete methods &rarr; ${helperSig}.${caveat} <a href="#" id="srcRead" style="color:var(--green)">re-read</a></div>`;
   }
   return `<div class="honest">Source not measured yet ${state.analyzer?'(auto-runs on analyze)':'— set the Analyzer backend in Settings'}. <a href="#" id="srcRead" style="color:var(--green)">Read source live</a> to measure the surface + engine subsystems.</div>`;
 }
@@ -2368,15 +2370,12 @@ function paintDash(){
   const hasReport=!!(c&&c.judge&&c.judge.data), srcRead=!!(c&&c.source&&!c.source.error&&!c.source.loading), analysisRun=!!(c&&c.analysisRun);
   const judgedLayer=(c&&c.judge&&c.judge.layer)||'';
   // STRIPPED (user decision 2026-07-22): NO console verdict/analysis. Read live -> open in Launch.
-  const gated=`<div class="genbar" style="text-align:center;padding:14px"><b>Read live. No console verdict here &mdash; by design.</b><div class="hint" style="margin-top:6px">You are the FEATURE OWNER: clone the repo, read every subsystem yourself, and INVENT a substantial feature / enhancement / optimization that fits the philosophy (never gap-hunt, never pad). <b>Open in Launch</b> for the lean briefing.</div><button class="btn primary" style="margin-top:10px" onclick="location.hash='#launch'">Open in Launch →</button></div>`;
-  const _t2=repoTier(r),_std2=standardsFor(_t2.tier),_fv=finalVerdict(r);
-  const _vchip=`<span class="verdictchip ${_fv.vclass}" style="font-size:15px">${esc(_fv.verdict)}</span>`;
-  const _levers=_fv.high.map(x=>`<div class="asidelever"><span class="vlamp ${x.ok?'pass':'fail'}"></span>${esc(x.k.split('(')[0].split('—')[0].trim())}</div>`).join('');
+  const gated=`<div class="genbar" style="text-align:center;padding:14px"><b>Read live. No console verdict here &mdash; by design.</b><div class="hint" style="margin-top:6px">You are the FEATURE OWNER: clone the repo, read every subsystem yourself, and INVENT a substantial feature / enhancement / optimization that fits the philosophy (never gap-hunt, never pad). <b>Open in Launch</b> for the lean briefing.</div><button class="btn primary" id="gatedToLaunch" style="margin-top:10px">Open in Launch →</button></div>`;
+  const _t2=repoTier(r),_std2=standardsFor(_t2.tier);
+  // verdict chip + difficulty-lever count intentionally NOT rendered here (user decision 2026-07-22: no console verdict).
   const _aside=`<aside class="aside">
     <h2 class="asidename">Analyzing<em>${esc(r.fullName)}</em></h2>
     <div class="asidesub">${(c&&c.live)?'<span class="livedot on" style="width:6px;height:6px"></span> live · ':''}${esc(r.lang)} · ${esc(r.license)} · ★ ${esc(r.stars)}</div>
-    <div class="asideverdict">${_vchip} <span class="hint">${_fv.highPass}/3 difficulty levers</span></div>
-    <div class="asidelevers">${_levers}</div>
     <div class="asidestats">
       <div class="asidestat"><span>Tier</span><b>Olympus</b></div>
       <div class="asidestat"><span>Paths</span><b>${div!=null?div:'?'}</b></div>
@@ -2411,6 +2410,7 @@ function paintDash(){
   const arf=document.getElementById('actRefresh');if(arf)arf.addEventListener('click',ev=>{ev.preventDefault();fetchRepoActivity(r.fullName);});
   const arr=document.getElementById('actRerun');if(arr)arr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
   const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
+  const gtl=document.getElementById('gatedToLaunch');if(gtl)gtl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
   // interactive divergence points: floating tooltip on hover
   const tip=document.getElementById('chartTip');
   if(tip)document.querySelectorAll('.divdot').forEach(d=>{

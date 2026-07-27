@@ -192,7 +192,15 @@ async function buildJudgeContext(repo, ref, layer){
   // whole-repo bounded scan + inLayer filter if the targeted fetch finds nothing.
   let files, variant = [];
   try { variant = await loadRepoDir(repo, ref, layer, TOKEN); } catch(_){}
-  if(variant.length){ files = variant; }
+  if(variant.length){
+    // Targeted subtree found. If `files` were just `variant`, variantPaths would cover ALL of files and
+    // the above/baseLike sibling-base discovery below (the #1 thing the freeHelpers question needs) would
+    // ALWAYS be empty. So also pull the bounded whole-repo scan as CONTEXT, then union in any variant file
+    // the prefix-bounded scan missed (targeted fetch reaches deeper than the tarball prefix).
+    try { files = await loadRepoFiles(repo, ref, TOKEN); } catch(_){ files = variant; }
+    const seen = new Set(files.map(f => f.path));
+    variant.forEach(f => { if(!seen.has(f.path)) files.push(f); });
+  }
   else { files = await loadRepoFiles(repo, ref, TOKEN); variant = files.filter(f => inLayer(f.path, layer)); }
   if(!variant.length) throw new Error('no files matched layer "'+layer+'" (try a path fragment or container kind like "adapters")');
   const variantDirs = new Set(variant.map(f => dirOf(f.path)));
@@ -377,6 +385,7 @@ function fuseDimension(members, dim, dispMap){
 // falls to 'risky'.
 function normViable(v){
   const z = String(v||'').toLowerCase().trim();
+  if(!z) return '';  // genuinely-empty/missing verdict ABSTAINS (dropped by the `answered` filter) -- not a 'risky' vote
   if(/^no\b|not viable|too easy|transcrib|^risky.*no/.test(z)) return 'no';
   if(/^risky|borderline|maybe|unclear|\?|^possib/.test(z)) return 'risky';
   if(/^yes\b|^viable|clearly|strong/.test(z)) return 'yes';
@@ -384,10 +393,8 @@ function normViable(v){
   if(/\byes\b/.test(z) && !/\bno\b/.test(z)) return 'yes';
   return 'risky';
 }
-// THE PANEL VOTE on olympusViable. Tier-1 (top-5) members carry weight 2, tier-2 weight 1.
-// VETO RULE: if >=2 of the TOP-5 say "no", the repo is rejected outright. Otherwise a weighted
-// majority decides, and anything not a clear weighted yes/no resolves to the skeptical "risky".
-// TOP-2 / DEBATE RULE (chosen by the user): the two PRIMARY judges (the strongest, picked by an
+// THE PANEL VOTE on olympusViable.
+// TOP-2 / DEBATE RULE (chosen by the user; this is what the code implements): the two PRIMARY judges (the strongest, picked by an
 // intelligence probe) decide. If both primaries agree, that is the verdict -- but if a majority of the
 // OTHER seats disagree, it is flagged CONTESTED ("up for debate"). If both primaries say "no" it is a
 // hard veto. If the primaries split (or fewer than 2 answered), a weighted vote (primary x3, others x1)
@@ -738,11 +745,11 @@ http.createServer(async (req, res) => {
       const result = await generateRepos(t, body.used || []);
       res.writeHead(200); return res.end(JSON.stringify(result));
     } catch (e) {
-      // "no files matched layer" is a client-input condition (wrong layer / flat repo), not a
-      // transient upstream failure -- return 400 so the console shows actionable guidance instead of
-      // retrying it as a cold-start 502.
+      // /generate curates repos (it never loads a layer), so a bad-input here is a model-output problem
+      // (e.g. "model did not return a JSON array") -- a client-actionable 400, not a transient 502 the
+      // console would retry as a cold-start.
       const msg = String(e.message || e);
-      res.writeHead(/no files matched layer/i.test(msg) ? 400 : 502); return res.end(JSON.stringify({ error: msg }));
+      res.writeHead(/not? .*json array|did not return|invalid json/i.test(msg) ? 400 : 502); return res.end(JSON.stringify({ error: msg }));
     }
   }
 
