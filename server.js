@@ -52,8 +52,9 @@ function mkProvider(label, key, base, model, small, tier, primary){
 // Provider roster: explicit A/B/C/D slots, PLUS the legacy single-provider config as an extra
 // member, so existing deployments keep working AND extra free models can be added alongside them.
 const PROVIDERS = [];
-// Up to 10 panel slots (A-J). Each: JUDGE_X_KEY/_BASE_URL/_MODEL/_LABEL/_SMALL/_TIER (TIER 1=top-5
-// heavy seat that carries the veto, 2=lighter resilience seat). A missing key skips the slot.
+// Up to 10 panel slots (A-J). Each: JUDGE_X_KEY/_BASE_URL/_MODEL/_LABEL/_SMALL/_TIER (TIER 1=heavier
+// seat, 2=lighter resilience seat). The verdict is decided by the TOP-2/DEBATE rule (see fuseOlympus),
+// not by tier weighting. A missing key skips the slot.
 'ABCDEFGHIJ'.split('').forEach(s => { const p = mkProvider(process.env['JUDGE_'+s+'_LABEL'], process.env['JUDGE_'+s+'_KEY'], process.env['JUDGE_'+s+'_BASE_URL'], process.env['JUDGE_'+s+'_MODEL'], process.env['JUDGE_'+s+'_SMALL'], process.env['JUDGE_'+s+'_TIER'], process.env['JUDGE_'+s+'_PRIMARY']); if(p) PROVIDERS.push(p); });
 if (JUDGE_API_KEY) { const leg = mkProvider(process.env.JUDGE_LABEL || JUDGE_MODEL, JUDGE_API_KEY, JUDGE_BASE_URL, JUDGE_MODEL, '', process.env.JUDGE_TIER||'1', process.env.JUDGE_PRIMARY); if (leg && !PROVIDERS.some(p => p.key===leg.key && p.model===leg.model)) PROVIDERS.push(leg); }
 const SYNTH = (process.env.JUDGE_SYNTH || 'on').toLowerCase(); // 'on' | 'off' | a provider label that does the reconciliation
@@ -509,7 +510,7 @@ async function judgeViaEnsemble(repo, ref, layer){
   };
   corro('featureRichness', fr, frr.agreement); corro('acceptanceFit', af, faf.agreement);
   corro('freeHelpers', fhv, fh.agreement); corro('approachWrong', aw, fa.agreement); corro('invariant', iv, fi.agreement);
-  // THE PANEL VOTE on overall Olympus viability (weighted top-5, with the >=2-of-top-5 veto).
+  // THE PANEL VOTE on overall Olympus viability (TOP-2/DEBATE: the two primaries decide; veto fires only when BOTH primaries say NO -- see fuseOlympus).
   const panel = fuseOlympus(members);
   // The centralized olympusViable verdict IS the panel vote; the synthesis only enriches the reason.
   const ov = { verdict: panel.verdict, reason: panel.reason,
