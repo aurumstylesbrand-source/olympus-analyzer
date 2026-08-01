@@ -1372,7 +1372,7 @@ function estPass(r){
   if(s.helpers==null||s.approach==null||s.invariant==null) return {lo:null,hi:null,label:'Answer the three questions to estimate',cls:'screen',tier:t.tier};
   if(s.helpers==='free') return {lo:70,hi:95,label:'Free helpers — agents solve it cheaply (too easy for either tier)',cls:'bad',tier:t.tier};
   const hard=(s.approach==='wrong'?1:0)+(s.invariant==='fails'?1:0);
-  // New ceilings: Olympus <=20%, Mars <=30%. A Mars-tier repo can't sustain the Olympus band.
+  // Band: Olympus 30-40% (sweet 30, cap 40). A Mars-tier repo can't sustain the Olympus band.
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
@@ -1380,7 +1380,7 @@ function estPass(r){
       : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current band 30-40%))',cls:'ok',tier:'mars'};
   }
   if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); 40% is the HARD cap (band 30-40%) (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:22,hi:34,label:'Above the 40% Olympus cap — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
+  if(hard===1) return {lo:22,hi:34,label:'Above the 40% Olympus cap — deepen the major wall toward the 30-40% band',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
