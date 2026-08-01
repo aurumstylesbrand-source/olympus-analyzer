@@ -627,7 +627,7 @@ const ACCEPTED_INTEL = {
      act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the MSG floor; the invariants are the gap.',
      anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
     {key:'census',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'Discovery-layer census (if the algorithm is known)',
-     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely clears <=20%; budget 2 batches.',
+     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely lands the 30-40% band; budget 2 batches.',
      anchor:'drizzle-chunked: offset->seek only moved 75->60%; a 2nd layer (non-unique column forcing PK auto-discovery) was needed for 20%.'},
     {key:'composes',when:()=>true,name:'"Composes with X" is a full-lifecycle contract',
      act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
@@ -828,7 +828,7 @@ const DOCTRINE = [
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
    <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → ≤20% pass)?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
- {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to <=20%)',body:
+ {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 30-40% band)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
    '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
    ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
@@ -1751,7 +1751,7 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
    pass rate. Capacity is computed from STRUCTURE (parallel-path count + offline core + accepted
    precedent) -- deterministic and more honest than a single-angle LLM verdict. It is the HEADLINE for
    board repos; the panel olympusViable is demoted to a per-ANGLE read. The ONLY true pass is a real
-   10-agent batch at <=20% -- capacity says "this repo can carry that", not "this feature will". */
+   10-agent batch in the 30-40% band -- capacity says "this repo can carry that", not "this feature will". */
 const ACCEPTED_PRECEDENT={
   'trpc/trpc':'PROVEN -- an accepted Olympus project shipped on this repo (20% pass: contextFactory wired across 7 adapters + cross-cutting invariants)',
   'drizzle-team/drizzle-orm':'PROVEN -- THREE accepted Olympus projects shipped on this repo (keyset / chunked / relation-aggregations, all on the RQB)'
@@ -1831,7 +1831,7 @@ function finalVerdict(r){
       : ovv==='no' ? 'the panel flags your CURRENT angle as weak -- pick another (the novelty gate + briefing steer you to a clean one)'
       : ovv==='risky' ? 'the panel says your CURRENT angle needs scoping -- confirm it is hard + unclaimed before building'
       : ovv==='yes' ? 'the panel also likes your current angle' : 'run the panel for a per-angle read';
-    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch at <=20% -- capacity says the repo can carry that, not that this one feature will.';
+    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch in the 30-40% band -- capacity says the repo can carry that, not that this one feature will.';
   }
   else if(t.curated){
     // CURATED BOARD REPO: deep-vetted (our 6-check standard) + user-platform-cleared. That verdict is
