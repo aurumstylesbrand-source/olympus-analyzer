@@ -1376,8 +1376,8 @@ function estPass(r){
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
-      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current bar <=20%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
-      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current bar <=20%))',cls:'ok',tier:'mars'};
+      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current band 30-40%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
+      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current band 30-40%))',cls:'ok',tier:'mars'};
   }
   if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); 40% is the HARD cap (band 30-40%) (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
   if(hard===1) return {lo:22,hi:34,label:'Above the 40% Olympus cap — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
