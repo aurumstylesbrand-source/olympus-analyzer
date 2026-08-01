@@ -553,7 +553,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
   <main class="main">
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass ≤ 20% of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 800-1000 (700 floor) · 6+ files · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
+      <p class="foot">Olympus pass 30-40% band of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 800-1000 (700 floor) · 6+ files · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
@@ -590,7 +590,7 @@ ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=
 function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
 // General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
 const TIPS=[
- {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is <=20% NOW (30% was the OLD bar) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is the 30-40% band NOW (sweet spot 30%, cap 40%) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
  {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
  {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
  {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
@@ -848,7 +848,7 @@ const DOCTRINE = [
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li><b>Pass rate ≤20% of 10 runs (tightened from 30%).</b></li>
+   <li><b>Pass rate 30-40% band of 10 runs (sweet spot 30%).</b></li>
    <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
    <li>Solution LOC 800-1000 (700 floor). Files 6+ (5 ok).</li>
    <li>Description up to 500 words; accepted cluster 479-500. Plagiarism ALL below 0.5.</li>
@@ -858,7 +858,7 @@ const DOCTRINE = [
    <p><b>Two places it bites:</b> (1) the <b>repo you pick</b> — avoid suites with known flakiness (WASM-heap pressure, real network/clock, port binding, parallel DB races, order-dependent global state); (2) the <b>tests you write</b> — no wall-clock/sleep assertions, no real network, no reliance on map/set iteration order, no shared mutable fixtures across tests, seed any randomness, and isolate each test's state. If a hard behavioural test can only be made to pass intermittently, redesign it to assert the invariant deterministically or drop it.</p>
    <p><b>Prove it before submitting:</b> run F2P/P2P locally at least 3x each; if any run flips, it is flaky — fix it, do not submit and hope.</p>`},
  {c:'violet',h:'Check-vs-difficulty cascade',body:`<p>Every Aligned/Fairness fix LOWERS difficulty. When you document an unstated detail to pass a check, you hand Nova the answer. <b>In the SAME edit, add a paired hard behavioral test</b> (an intermediate-state or surface-shape assertion) so the documentation does not soften the gap. Track it: each "document X" must have a "+ test Y" in the same diff.</p>`},
- {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to the ≤20% ceiling is forcing codebase discovery — a feature above the helper layer (agents write real logic from scratch) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
+ {c:'gold',h:'Discovery-gap law',body:`<p>Known algorithms ceiling at 60–100% pass no matter how many edge cases you add. The only lever to the 40% cap is forcing codebase discovery — a feature above the helper layer (agents write real logic from scratch) or a surface where Nova misses symbols. <b>Name the gap before greenlighting.</b></p>`},
  {c:'gold',h:'LOC-floor law',body:`<p>The platform measures AGENT median LOC, not your reference. The only floor-raiser is a feature whose target layer has no free helpers, forcing agents to hand-roll real per-case logic. Never collapse divergent variants into a shared helper — that divergence is the CAPACITY + the LOC floor; the difficulty is the feature you pick.</p>`},
  {c:'violet',h:'Phase 1 — Rejection prevention (all 7 before any code)',body:`<ol>
    <li>Plagiarism: grep the repo for your API symbols. 0 hits + platform &lt;0.5 = green. ≥0.5 same repo = PIVOT.</li>
@@ -1264,7 +1264,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'800-1000 (700 floor)', files:'6+', desc:'479-500 words (hard max 500)', msg:'150+ solving-agent MSGs (120 min)', pass:'≤20% of 10 runs'};}
+function standardsFor(tier){return {loc:'800-1000 (700 floor)', files:'6+', desc:'479-500 words (hard max 500)', msg:'150+ solving-agent MSGs (120 min)', pass:'30-40% band of 10 (sweet spot 30%, cap 40%)'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -1379,8 +1379,8 @@ function estPass(r){
       ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current bar <=20%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
       : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current bar <=20%))',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); <=20% is the HARD ceiling (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:22,hi:34,label:'Above the 20% Olympus ceiling — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); 40% is the HARD cap (band 30-40%) (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:22,hi:34,label:'Above the 40% Olympus cap — add the missing factor to reach <=20%',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
@@ -1391,7 +1391,7 @@ function chartGauge(r){
   // zones (tier-aware): green up to the tier ceiling, amber just above, grey beyond
   body+=`<rect x="${padL}" y="${y}" width="${(ceil/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
   body+=`<rect x="${x(ceil)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
-  // markers at the sweet spot and the tier ceiling (Olympus 20%, Mars 30%)
+  // markers at the sweet spot and the tier ceiling (Olympus band 30-40%)
   [[sweet,'sweet '+sweet+'%',CHC.green],[ceil,(e.tier==='mars'?'Mars':'Olympus')+' '+ceil+'%',CHC.warn]].forEach(([v,lbl,col])=>{
     body+=`<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+bh+4}" stroke="${col}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
     body+=`<text x="${x(v)}" y="${y+bh+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${col}">${lbl}</text>`;});
@@ -1425,8 +1425,8 @@ function olympusFit(r){
   if(paths==null&&!t.curated) return {v:'screen',t:'Count the code paths first (read live, or set divergence).'};
   if(s.helpers==null||s.approach==null||s.invariant==null) return {v:'screen',t:(paths!=null?paths+' code paths. ':'')+'Capacity read — '+t.why+' Run the panel (VALUE + ACCEPTANCE + difficulty) to confirm a hard, valuable, maintainer-acceptable feature.'};
   if(s.helpers==='free') return {v:'weak',t:'EASY — the target layer already exposes free helpers, so agents call them for free (TypeORM TreeRepository = 100% pass). Move the feature ONE LAYER ABOVE the helpers, or pick a wider-surface repo.'};
-  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'Olympus-shaped — '+(paths!=null?paths+' subsystems, ':'')+'NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. Confirm the feature is also VALUABLE + maintainer-acceptable (the panel), then build (small surface, hard behaviour, ≤20% ceiling).'};
-  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'Olympus-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the ≤20% ceiling.'};
+  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'Olympus-shaped — '+(paths!=null?paths+' subsystems, ':'')+'NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. Confirm the feature is also VALUABLE + maintainer-acceptable (the panel), then build (small surface, hard behaviour, 40% cap).'};
+  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'Olympus-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the 40% cap.'};
   return {v:'possible',t:'Capacity is there but this ANGLE looks easy — the obvious approach works and nothing violates an invariant. Pick a harder feature (the difficulty is the feature you choose, not the repo), or make the obvious approach wrong + add an intermediate-state invariant.'};
 }
 function tierBanner(r){
@@ -2545,7 +2545,7 @@ document.getElementById('drawerInner').addEventListener('click',async e=>{
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());if(ev)ev.innerHTML='<div class="outbox" style="max-height:340px;overflow:auto;white-space:pre-wrap">'+esc(d.content||d.error||'(empty)')+(d.truncated?'\n\n[...truncated]':'')+'</div>';}catch(err){if(ev)ev.innerHTML='<div class="honest">load failed</div>';}}
   if(cb){const n=cb.dataset.expcopy;
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());
-      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass bar is <=20% now (was 30%).\n\n--- '+n+' ---\n'+(d.content||'');
+      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass band is 30-40% now (sweet spot 30%, cap 40%).\n\n--- '+n+' ---\n'+(d.content||'');
       await navigator.clipboard.writeText(txt);cb.textContent='Copied for Claude ✓';setTimeout(()=>cb.textContent='Copy for extraction',1600);
     }catch(err){cb.textContent='copy failed';}}
 });
