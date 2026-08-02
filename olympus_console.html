@@ -1379,17 +1379,17 @@ function estPass(r){
       ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current band 30-40%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
       : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current band 30-40%))',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:9,hi:20,label:'Proven Olympus structure — measured anchors 9% (mangum/gorm) to 20% (tRPC/drizzle/typeorm); 40% is the HARD cap (band 30-40%) (not a floor), and an Orion-only solve is a valid win',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:22,hi:34,label:'Above the 40% Olympus cap — deepen the major wall toward the 30-40% band',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — projected IN the 30-40% band (sweet spot 30% = 3/10). Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — projected ABOVE our 40% cap: add a second independent execution-hard layer to land in the 30-40% band',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
   const e=estPass(r),W=460,H=66,padL=8,padR=8,innerW=W-padL-padR,y=26,bh=16;
   const x=v=>padL+(v/100)*innerW;
-  const ceil=e.tier==='mars'?30:20, sweet=e.tier==='mars'?22:14;
+  const ceil=e.tier==='mars'?30:40, sweet=e.tier==='mars'?22:30, zlo=e.tier==='mars'?0:30;
   let body=`<rect x="${padL}" y="${y}" width="${innerW}" height="${bh}" rx="8" fill="${CHC.line}"/>`;
   // zones (tier-aware): green up to the tier ceiling, amber just above, grey beyond
-  body+=`<rect x="${padL}" y="${y}" width="${(ceil/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
+  body+=`<rect x="${x(zlo)}" y="${y}" width="${((ceil-zlo)/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
   body+=`<rect x="${x(ceil)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
   // markers at the sweet spot and the tier ceiling (Olympus band 30-40%)
   [[sweet,'sweet '+sweet+'%',CHC.green],[ceil,(e.tier==='mars'?'Mars':'Olympus')+' '+ceil+'%',CHC.warn]].forEach(([v,lbl,col])=>{
