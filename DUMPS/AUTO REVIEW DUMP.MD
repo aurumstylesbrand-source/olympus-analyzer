@@ -1721,3 +1721,1241 @@ The ten working-pool runs show a coherent, demanding task rather than a discrepa
 
 
 10.
+
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+Revision requested because the compaction option’s callable signature is under-specified and caused all agent implementations to fail compilation against the tests. Apart from that mismatch and one narrow metadata-only coverage gap, the suite and reference solution are strong.
+
+Rubric bands
+
+1/3
+Problem Description
+— Weak
+High conf
+Prescriptive/leaky, ambiguous, or off-scope — needs changes.
+
+The task is otherwise complete and authentic, but the compaction API is materially ambiguous. It says “Passing parquet.AppendCompaction” while explicitly writing “AppendCompactionThreshold(n)”; five independent implementations consequently supplied AppendCompaction as a WriterOption value, whereas the tests require a zero-argument function. Because this signature difference prevents compilation, it is more than the sub-review’s presentation-only concern and needs clarification.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+Coverage is broad, deterministic, and behaviorally strong, with only a minor metadata-only reopen gap. However, the kept agent-run discrepancy shows that every working implementation failed at compile time because tests invoke AppendCompaction(), despite the description presenting parquet.AppendCompaction without parentheses. This creates a concrete false-negative risk around an under-specified public signature, so the suite needs revision or the description must state the callable API explicitly.
+
+3/3
+Solution & Code
+— Clean
+High conf
+Meets requirements, no regressions, no irrelevant changes, stable API, no slop.
+
+The reference solution comprehensively implements the requested API through existing writer infrastructure, including schema validation, metadata merging, page-index/footer reconstruction, closed-state checks, and compaction. The reported feature and regression suites pass, and no unrelated changes, regressions, or implementation slop are evidenced.
+
+Other notes
+
+Difficulty / scope
+All five working agent runs made substantial attempts but none reached behavioral execution because they converged on the same AppendCompaction value-versus-function interpretation. The 0/5 pass rate therefore does not establish ordinary task difficulty; it primarily signals an API-contract mismatch. No confirmed leakage, public upstream solution, or duplicate was reported.
+
+Synthesis findings
+
+description_quality
+Low
+descriptionQuality
+The description includes nonessential motivational framing and API-reference-style wording, making it slightly more verbose and spec-like than necessary.
+
+It adds presentation noise but does not by itself make the task unclear.
+
+Expected: Trim nonessential motivation and retain the load-bearing behavior contract.
+
+artifact_line: Today a parquet file is written once and closing it finalizes the layout
+
+test_coverage
+Low
+TestAppenderMergesKeyValueMetadata
+The tests do not verify that key/value metadata options are merged when an appender is opened and closed without appending rows.
+
+An implementation that applies option metadata only after row writes could pass the current suite.
+
+Expected: Add a metadata-option reopen/close test that performs no row writes and verifies merged and overwritten keys.
+
+test_name: a.Write(appendRecords(1000, 100))
+
+agent-run discrepancy
+High
+evaluation_result.json
+All working runs were prevented from executing the hidden behavior suite by the same AppendCompaction value-versus-function API mismatch.
+
+The hidden suite requires a callable signature that the task wording led every working agent to interpret differently, causing compile-time false negatives before behavior could be assessed.
+
+Expected: Specify `AppendCompaction() WriterOption` explicitly in the description, or align the tests with a directly passable WriterOption value.
+
+artifact_line: "quick_failure_summary": "Hidden tests could not compile because they expected AppendCompaction to be a zero-argument function rather than a WriterOption value.",
+
+difficulty
+Medium
+No agent run on the latest version reached PASS; the problem is not yet shown to be solvable under the presented contract.
+
+The pass-rate signal is confounded by the shared compile-time API mismatch rather than behavioral failures.
+
+Expected: Clarify the signature and rerun agents so actual implementation difficulty can be measured.
+
+metric: 5 working agent run(s); 0 successful.
+
+Guidance
+
+Your takeaway
+
+State the exact compaction API signature in the task. In particular, write `parquet.AppendCompaction()` everywhere if it is intended to be a zero-argument `WriterOption` constructor, rather than saying to pass `parquet.AppendCompaction`. Add a test for opening with key/value metadata options and closing without writing rows, to ensure metadata is still merged.
+
+All five agent runs converged on implementing `AppendCompaction` as a directly passable option value, then failed to compile because the suite calls it as a function. They produced substantial implementations, but no behavioral tests ran, so this result reflects the signature mismatch rather than evidence that the implementation work is too difficult.
+
+Keep the broad behavioral coverage and the reference implementation’s integration with the existing writer machinery. The preservation, schema compatibility, index handling, metadata, reopen, close-state, determinism, and compaction cases are otherwise thorough and well aligned with the feature.
+
+What the runs showed
+
+
+Every working run implemented `AppendCompaction` as an option value and therefore failed to compile against hidden tests that invoke it as a zero-argument function.
+unfair test
+5 runs
+Sub-reviewers
+
+
+Description
+2/3
+Completed
+Strong, fair, and verifiable task statement with all contract-critical details present; mildly verbose and API-reference-like in presentation.
+
+The description is complete, self-contained, behavior-focused, and closely aligned with the hidden contract. The named public API and detailed semantics are load-bearing: the tests directly compile against NewGenericAppender, NewAppender, AppendFile, Appender, the writer-like methods, and both compaction options, while asserting preservation, schema compatibility, page-index behavior, metadata merging, determinism, and error cases. The repository already provides the corresponding GenericWriter, WriterOption, RowGroup, and file abstractions, so the feature is authentic and scoped to established conventions. The only deduction is soft presentation: the opening motivation and some API-reference-style prose make an already lengthy description slightly more verbose and spec-like than a clean maintainer issue. This does not create ambiguity or prescribe internal implementation, so band 2 rather than band 1. Earlier V2/V4 feedback concerns a different gRPC task and is not applicable; the two V5 wording comments were made on the latest version, so there was no later revision in which they could have been addressed.
+
+Issues
+
+P4
+Low
+descriptionQuality
+The description includes nonessential motivational framing and API-reference-style wording, making it slightly more verbose and spec-like than necessary.
+
+This is only a presentation concern: it reduces concision but does not obscure the task or leave implementation-critical behavior unclear.
+
+Expected: Keep the opening focused on the requested feature and express the required writer-like surface in a more natural maintainer-issue sentence.
+
+artifact_line: Today a parquet file is written once and closing it finalizes the layout
+
+
+Tests
+2/3
+Completed
+Strong, deterministic, fair 55-test suite with one minor missed combination: applying key/value metadata options when reopening and closing without adding rows.
+
+The suite is exceptionally broad and fair: all 55 new tests fail on the base and pass with the reference solution, all 5,279 relevant base tests remain passing, and six repeated executions found no flakiness. Assertions map cleanly to the prompt or visible parquet conventions, avoid exact error-message pinning, and cover the typed/untyped constructors, all principal write paths, schema mismatch dimensions, indexed/index-less files, byte preservation, metadata, repeated reopen, use-after-close, and compaction behavior. The one confirmed minor coverage gap is metadata-only reopening: metadata merge/overwrite is tested only in executions that also append rows, while the separate no-op reopen test supplies no metadata options. Thus an implementation that incorrectly applies option metadata only when rows are appended could pass. This is a narrow edge rather than a major weakness. Earlier feedback contained no unresolved Tests-dimension defect relevant to this parquet task.
+
+Issues
+
+T4
+Low
+TestAppenderMergesKeyValueMetadata
+The tests do not verify that key/value metadata options are merged when an appender is opened and closed without appending rows.
+
+An implementation that gates metadata merging on having appended at least one row would pass both the metadata tests and the no-op reopen test, despite the metadata merge requirement applying to appender options generally.
+
+Expected: Open an appender with KeyValueMetadata options, append no rows, close it, and verify new/overwritten keys plus unchanged rows.
+
+test_name: a.Write(appendRecords(1000, 100))
+
+
+Solution & Code
+3/3
+Completed
+Clean, complete implementation of in-place parquet appending and optional tail compaction, with strong repository alignment and all feature/regression checks passing.
+
+The reference solution fully implements the requested appender API and integrates it through the repository's existing writer/configuration machinery rather than introducing a parallel encoder. The append planning, schema validation, metadata merge, index/footer reconstruction, closed-state guards, and opt-in compaction logic are all scoped to the feature and directly address the stated edge cases. The implementation preserves ordinary writer behavior by keeping append configuration private and only consuming it from the new appender path. Dynamic verification is decisive: the verifier reports that the solution satisfies the contract, with all 55 feature tests passing and the regression suite remaining green; the independent solution-quality check likewise found the implementation comprehensive and production-quality. No unrelated churn, regression, dead code, unexplained defensive logic, or convention mismatch is evidenced. Earlier review feedback in the timeline concerned a different grpc-go connection-scaling submission and is not applicable to this parquet solution; the latest inline comments concern description prose, not Solution & Code.
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+All five working-pool runs produced substantial implementations (778-1023 added lines, 80-97 messages) but converged on the same public-API interpretation: `AppendCompaction` as a directly passable `WriterOption` value. The hidden suite instead calls `AppendCompaction()`, so every run failed package compilation before any behavioral test could execute; each test log reports 0/55 new tests and failure to enumerate the package. This is a strong cross-run discrepancy rather than evidence that the feature is merely very hard. I considered `genuinely_hard`, `shared_blind_spot`, and `subtle_but_fair`, but they fit poorly because the implementations were not behaviorally exercised and the description explicitly writes `parquet.AppendCompaction` without parentheses while writing `AppendCompactionThreshold(n)` with them. `unfair_test` is therefore the appropriate lead for the tests reviewer, without independently adjudicating test fairness here. The runs show neither triviality nor thin effort. One run queried upstream `main`, but the command returned no matching implementation, so there is no local evidence of leakage or a publicly solved duplicate. The stale cross-run holistic text concerns an unrelated grpc-go task and was not relied upon. Earlier-version feedback also concerns that replaced grpc-go task, so it is not materially relevant to the current agent-run assessment.
+
+Discrepancies
+
+agent-run discrepancy
+High
+evaluation_result.json
+All working runs were prevented from executing the hidden behavior suite by the same `AppendCompaction` value-versus-function API mismatch.
+
+The 0/5 pass rate does not calibrate implementation difficulty or correctness because no hidden behavioral test ran; convergence across five substantial attempts indicates a compile-critical expectation mismatch.
+
+Expected: Agent runs should reach behavioral tests so their failures can meaningfully corroborate task difficulty; here the evidence instead shows a shared API-shape blocker.
+
+artifact_line: "quick_failure_summary": "Hidden tests could not compile because they expected AppendCompaction to be a zero-argument function rather than a WriterOption value.",
+
+difficulty
+Medium
+No agent run on the latest version reached PASS — the problem isn't yet shown to be solvable.
+
+Without a successful pool run there's no positive evidence the task is coherent.
+
+Expected: At least one agent run with verdict PASS_LEGITIMATE on latest version.
+
+metric: 5 working agent run(s); 0 successful.
+
+
+
+
+11.
+
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+The specification is clean, but revision is required. The tests omit two explicit phase-composition cases, and the reference implementation violates unconditional collapse-field validation on empty rankings. Separately, the 5/5 agent pass rate indicates the task is easier than the Olympus target.
+
+Rubric bands
+
+3/3
+Problem Description
+— Clean
+High conf
+Natural, only necessary detail, non-prescriptive, well-formed. Complete, self-contained, unambiguous, real repo scope.
+
+The description is complete, behavior-focused, self-contained, and non-prescriptive. It clearly defines searcher-wide phase ordering, window semantics, rescoring and collapsing behavior, error cases, offsets, tie handling, statistics propagation, and collector composition without exposing an implementation strategy.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+The suite is broad, deterministic, and reportedly passes all 31 feature tests on the reference while failing them on base, but both verified coverage holes concern explicit composition requirements: it never queues collapse twice, and it only rejects rescoring under fast-field ordering when rescore is the sole/first phase. Implementations that overwrite repeated collapses or inspect only the first queued phase can therefore pass. These are material ordered-phase false-negative risks, so the sub-review's weak rating is retained.
+
+0/3
+Solution & Code
+— Failing
+High conf
+Doesn't meet requirements or breaks existing code.
+
+The implementation reportedly passes all 31 feature tests and all 1,151 baseline tests and is otherwise architecturally aligned. However, the verified early exits on empty rankings occur before collapse-field access, while check_schema validates phase shape but not collapse field existence or fastness. A no-match search can therefore return Ok(empty) for a missing or non-fast collapse field, contrary to the unconditional error requirement; later collapse validation can likewise be skipped after earlier phases empty the ranking. This is a direct behavioral failure, so the sub-review's failing rating is retained.
+
+Other notes
+
+Difficulty / scope
+All five working Olympus agents passed the baseline and feature suites with substantial implementations and no reported leakage or verifier gaming. The confirmed 5/5 pass rate is well above the lane's 40% difficulty cap, indicating the task is easier than intended for Olympus despite its substantial implementation scope. There were no failing-run patterns and no scratched contests.
+
+Synthesis findings
+
+T3/T4
+High
+collapse_keeps_n_documents_per_group_6c3a71
+The tests never queue two collapse phases, leaving repeated-collapse and ordered-collapse behavior unvalidated.
+
+An implementation that overwrites, coalesces, or ignores a second consecutive collapse phase can pass despite violating an explicit requirement.
+
+Expected: Add a test with two behaviorally distinguishable collapse phases and assert the final ranking reflects both in insertion order.
+
+test_name: .collapse_by(10, "author", 2)
+
+T3/T4
+High
+rescore_requires_a_score_ranking_6c3a71
+Fast-field rejection is tested only when rescore is the sole/first phase, not when rescore appears later in a mixed queue.
+
+An implementation that checks only the first queued phase for rescoring can pass while allowing an invalid later rescore under fast-field ranking.
+
+Expected: Queue a collapse followed by rescore, terminate with order_by_fast_field, and assert the search returns an error.
+
+test_name: .rescore_with(3, fixture.term("beta"), 1.0, 1.0)
+
+S1
+High
+Collapse field validation is skipped when the current ranking is empty, so a missing or non-fast collapse field can incorrectly return an empty successful result.
+
+The specification requires these invalid fields to return an error regardless of whether the base query matches documents; later invalid collapse phases must also be validated even if an earlier phase empties the ranking.
+
+Expected: Validate every collapse field before processing results or before breaking on an empty ranking, and cover empty-result searches.
+
+quote: if ranking.is_empty() { break; }
+
+difficulty
+High
+evaluation_result.json
+The task has a confirmed 100% working-agent pass rate (5/5), substantially above the Olympus 40% cap.
+
+This is a lane-calibration concern rather than a correctness defect: capable agents consistently solved the task.
+
+Expected: Consider increasing the task's discriminating difficulty or placing it in a less demanding lane.
+
+artifact_line: "summary": "Agent passed all 1,151 baseline tests and all 31 new post-ranking tests with a substantive implementation that modifies the collector/searcher architecture rather than gaming the verifier.",
+
+difficulty
+High
+Olympus pass-rate 100% exceeds the 40% cap across five working runs.
+
+The deterministic aggregate corroborates the difficulty discrepancy.
+
+Expected: Recalibrate task difficulty or lane placement.
+
+metric: 5 pass / 5 working agent run(s).
+
+Guidance
+
+Your takeaway
+
+Validate every queued collapse field independently of whether the current ranking contains documents. Move missing/non-fast field validation into schema checking or otherwise run it before any empty-ranking early exit, including for later collapse phases. Add a no-match test for both missing and non-fast fields so this cannot regress.
+
+Expand the suite with a search that queues two collapse phases and proves both run in order. Also add a fast-field-ranked mixed queue where collapse comes first and rescore later, and assert that the search errors. Those cases close concrete gaps where an implementation could overwrite phases or inspect only the first phase.
+
+All five agents completed the task and passed both suites, with no shared failure mode; that suggests the task is easier than the intended Olympus level rather than unfair. Keep the clear behavioral specification, the searcher-wide and scoring-statistics coverage, the composition checks, and the collector/searcher lifecycle design, which are otherwise strong.
+
+Sub-reviewers
+
+
+Description
+3/3
+Completed
+Clean problem description: self-contained, unambiguous, objectively testable, repository-aligned, and non-prescriptive. No grounded issues found.
+
+The description is complete, behavior-focused, and aligned with the existing search/collector architecture. The named public surface is appropriate and inferable from the repository: `TopDocs` already exists as the ranking collector (`src/collector/top_score_collector.rs:61`), provides `order_by_score` and `order_by_fast_field` terminal ranking methods (`src/collector/top_score_collector.rs:224,299`), and the searcher already exposes custom BM25 statistics (`src/core/searcher.rs:193`). The substantial detail is load-bearing rather than prescriptive: the hidden tests exercise the formula, searcher-wide windows, phase order, collapse semantics, oversampling, offsets, validation, facets, composition, and statistics propagation. The prose does not reveal helper types, fields, file layout, or an implementation strategy. Although dense, it reads as a coherent maintainer specification rather than a templated checklist or raw spec dump. The one-sentence architectural opener is harmless context and does not justify a deduction.
+
+
+Tests
+1/3
+Completed
+Strong and fair 31-test suite with a sound harness, but it misses two material repeated/mixed-phase branches: consecutive collapse phases and a non-leading rescore phase under fast-field ranking.
+
+The harness is valid and honest: all 1,151 base tests pass, all 31 new tests fail on the base commit, and the reference solution passes all 31. The suite is deterministic, avoids network use and exact error-message pinning, and covers nearly all prompt-stated behavior, including global windows, score math, collapse semantics, offsets, composition, custom statistics, facets, and validation. However, two explicit composition branches are not exercised. There is no search that queues two collapse phases, despite the requirement that collapse may be called repeatedly, so an implementation that overwrites or coalesces consecutive collapses can pass. There is also no fast-field-ranked collector where rescoring appears after another phase; the only fast-field rejection case has rescore as the sole/first phase, so an implementation that checks only the first phase for rescoring can pass. These are concrete T3/T4 holes in explicitly required ordered-phase behavior, rather than marginal edge cases.
+
+Issues
+
+T3/T4
+High
+collapse_keeps_n_documents_per_group_6c3a71
+The tests never queue two collapse phases, leaving the prompt-stated repeated-collapse behavior unvalidated.
+
+An incomplete implementation could overwrite the prior collapse whenever another collapse is appended, or otherwise mishandle collapse-to-collapse sequencing, while still passing every current test because repeated rescoring and mixed collapse/rescore do not exercise this same-kind branch.
+
+Expected: Add a search with two successive collapse_by phases, preferably on different fields with non-increasing windows, and assert the ordered combined result.
+
+test_name: .collapse_by(10, "author", 2)
+
+T3/T4
+High
+rescore_requires_a_score_ranking_6c3a71
+Fast-field rejection is tested only when rescore is the sole/first phase, not when a rescore phase appears later in a mixed queue.
+
+The requirement is that rescoring is invalid under fast-field ranking regardless of its queue position. An implementation that inspects only the first phase would reject the existing test yet incorrectly accept collapse_by(...).rescore_with(...).order_by_fast_field(...).
+
+Expected: Add a mixed phase chain containing collapse followed by rescore and finish with order_by_fast_field, asserting that search returns an error.
+
+test_name: .rescore_with(3, fixture.term("beta"), 1.0, 1.0)
+
+
+Solution & Code
+0/3
+Completed
+Strong, regression-free implementation with one uncovered requirement failure: invalid collapse fields are not rejected when there are no ranked documents on which to execute the phase.
+
+The implementation is otherwise clean, architecturally well aligned, and strongly validated: verifySolution reports all 31 feature tests and all 1151 baseline tests passing. However, it misses an unconditional error requirement. Both post-ranking application loops stop as soon as the merged ranking is empty, while their collectors' check_schema methods validate phase shape but do not validate collapse field existence/fastness. Consequently, collapsing by a missing or non-fast field returns Ok(empty) when the base query has no matches (and similarly can skip validation of a later collapse phase once the ranking is empty), despite the description requiring such searches to return an error. This is a real S1 behavioral gap, not merely style or noise, so the rubric maps it to band 0 even though the supplied tests do not cover the empty-ranking case.
+
+Issues
+
+S1
+High
+Collapse field validation is skipped when the current ranking is empty, so a missing or non-fast collapse field can incorrectly return an empty successful result.
+
+The task unconditionally requires collapsing on a missing or non-fast field to return an error. Query result cardinality should not determine whether collector configuration is valid.
+
+Expected: Validate every collapse field against the schema before collection/finalization (or at least before any empty-ranking early exit), so invalid fields always produce an error.
+
+quote: if ranking.is_empty() { break; }
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+All five working-pool agents passed both the baseline and all 31 new tests, confirming the precomputed 100% pass-rate signal. The runs were legitimate and independent-looking: their evaluations report no verifier edits, hardcoding, or hidden-artifact access, and sampled patches show substantial production implementations across collector/searcher lifecycle plumbing rather than trivial stubs. Effort was also substantial (785–1,085 raw added lines, 101–127 messages), so this is not a thin-LOC or leakage finding. Nevertheless, a 5/5 success rate among capable Olympus agents is well above the 40% difficulty cap and is a notable difficulty discrepancy under this dimension. There are no failing working-pool runs to group into failure modes and no scratched contests.
+
+Discrepancies
+
+difficulty
+High
+evaluation_result.json
+The task has a confirmed 100% working-agent pass rate (5/5), substantially above the Olympus 40% cap.
+
+Although each implementation was substantial and legitimate, universal success among capable agents indicates the task did not achieve the intended benchmark difficulty.
+
+Expected: Agent evidence should show a materially lower pass rate for an intentionally very hard Olympus task; here all five working runs passed the complete baseline and new suites.
+
+artifact_line: "summary": "Agent passed all 1,151 baseline tests and all 31 new post-ranking tests with a substantive implementation that modifies the collector/searcher architecture rather than gaming the verifier.",
+
+difficulty
+High
+Olympus pass-rate 100% > 40% cap (5/5 working agent runs).
+
+A high pass-rate means the problem may be too easy for its lane.
+
+Expected: Pass rate ≤ 40% over the all agents working pool.
+
+metric: 5 pass / 5 working agent run(s).
+
+
+
+
+
+
+12.
+
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+The description and reference solution are strong, but the test suite leaves a required PageModified branch unprotected for attribute-only edits. Revision is requested to close that coverage hole. Agent results also flag that the task is easier than the Olympus target, with a 60% full-pass rate.
+
+Rubric bands
+
+2/3
+Problem Description
+— Minor
+High conf
+Passes, with soft issues — mildly AI-ish, slightly verbose, or minor formatting.
+
+The description is complete, self-contained, non-prescriptive about implementation internals, and aligned with the requested repository API and behavior. The kept concern is only that the specification is unusually dense and inventory-like; this is a minor concision issue, not ambiguity or unfairness, so the original band remains appropriate.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+The suite broadly covers reference independence, cycles, page matching, inheritance, annotations, outlines, options, accessors, rendering, and summaries, and the cited assertion was verified in the test patch. However, changed_dict_value_reports_modified checks only the Rotate field-level Modified change; it does not require a PageModified marker or the corresponding pages_modified summary for an attribute-only edit. This leaves a prompt-required behavioral branch unprotected and permits a meaningfully incomplete implementation, so the sub-reviewer's band and severity are retained.
+
+3/3
+Solution & Code
+— Clean
+High conf
+Meets requirements, no regressions, no irrelevant changes, stable API, no slop.
+
+The reference solution cleanly implements the requested API in focused modules, dereferences objects with cycle protection, compares decoded stream content, handles page matching and inheritance, supports annotation and outline comparison, applies scope options, and re-exports the public types. Reported dynamic verification passed all baseline and new tests, and no grounded correctness, regression, API, or irrelevant-change issue was identified.
+
+Other notes
+
+Difficulty / scope
+Lines of code
+Agent runs indicate the task is easier than the Olympus target: 3 of 5 working agents passed the complete verifier, despite substantial implementations and long run histories. The two near-complete failures converged on resolving legacy named outline destinations through catalog/Dests; one also mishandled compression-only stream dictionary differences. This is a subtle but fair repository-integration challenge, not evidence of leakage, overlap, or unfair testing.
+
+Synthesis findings
+
+description_concision
+Low
+descriptionQuality
+The description is unusually dense and inventory-like, weakening concision even though its details are mostly contract-necessary.
+
+A shorter maintainer-style statement would be easier to scan, though the current wording remains complete and usable.
+
+Expected: Trim or consolidate wording where possible without removing the behavioral contract.
+
+artifact_line: "summary": "Detailed but mostly load-bearing against the hidden tests; there\u2019s little to trim or soften without risking mismatches.",
+
+test_coverage
+High
+changed_dict_value_reports_modified
+The tests do not require PageModified for an attribute-only page edit.
+
+An implementation can report the field-level Rotate change while omitting the required page marker and pages_modified accounting, yet still pass this branch of the suite.
+
+Expected: For an attribute-only edit, assert a PageModified change and assert that summary().pages_modified counts the page once; similarly cover annotation-only edits if they are intended to mark the page modified.
+
+test_name: assert!(d.iter().any(|c| c.path == "page 1/Rotate" && kind_is(c, "Modified")), "{:?}", d.changes);
+
+difficulty
+High
+evaluation_result.json
+The working-pool pass rate is 60% (3/5), above the benchmark's 40% cap, and successful agents passed the complete broad verifier.
+
+This indicates the task is easier than the target difficulty for the Olympus lane, even though it still required substantial work.
+
+Expected: If target difficulty is mandatory, increase the task's genuinely inferential scope rather than adding arbitrary hidden requirements.
+
+artifact_line: The hidden verifier's separate 41-test suite passed completely, including reference independence, cycles, shared references, page matching, inheritance, annotations, outlines, metadata, options, accessors, rendering, and summaries.
+
+difficulty
+High
+Olympus pass-rate 60% exceeds the 40% cap.
+
+The deterministic working-agent result confirms the difficulty discrepancy.
+
+Expected: Review whether the submission meets the lane's intended difficulty threshold.
+
+metric: 3 pass / 5 working agent run(s).
+
+Guidance
+
+Your takeaway
+
+Add coverage for page edits that do not alter the content stream. In particular, an attribute-only change such as Rotate—and ideally an annotation-only change—should assert both the PageModified marker and a pages_modified summary count of one. The existing field-level assertion is not enough to prevent an implementation from marking only content edits as page modifications.
+
+The agent runs show that the task is broadly solvable: three of five implementations passed the full suite, while the two near-complete failures converged on legacy named destinations under catalog/Dests. Keep that case explicit and well covered; it is the main subtle repository-specific behavior agents missed. The relatively high pass rate suggests the task is easier than the intended Olympus target, although the implementations were still substantial.
+
+The rest is strong and should remain: the API contract is self-contained, the suite covers references, cycles, page alignment, inheritance, annotations, outlines, scope toggles, rendering, and accessors, and the reference implementation is modular and confined to the feature.
+
+What the runs showed
+
+
+Both failing agents overlooked resolution of legacy named outline destinations through catalog/Dests when comparing the logical target page.
+subtle but fair
+2 runs
+Sub-reviewers
+
+
+Description
+2/3
+Stale
+Completed
+Strong and fair structural-diff task whose extensive detail is overwhelmingly required by the tested contract. Minor deduction for density/verbosity; no blocking ambiguity, leak, or scope defect.
+
+The description is complete, self-contained, objectively verifiable, and closely aligned with both the hidden tests and the repository's existing Document/page/annotation APIs. Its named public API and most detailed behavioral rules are load-bearing: the tests directly compile against the types and methods and assert the change kinds, scope toggles, path conventions, page matching, inheritance, cycle handling, annotation behavior, outline destinations, summaries, rendering, and re-exports. It does not prescribe internal files, helpers, algorithms, or data structures. The only deduction is softness rather than substance: this is an unusually dense feature specification with a long API/behavior inventory, so it reads less like a concise maintainer issue than a clean band-3 description. The auxiliary description review independently characterizes it as detailed but mostly load-bearing. Earlier V2 feedback concerned an entirely different NestJS task; the latest submission materially replaced that scope rather than carrying the old API-manifest problem forward. The two current inline suggestions are minor wording refinements and do not create ambiguity or unfairness.
+
+Issues
+
+P4
+Low
+descriptionQuality
+The description is unusually dense and inventory-like, which weakens concision even though the details are mostly contract-necessary.
+
+A shorter maintainer-style issue would be easier to scan, but this does not block implementation or make the task ambiguous.
+
+Expected: Retain all test-critical API and behavioral requirements while trimming redundant connective wording where possible.
+
+artifact_line: "summary": "Detailed but mostly load-bearing against the hidden tests; there\u2019s little to trim or soften without risking mismatches.",
+
+
+Tests
+1/3
+Stale
+Completed
+Extensive, deterministic, fair suite with sound base/new gating, but it misses the required PageModified marker for non-content page edits, allowing a concretely incomplete implementation to pass.
+
+The harness is valid and honest: verifyTests reports 241/241 base tests passing and all 41 new tests failing on the base commit, while verifySolution reports all 41 passing with the reference solution. The checks found no flakiness or unfair assertions, and the suite is broad across references, cycles, page matching, inheritance, annotations, outlines, scopes, accessors, rendering, and summaries. However, there is one concrete T3/T4 hole in a prompt-stated branch: `PageModified` is only required by tests that also change page content. Attribute-only edits (and similarly annotation-only edits) are checked for field/annotation changes but not for the required page marker or `pages_modified` summary count. Thus an implementation that emits `PageModified` only for content-stream edits while omitting it for other edits would pass all hidden tests despite violating the requested behavior. Per the rubric, a required behavior branch that admits a meaningfully incomplete implementation warrants band 1 rather than band 2.
+
+Issues
+
+T3/T4
+High
+changed_dict_value_reports_modified
+The tests do not require PageModified for an attribute-only page edit.
+
+The description requires a kept-in-place edited page to surface a PageModified marker with its field-level changes. An implementation can emit PageModified only when Contents changes, still report Rotate/annotation field changes, and pass the suite while producing incomplete page-level results and summaries for non-content edits.
+
+Expected: Add an attribute-only (and preferably annotation-only) edit test that requires exactly the applicable page-level PageModified marker and verifies `summary().pages_modified` counts that page.
+
+test_name: assert!(d.iter().any(|c| c.path == "page 1/Rotate" && kind_is(c, "Modified")), "{:?}", d.changes);
+
+
+Solution & Code
+3/3
+Stale
+Completed
+Clean, modular structural-diff implementation with complete new-test coverage and no regression evidence.
+
+The reference solution implements the full requested public API and separates the PDF-specific logic into focused modules for object comparison, page matching/inheritance, annotations, outlines, and public types. The implementation dereferences indirect objects, bounds decoding/traversal, detects reference cycles, compares decoded stream bytes, normalizes inherited page attributes, applies all three scope options, and re-exports the requested Debug types. The dynamic verification reports 241/241 baseline tests and 41/41 new tests passing with no failures, while the solution-quality check independently rates both comprehensiveness and code quality as fully met. The changes shown are confined to the new diff feature and its crate-root exports, with no unrelated churn or evident slop. Earlier review feedback concerned a completely different NestJS submission and therefore does not identify an unresolved issue in this lopdf solution.
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+Stale
+Three of five working-pool agents passed all 41 new tests and all 241 baseline tests with independent, legitimate implementations. That 60% pass rate is above the Olympus difficulty cap and is a notable difficulty discrepancy, even though the work was not trivial: the passing patches each contain roughly 793–884 production lines in src/diff.rs and required 70–86 messages. The two failures were near-complete (39/41 and 40/41) and primarily converged on named-destination outline resolution, reinforcing that the task is broad but unusually solvable because the description specifies the implementation surface and edge cases in considerable detail. No leakage, answer discovery, false-positive pass, overlap, or contested-run issue was found. Earlier V2 scope feedback concerned a different NestJS task; the current lopdf task and implementation are materially different, so it does not establish an unresolved agent-run discrepancy here.
+
+Discrepancies
+
+difficulty
+High
+evaluation_result.json
+The working-pool pass rate is 60% (3/5), above the benchmark's 40% cap, and the passes cover the complete broad verifier rather than a weak or partial success.
+
+Olympus tasks are intended to remain very hard for capable coding agents; three independent full solutions out of five is a notable too-easy signal despite substantial solution size.
+
+Expected: Agent evidence should show a pass rate consistent with an appropriately hard Olympus task; here three agents legitimately passed all 41 new and 241 baseline tests.
+
+artifact_line: The hidden verifier's separate 41-test suite passed completely, including reference independence, cycles, shared references, page matching, inheritance, annotations, outlines, metadata, options, accessors, rendering, and summaries.
+
+difficulty
+High
+Olympus pass-rate 60% > 40% cap (3/5 working agent runs).
+
+A high pass-rate means the problem may be too easy for its lane.
+
+Expected: Pass rate ≤ 40% over the all agents working pool.
+
+metric: 3 pass / 5 working agent run(s).
+
+
+
+13.
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+Revision requested because read-only indexers are serialized incorrectly and the tests do not validate full extern member fidelity. The description is strong, and the rest of the implementation and coverage are broad and focused.
+
+Rubric bands
+
+3/3
+Problem Description
+— Clean
+High conf
+Natural, only necessary detail, non-prescriptive, well-formed. Complete, self-contained, unambiguous, real repo scope.
+
+The description is complete, self-contained, behavior-focused, and non-prescriptive. It clearly defines the public API, retained-type precondition, supported type surfaces, recursion and ordering rules, extern hoisting, returned-value declarations, deterministic output, round-trip fidelity, and CLI behavior.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+The suite is broad, deterministic, and exercises the API, serializer, round trips, recursion, extern declarations, value surfaces, ordering, and CLI integration. However, the verified extern-surface test checks only that member names are present. It does not compare member types or read/write modes, so a materially unfaithful extern declaration can pass despite the central exact-round-trip requirement. This is a substantive coverage gap, not a minor assertion weakness.
+
+0/3
+Solution & Code
+— Failing
+High conf
+Doesn't meet requirements or breaks existing code.
+
+The implementation is extensive and passes the supplied suite, but it does not preserve read-only indexers. The repository's TableIndexer carries an isReadOnly flag, while both table and extern indexer emission unconditionally print `[K]: V` without `read`. Reloading the generated declaration therefore changes a read-only indexer into a mutable one, violating the explicit faithful-round-trip contract.
+
+Other notes
+
+Difficulty / scope
+Agent runs indicate a challenging but coherent task: all five produced substantial near-complete implementations and passed 102 or 103 of 104 new cases, but none fully passed. Every run missed the precedence-sensitive grouping of an intersection used as a union branch; four also had one isolated miss involving generic variadics, recursive generic arguments, or metatable syntax. This low pass rate reflects breadth and subtlety rather than a broken or unfair task. Upstream master is reported one commit ahead and overlaps Sources.cmake, but this is only an advisory upstream-ahead signal, not confirmation that the feature is publicly solved.
+
+Synthesis findings
+
+T3/T4 — extern member fidelity
+High
+extern_complete_member_surface_q9v
+The extern surface test checks only member presence, allowing incorrect member types or read/write modes to pass.
+
+A generator can widen extern members or change their access modes while still passing the test, despite the requirement that loading generated declarations reconstruct exactly the same types.
+
+Expected: Assert reconstructed extern member types and read/write modes for BaseMethod, Touched, and other representative members.
+
+test_name: CHECK(etv->props.count("BaseMethod") == 1);
+
+S1 — read-only indexer fidelity
+High
+Analysis/include/Luau/Type.h:429
+Declaration generation does not preserve read-only table or extern indexers; emitted indexers omit the `read` qualifier and reload as mutable.
+
+This changes the reconstructed type and directly violates the faithful-round-trip requirement.
+
+Expected: Inspect TableIndexer::isReadOnly and emit the appropriate read-only indexer syntax for ordinary tables and extern declarations.
+
+repo_line: bool isReadOnly = false;
+
+Guidance
+
+Your takeaway
+
+Preserve the `isReadOnly` bit when serializing both table and extern indexers, emitting the declaration syntax’s `read` qualifier where required. Add focused round-trip tests for read-only indexers. Also strengthen the extern-surface test to compare each member’s reconstructed type and access mode, rather than checking only that member names exist.
+
+The agent runs show that this is a difficult but tractable task: their implementations were nearly complete, but all converged on the subtle precedence case where an intersection used inside a union must be parenthesized. Several runs also missed one isolated generic-pack, recursive-generic, or metatable edge case. The low pass rate is therefore useful difficulty calibration, not evidence that the task is broken.
+
+Keep the broad behavioral coverage and focused production changes. The API shape, deterministic ordering, recursion handling, extern hoisting, value-surface generation, and CLI error/output behavior are all well specified and extensively exercised.
+
+What the runs showed
+
+
+All five implementations omitted required parentheses when serializing an intersection as one branch of a union, so that generated declaration failed to reload.
+subtle but fair
+5 runs
+
+Four runs had one additional isolated edge-case miss involving generic variadic declaration syntax, recursive generic alias arguments, or metatable spelling.
+genuinely hard
+4 runs
+Sub-reviewers
+
+
+Description
+3/3
+Stale
+Completed
+Clean maintainer-style specification of a substantial but bounded declaration-generation feature; no problem-description defect warrants a deduction.
+
+The description is complete, self-contained, behavior-focused, and closely aligned with the hidden contract. It states the load-bearing public API, retained-type precondition, supported declaration surfaces, recursion behavior, ordering, round-trip criterion, extern hoisting, returned-value handling, determinism, and CLI stdout/stderr/exit behavior without prescribing the serializer's internal data structures or algorithms. Repository evidence supports the scope: `Module` is the checked-module abstraction, the frontend conditionally retains full type graphs, the analyzer already has an analogous output mode, and definition loading is established in the test suite. The dynamic checks likewise found the task authentic, fair, bounded, and objectively verifiable. The two identified explanatory clauses are at most optional micro-trims and do not make the prose materially verbose, templated, ambiguous, or prescriptive. Earlier V2 substantive feedback concerned tests and implementation rather than a defect in the problem description; the V2 human reviewer already rated this dimension 3/3, and the latest wording adds the contract details needed by the expanded tests. The current-version bot comments are minor concision suggestions, not unresolved substantive feedback.
+
+
+Tests
+1/3
+Stale
+Completed
+Broad, fair, stable coverage with good CLI and harness improvements, but extern member fidelity remains materially under-tested; incorrect extern declarations can pass.
+
+The harness is valid and deterministic: verifyTests reports 1,034 baseline tests passing and all 104 new tests failing on base, while verifySolution reports all 104 passing with the reference solution. Fairness found no unfair tests, and the current version materially added the previously missing CLI coverage and improved JUnit handling. However, the earlier request to compare complete extern surfaces was not fully addressed. The strongest added extern-surface test verifies only that three property names exist, not that BaseMethod or Touched retain their original types or read/write modes. A meaningfully incorrect generator that emits BaseField correctly but widens the other extern members to `any` would satisfy the name/count checks, parse successfully, and preserve aliases that merely reference `BaseClass` by name. That violates the central faithful-roundtrip requirement and is a concrete T3/T4 hole, so the suite needs a substantive correction rather than a minor polish.
+
+Issues
+
+T3/T4 — extern member fidelity is not validated
+High
+extern_complete_member_surface_q9v
+The extern surface test checks only member presence, allowing wrong member types and access modes to pass.
+
+The task requires generated declarations to reconstruct exactly the same types and to emit the full extern member surface. An implementation can preserve the names BaseField/BaseMethod/Touched while serializing BaseMethod and Touched as `any` (or with incorrect read/write semantics); the existing reparsing and alias roundtrip checks do not compare those member types.
+
+Expected: After reparsing, compare each extern property's complete read/write type against the original fixture extern, including function signatures and referenced extern types, rather than only counting names.
+
+test_name: CHECK(etv->props.count("BaseMethod") == 1);
+
+
+Solution & Code
+0/3
+Stale
+Completed
+Broad, clean implementation with all supplied checks passing, but read-only indexers lose their mutability qualifier during declaration generation, violating exact type round-tripping.
+
+The current version materially addresses the V2 human feedback: it adds metatable serialization, valid generic-pack default formatting, dependency-aware extern ordering, const API usage, and CLI error reporting to stderr/nonzero status. Dynamic verification is strong (104/104 new tests and 1034/1034 regression tests pass), and the patch is otherwise focused and convention-aligned. However, the serializer drops the read-only bit from table indexers: both table and extern indexers are always emitted as `[K]: V`, even though the repository's indexer type explicitly stores `isReadOnly`. Because the task requires the generated declaration to reconstruct exactly the same types and tables to carry their indexers faithfully, a `{read [K]: V}` input is regenerated as a mutable indexer. This is an unmet round-trip requirement, so the Solution & Code band is 0 despite the broad passing suite; the hidden tests simply do not cover read-only indexer fidelity.
+
+Issues
+
+S1
+High
+Analysis/include/Luau/Type.h:429
+Declaration generation does not preserve read-only table or extern indexers; emitted indexers omit the `read` qualifier and reload as mutable.
+
+Indexer mutability is part of the analyzed table type. Dropping it changes assignability and permits writes that the original type rejects, so feeding the declaration back through the loader does not reconstruct exactly the same type.
+
+Expected: When `TableIndexer::isReadOnly` is true, serialize the indexer using accepted read-only syntax such as `read [K]: V` (including in extern declarations), and cover that round trip.
+
+repo_line: bool isReadOnly = false;
+
+upstream-ahead
+Medium
+Upstream `master` is 1 commit(s) ahead of `5bc7f4b` and touches 1 file(s) the solution patch also modifies.
+
+Maintainers may have already fixed this bug between the base commit and HEAD; confirm this submission's fix isn't already present or superseded upstream.
+
+Expected: Base commit at/near upstream HEAD, or post-base commits unrelated to this fix.
+
+metric: Overlap: Sources.cmake. Sample commits in range: f8ca77a (Sync to upstream/release/731 (#2584)).
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+Stale
+The five working-pool runs corroborate an appropriately difficult but coherent task rather than a broken or excessively hard one. Every run built successfully, passed the baseline suite, and passed 102 or 103 of 104 new cases with substantial implementations of 766-979 added lines across the same five production files—effort close to the roughly 1,000-line reference implementation. Their failures were localized implementation omissions, not environment failures or hidden requirements: all five mishandled the required grouping of an intersection nested in a union, while a subset additionally missed generic variadic declaration syntax, recursive generic alias arguments, or the expected metatable rendering. The artifacts consistently classify the task as challenging, deterministic, clear, and inferable from visible parser/printer examples. Thus the raw 0/5 pass rate is difficulty calibration only; the near-complete results strongly demonstrate tractability. No leakage, trivial solve, false-positive pass, public-solution overlap, or contested-run discrepancy is evidenced. Earlier substantive feedback also appears materially reflected in the current task: the latest tests include end-to-end CLI/error cases and stronger round-trip/extern checks, while the reference addresses metatables, pack defaults, extern dependency ordering, and analyzer error reporting.
+
+Discrepancies
+
+difficulty
+Medium
+No agent run on the latest version reached PASS — the problem isn't yet shown to be solvable.
+
+Without a successful pool run there's no positive evidence the task is coherent.
+
+Expected: At least one agent run with verdict PASS_LEGITIMATE on latest version.
+
+metric: 5 working agent run(s); 0 successful.
+
+
+
+
+
+14.
+
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+Revision requested because the otherwise strong and fair suite omits explicit verification of distinct newly stored tag counting. The reference solution is clean and complete; the description only needs a minor readability polish.
+
+Rubric bands
+
+2/3
+Problem Description
+— Minor
+High conf
+Passes, with soft issues — mildly AI-ish, slightly verbose, or minor formatting.
+
+The specification is complete, self-contained, scoped to a real repository gap, and explicit about parsing, object fidelity, reference updates, marks, errors, and storage-specific behavior. The verified deduction is presentational: several long, semicolon-heavy paragraphs read like a compressed generated contract rather than natural maintainer prose. That is a minor readability issue, not an ambiguity or fairness problem.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+The suite is broad, deterministic, passes with the reference solution, fails on the base repository, and exercises most stated behavior thoroughly. However, the verified distinct-object test checks repeated/already-present blobs and commits only. It never verifies that FastImportResult.Tags remains zero when an identical annotated-tag object is encountered again or is already stored. Because distinct newly stored tag counting is an explicit result-field requirement, an implementation that overcounts Tags can pass the full suite; this is a material coverage hole.
+
+3/3
+Solution & Code
+— Clean
+High conf
+Meets requirements, no regressions, no irrelevant changes, stable API, no slop.
+
+The reference solution cleanly implements the public API, separates protocol parsing into an internal package, preserves raw identity/object bytes, validates paths and object types, handles branch/tree/action semantics, performs atomic reference updates, and limits changes to expected integration and documentation files. Reported dynamic checks show all baseline and feature tests passing with no regressions. The upstream-ahead signal only identifies overlapping integration files and does not establish a shipped fix or unrelated churn.
+
+Other notes
+
+Difficulty / scope
+Lines of code
+AI slop
+Agent runs indicate an appropriately difficult but fair task: one independent implementation passed the complete suite, two reached 116/117 and missed only the strict malformed-identity grammar, and two others exposed the breadth of byte-exact Git encoding and tree/action semantics. The successful implementation required substantial production code rather than test gaming. Upstream main is reported 33 commits ahead and also touches options.go and repository.go, but this is only an unconfirmed upstream-ahead signal and not evidence that this feature is already publicly solved.
+
+Synthesis findings
+
+ai-slop
+Low
+description
+The description has a compressed, templated specification tone rather than natural maintainer prose.
+
+Dense, semicolon-heavy protocol paragraphs are harder for contributors to scan and maintain, even though the requirements remain substantively clear.
+
+Expected: Split the dense protocol contract into shorter, naturally structured paragraphs or bullets without changing its semantics.
+
+quote: A commit names a reference, carrying an optional author, required committer, optional encoding, a message, optional from, merge lines, then actions. filemodify adds or replaces a path with mode 100644, 100755, 120000 or 160000 (a gitlink names a commit hash, present or not, but a present one must be a commit) from a mark, hash or inline data; filedelete removes a path or subtree; filecopy and filerename move a file or directory, a rename never losing content, even to the same path or its own subtree; deleteall empties it.
+
+T3/T4
+High
+TestFastImportB47e2dCountsDistinctObjectsOnly
+Distinct-object counting is tested for blobs and commits but not tags, so an importer that increments Tags for repeated or already-stored annotated-tag objects would still pass.
+
+The description explicitly requires all three counters, including Tags, to count only distinct newly stored objects. Missing this test permits a materially incorrect FastImportResult.
+
+Expected: Add duplicate-tag and already-present-tag cases asserting that Tags increments only when the annotated-tag object is newly stored.
+
+test_name: require.Equal(t, 0, again.Commits)
+
+Guidance
+
+Your takeaway
+
+Add focused result-count tests for annotated tags. Import an identical tag object more than once, and import a tag object that is already present in storage, then assert that `Tags` counts only the newly stored distinct object. Also consider breaking the dense commit/action paragraph into shorter protocol sections so contributors can scan the requirements without decoding a long semicolon-heavy contract.
+
+The agent runs show that the task is hard for legitimate reasons, not because the tests are arbitrary. One implementation completed it, two nearly complete implementations missed only the stated rule that nothing may trail an identity, and the remaining implementations struggled across byte-exact object encoding, tree ordering, path bytes, and copy/rename replacement behavior. Keep those strict semantics; the low pass rate is healthy evidence of implementation depth.
+
+The rest is solid and should stay: the suite is extensive and deterministic, the public API fits the repository, and the reference implementation has a clean parser/executor split with scoped integration changes and atomic reference handling.
+
+What the runs showed
+
+
+Two near-complete implementations accepted a malformed identity with junk between the email delimiter and timestamp.
+subtle but fair
+2 runs
+
+Two implementations covered the main importer but omitted multiple byte-exact Git and tree/action semantics.
+genuinely hard
+2 runs
+Sub-reviewers
+
+
+Description
+2/3
+Stale
+Completed
+Complete, self-contained, verifiable, and behavior-focused, but unusually compressed and spec-like in tone. Prior substantive feedback is reflected in the latest description.
+
+The description is substantively strong: it defines the public behavior, supported protocol subset, error typing and line reporting, object/reference semantics, marks, storage differences, and fidelity requirements, and those details closely track the hidden tests. The repository confirms this is a real, bounded feature gap (`COMPATIBILITY.md` currently marks fast-import unsupported), while existing `Repository` methods and centralized option structs establish the requested API shape as conventional. Earlier substantive description feedback was materially addressed: the current version clarifies non-commit reference updates, scopes fidelity to “these commands,” defines counters as distinct newly stored objects, and states the filesystem-versus-memory prefixing distinction. The only deduction is presentation: seven highly compressed, semicolon-heavy specification paragraphs read more like a generated contract than a natural maintainer issue. This is a soft readability/AI-tone issue rather than ambiguity or unfairness, so band 2 is appropriate.
+
+Issues
+
+ai-slop
+Low
+The description has a compressed, templated specification tone rather than natural maintainer prose.
+
+Long chains of protocol rules packed into semicolon-separated sentences make the task harder to scan, even though the requirements remain coherent and load-bearing.
+
+Expected: Retain the behavioral contract but present it in more natural prose or a small number of focused bullets/sections.
+
+quote: A commit names a reference, carrying an optional author, required committer, optional encoding, a message, optional from, merge lines, then actions. filemodify adds or replaces a path with mode 100644, 100755, 120000 or 160000 (a gitlink names a commit hash, present or not, but a present one must be a commit) from a mark, hash or inline data; filedelete removes a path or subtree; filecopy and filerename move a file or directory, a rename never losing content, even to the same path or its own subtree; deleteall empties it.
+
+
+Tests
+1/3
+Stale
+Completed
+Strong and fair 117-test suite with a valid regression harness, but it leaves the explicitly required distinct-new-tag counting branch unverified despite prior review feedback.
+
+The harness is valid and honest: verifyTests reports 895/895 relevant base tests passing and all 117 new tests failing on the unmodified repository; verifySolution reports all 117 passing with the reference solution; verifyFlakiness found consistent results across six runs. The suite is broad, deterministic, and verifyFairness found no unfair tests. However, one explicit result-field requirement remains materially untested: Tags must count distinct newly stored objects, but the distinct-object test exercises duplicate/already-present blobs and commits only. An implementation that correctly deduplicates Blobs and Commits but increments Tags for every repeated tag command would pass the entire suite. Under the rubric's concrete-hole rule, this is a T3/T4 weakness rather than a minor optional edge. Feedback-evolution check: fail for this dimension—the V4 human review specifically requested tests for “duplicate blobs, identical commits, identical tags, and objects already present in storage”; V5 added blob/commit coverage but still omitted identical/already-present tags.
+
+Issues
+
+T3/T4
+High
+TestFastImportB47e2dCountsDistinctObjectsOnly
+Distinct-object counting is tested for blobs and commits but not tags, so an importer that increments Tags for repeated or already-stored annotated-tag objects would still pass.
+
+The prompt explicitly defines Tags as the number of distinct objects newly stored, not the number of tag commands. This leaves a concrete incorrect implementation undetected.
+
+Expected: Add a stream or repeated import that creates the same annotated tag object more than once and assert Tags is 1 within the first run and 0 when that object is already present.
+
+test_name: require.Equal(t, 0, again.Commits)
+
+
+Solution & Code
+3/3
+Stale
+Completed
+Clean, comprehensive implementation that meets the specified fast-import behavior, follows repository conventions, and passes all focused and regression checks. Prior substantive code-review feedback was materially resolved.
+
+The current reference solution materially addresses the earlier Solution & Code feedback: parsing was moved behind an internal package; ignored lines are handled within command bodies; semantic errors retain subcommand line numbers; object-type, ref-name, canonical-path, and .git-component validation were added; annotated tags are peeled in commit contexts; identity lexemes are written raw; overlapping renames preserve content; counters detect newly stored distinct objects; and reference flushes roll back atomically. The implementation is scoped to the feature, with only the expected public API, internal parser/executor, repository integration, and compatibility documentation. Dynamic verification is unambiguous: verifySolution reports baselinePassed=true with 895 passing pass-to-pass tests and no failures, all 117 new fast-import tests passing, and the Harbor oracle passing. solutionQuality independently rates both comprehensiveness and code quality fully met, specifically confirming separation of parser and execution concerns, use of existing plumbing/path utilities, atomic ref updates, raw object fidelity, and no regressions. The small upstream overlap signal concerns options.go and repository.go, which are precisely the necessary integration points and does not indicate unrelated churn.
+
+Issues
+
+upstream-ahead
+Medium
+Upstream `main` is 33 commit(s) ahead of `6a082fa` and touches 2 file(s) the solution patch also modifies.
+
+Maintainers may have already fixed this bug between the base commit and HEAD; confirm this submission's fix isn't already present or superseded upstream.
+
+Expected: Base commit at/near upstream HEAD, or post-base commits unrelated to this fix.
+
+metric: Overlap: options.go, repository.go. Sample commits in range: f029087 (Merge pull request #2256 from gecube/fix/submodule-skip-stale-gitmodules-entry), 0234842 (Merge pull request #2270 from go-git/renovate/main-go-git), d730772 (build: re-enable go-billy renovate updates on v5.x), 03639ce (Merge pull request #2272 from go-git/copilot/update-renovate-config-superseding), d4b7d93 (build: Update github-actions).
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+Stale
+The five working-pool runs corroborate a coherent, appropriately difficult task. One independent implementation passed all 895 baseline and all 117 feature tests, while the other four preserved all baseline behavior and passed 83, 90, or 116 feature tests. Effort was consistently substantive (1,222–1,831 raw added lines, 70–131 messages), and the passing patch is a real ~845-line production importer plus parser/support code rather than a thin or test-gaming solution. No trajectory or evaluation evidence indicates leakage, hidden-test access, upstream overlap, or a false-positive pass. The two near-passes share one strict identity-grammar mistake explicitly covered by the description; the remaining failures are broader implementation omissions. Earlier review feedback was materially incorporated into the latest description, tests, and reference solution, and the current run evidence does not reveal an unresolved agent-run discrepancy.
+
+
+
+
+
+15.
+
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+The task is well specified and extensively tested, but revision is required because merge provenance can be assigned to the wrong parent when both branches changed the same cell and the merge retained one parent's value. Add that missing regression and make attribution value-aware.
+
+Rubric bands
+
+2/3
+Problem Description
+— Minor
+High conf
+Passes, with soft issues — mildly AI-ish, slightly verbose, or minor formatting.
+
+The description is self-contained, behavior-focused, non-prescriptive, and detailed where the behavior requires it. The only verified issue is minor repetition in the opening paragraph: after clearly distinguishing cell-level from row-level attribution, it restates that attributing every column to the row's latest commit is wrong. This is stylistic and non-blocking.
+
+2/3
+Tests
+— Minor
+High conf
+Solid; a missed edge case or one weak/redundant assertion.
+
+The suite is broad, deterministic, black-box, and strongly asserts nearly every stated behavior, including revisions, ranges, schema evolution, NULL provenance, ordering, validation, and merges. However, the verified solution defect exposes one missed merge edge: the tests cover changes to different cells on the two parents and a conflict resolved to a newly written value, but not both parents changing the same cell followed by the merge retaining one parent's existing value. That single meaningful edge-case gap warrants a minor deduction rather than undermining the otherwise strong suite.
+
+0/3
+Solution & Code
+— Failing
+Med conf
+Doesn't meet requirements or breaks existing code.
+
+Although dynamic checks report all baseline and new tests passing and the implementation is focused, the merge-history algorithm does not fully meet the explicit attribution requirement. It suppresses a carry-forward merge by intersecting changes across parents, then assigns an unresolved cell to the first traversed ancestor that changed the row/tag, without verifying that ancestor's resulting value equals the value at the blamed revision. Since commit traversal is ordered by graph height and then timestamp, when both parents changed the same cell and the merge retained one parent's value, the losing parent's commit can be visited first and incorrectly receive attribution. This is a substantive correctness failure in a required behavior, not harmless implementation noise.
+
+Other notes
+
+Difficulty / scope
+Lines of code
+Agent runs indicate a difficult but coherent task: 3 of 10 working-pool runs passed, and all runs made substantial implementations of roughly 576–778 added lines while retaining the baseline suite. Common failures were distinguishing an explicitly inserted NULL from a never-populated added-column NULL, and distinguishing wrong-type literals from non-literal expressions. No leakage, cheating, task breakage, or contest concern was reported; the low pass rate reflects subtle but fair history semantics.
+
+Synthesis findings
+
+P4
+Low
+The opening paragraph repeats the core per-cell attribution requirement after already stating it clearly.
+
+It adds minor redundancy to an otherwise concise and well-formed task description.
+
+Expected: State the per-cell-versus-row distinction once without the final repetitive clause.
+
+quote: and attributing every column of a row to the row's most recent change is wrong.
+
+T4
+Medium
+The merge tests omit the case where both parents change the same cell and the merge carries one parent's existing value unchanged.
+
+That omission allows a traversal-order-dependent provenance bug to pass all new tests despite violating the stated merge behavior.
+
+Expected: Add a merge test in which both branches write different values to the same cell, the resolution keeps one parent's value without introducing a third value, and blame points to the selected parent's commit regardless of traversal order.
+
+quote: SELECT a, a_commit = @CF, b, b_commit = @CM FROM dolt_blame('t') WHERE id = 1;
+
+S1
+High
+go/libraries/doltcore/env/actions/commitwalk/commitwalk.go:184
+A merge that carries one parent's changed cell value can attribute the cell to the other, losing parent commit.
+
+The implementation assigns the first traversed ancestor that changed the row/tag without checking whether that ancestor produced the final blamed value, so attribution can depend on graph height or timestamp rather than actual provenance.
+
+Expected: Track the value being blamed while walking history and only accept an ancestor whose post-change value matches the carried-forward target value, while still attributing genuinely new merge-resolution values to the merge commit.
+
+repo_line: // commits appear first. Remaining ties are broken by timestamp; newer commits appear first. DO NOT DELETE, USED IN DOLTHUB
+
+Guidance
+
+Your takeaway
+
+Fix merge attribution before resubmitting. When walking ancestors, do not assign provenance merely because a commit changed the same row and column tag; also establish that the commit supplied the cell value present at the blamed revision. Add a regression where both parents change the same cell and the merge retains one parent's existing value, with traversal ordering arranged so the losing parent could otherwise be visited first. Also trim the repeated per-cell-versus-row sentence in the opening paragraph.
+
+The agent runs show that this is hard but workable rather than broken: three of ten implementations passed, and the failures were generally narrow semantic misses. The recurring traps were treating every current NULL alike instead of separating explicit NULL writes from never-populated added columns, and returning the non-literal error for numeric literals instead of the repository's wrong-type error. Preserve those distinctions clearly in the implementation and tests.
+
+The overall public contract and most of the test suite are strong. Keep the revision and range coverage, schema-history cases, composite-key checks, metadata assertions, argument validation, and deterministic commit-variable comparisons. The implementation is also appropriately scoped and integrated through the existing table-function registry.
+
+What the runs showed
+
+
+Most failing implementations conflated an explicitly inserted NULL cell with a never-populated column and therefore omitted the insert commit's provenance.
+subtle but fair
+6 runs
+
+Several implementations used the non-literal-expression error for numeric literals instead of distinguishing a literal of the wrong SQL type.
+shared blind spot
+3 runs
+Sub-reviewers
+
+
+Description
+2/3
+Stale
+Completed
+Strong, fair, and precise description with one small piece of repeated emphasis; band 2 for mild verbosity, not for any substantive contract defect.
+
+The description is self-contained, behavior-focused, objectively verifiable, and closely aligned with both the hidden tests and established table-function conventions in the repository. It specifies the public contract rather than internal helpers or file layout, and its detailed points are load-bearing for the tests (schema shape, revision/range semantics, schema evolution, merge handling, validation, and ordering). The only deduction is minor redundancy: the final clause of the first paragraph repeats the immediately preceding per-cell-versus-row requirement. This exact point was raised against V1 and remains unchanged in V3, so the prior feedback was not materially reflected, although the issue is stylistic and non-blocking rather than a substantive ambiguity or leak.
+
+Issues
+
+P4
+Low
+The opening paragraph repeats the core per-cell attribution requirement after already stating it clearly.
+
+It adds unnecessary emphasis and slightly weakens the otherwise concise maintainer-issue style; this was also the specific description-quality feedback on V1 and remains present in V3.
+
+Expected: End the sentence after “different commits” or otherwise remove the repeated row-level warning.
+
+quote: and attributing every column of a row to the row's most recent change is wrong.
+
+
+Tests
+3/3
+Stale
+Completed
+Clean and extensive hidden tests with valid base/new harness behavior, strong requirement coverage, no over-pinning, no nondeterminism, and no confirmed material coverage gap.
+
+The hidden suite is strong, deterministic, and black-box. It directly exercises the core per-cell attribution rule, insert and partial-update provenance, explicit NULL writes versus never-populated added-column NULLs, deleted-row omission, result ordering, schema shape and attribution types, composite primary keys, historical revisions, two-dot exclusion and end-revision row/schema semantics, column rename and value-preserving type evolution, current-branch defaulting, non-conflicting and conflict-resolution merges, merged-branch range reachability, filtering, ordering, joins, and all prompt-stated argument-error categories. Assertions compare generated commit variables and repository metadata rather than hard-coded hashes, dates, or message formatting. Dynamic checks confirm the base regression suite passes (209/209), all 71 new cases fail on the base, the reference solution passes, and no flakiness or unfair tests were identified. The fairness suggestions about keyless tables and malformed/unknown revisions do not establish material T4 gaps: keyless behavior is unspecified, and exact handling of invalid revision identifiers is outside the prompt's enumerated error requirements. Multiple independent agent solutions pass all hidden tests, while failing runs show ordinary missed-requirement or logic failures rather than evidence of unfair false negatives. Earlier review feedback concerned only redundant wording in the description, not the tests, so there is no unresolved Tests-dimension feedback-evolution issue.
+
+
+Solution & Code
+0/3
+Stale
+Completed
+Most functionality and regression coverage are strong, but merge attribution is incorrect when both parents changed the same cell and the merge retains one parent's value without creating a new value.
+
+The implementation is otherwise focused, registered through the existing table-function catalog, and the dynamic checks report all 209 baseline cases and 71 new cases passing. However, its merge-history algorithm has a real uncovered correctness hole. It suppresses blame on a merge by intersecting changes against all parents, then assigns each still-unblamed cell to the first ancestor commit encountered that changed that row/tag. It never confirms that the ancestor's post-change cell value is the value present at the blamed revision. If both parents changed the same cell and the merge carries one parent's existing value unchanged, the losing parent's commit can be visited first and incorrectly claim the cell. Commit traversal ordering can favor that losing parent based on graph height or timestamp, so attribution depends on traversal order rather than which branch actually supplied the final value. This violates the explicit per-cell merge attribution requirement despite the passing tests, which cover disjoint changed cells and a merge-created new value but not competing parent values where one parent is selected unchanged.
+
+Issues
+
+S1
+High
+go/libraries/doltcore/env/actions/commitwalk/commitwalk.go:184
+A merge that carries one parent's changed cell value can attribute the cell to the other, losing parent commit.
+
+The function can report a commit that never supplied the value visible at the blamed revision, directly violating cell-level attribution semantics for merges.
+
+Expected: When a merge result equals one parent's cell value and differs from the other's, provenance should continue through the matching parent only; ancestor changes whose resulting value does not match the target cell must not claim it.
+
+repo_line: // commits appear first. Remaining ties are broken by timestamp; newer commits appear first. DO NOT DELETE, USED IN DOLTHUB
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+Stale
+The ten working-pool runs show an appropriately difficult but coherent task: 3/10 passed legitimately, while every run made a substantial production implementation (576-778 raw added lines, 82-135 messages) and all evaluators report the baseline suite passing. The three successful artifacts explicitly report 209/209 baseline and 71/71 new nodes with real commit-DAG, schema-history, and per-cell implementations; the failed runs generally passed nearly all new coverage and missed narrow semantics rather than encountering task or environment breakage. Artifact-wide searches found no hidden test filename, hidden test title, or reference solution surfaced in trajectories, and the passing evaluators found no cheating. The concentrated failures are understandable subtle misses in a broad history algorithm, not evidence that the task is broken or trivially solved. No scratched runs require contest review.
+
+
+
+
+
+16.
+Auto Review
+Revision Requested
+Multi-agent review across description, tests, solution & agent runs.
+
+The task description and reference solution are clean, focused, and substantively complete. Revision is requested because the test suite leaves two explicit behaviors materially under-validated: Info key addition/removal and meaningful render content. A duplicate outline test is a minor cleanup item.
+
+Rubric bands
+
+3/3
+Problem Description
+— Clean
+High conf
+Natural, only necessary detail, non-prescriptive, well-formed. Complete, self-contained, unambiguous, real repo scope.
+
+The description is self-contained, concrete, and necessarily detailed for a broad public API and structural-comparison contract. It specifies observable behavior without prescribing implementation layout, and the supplied tests map closely to its requirements for reference resolution, cycles, page matching, inherited values, annotations, outlines, metadata, scope controls, paths, summaries, and rendering.
+
+1/3
+Tests
+— Weak
+High conf
+FP/FN risk, flaky, fragile internals, or ignores repo structure. Missing needed tests suggested by the Test Fairness check
+
+The suite and harness are broad and deterministic, but the two verified high-severity coverage gaps permit materially incomplete implementations. The Info tests only modify keys present in both documents, so metadata key addition/removal can be omitted; both render tests assert only line count, so render output need not actually include paths or meaningful change information. The exact duplicate named-destination test is only minor redundancy, but the two behavioral holes concern explicit required behavior and keep this dimension weak.
+
+3/3
+Solution & Code
+— Clean
+High conf
+Meets requirements, no regressions, no irrelevant changes, stable API, no slop.
+
+The reference patch is focused on a new diff subsystem plus crate-root wiring and implements the requested API and comparison domains without unrelated churn. The available agent-run signal reports all 48 feature tests and all 241 selected baseline tests passing. No grounded correctness, regression, API, or slop issue was reported for the reference solution.
+
+Other notes
+
+Difficulty / scope
+Lines of code
+Agent runs indicate healthy, substantial difficulty: only 1 of 5 completed the task, while the unsuccessful implementations still passed 46/48 or 47/48 feature tests and all baseline tests. The shared blind spot was resolving outline named destinations through the catalog name tree; another run compared outline targets by physical position instead of content-matched logical page identity after insertion. The reported implementation size was about 1,060 production lines. Stale cross-run analysis for an unrelated NestJS task was correctly disregarded.
+
+Synthesis findings
+
+T3/T4 metadata coverage
+High
+info_custom_field_change_reported
+Info metadata coverage checks modifications only, so an implementation that compares only keys present in both Info dictionaries can pass while missing required metadata additions and removals.
+
+The task requires Info metadata comparison generally; additions and removals are core dictionary-diff behavior, not optional edge cases.
+
+Expected: Add tests where an Info key is present only in the first document and only in the second document, asserting Removed and Added at the appropriate Info path.
+
+test_name: assert!(a.diff(&b).contains_path("Info/Producer"),
+
+T3/T4 render coverage
+High
+render_includes_each_change_path
+The render tests verify only line count; even render_includes_each_change_path never checks that a change path or any change information appears in the rendered line.
+
+A placeholder line per change would satisfy the tests while violating the stated rendering behavior.
+
+Expected: Assert that rendered lines contain each corresponding change path, and preferably representative kind information.
+
+test_name: assert_eq!(d.render().lines().count(), d.len(), "render prints one line per change: {:?}", d.changes);
+
+T4 redundant coverage
+Low
+outline_named_destination_retarget_is_change
+The two named-destination outline tests are exact duplicates and add no independent coverage.
+
+Duplicate tests add maintenance cost without increasing confidence.
+
+Expected: Remove one duplicate or vary it to exercise a distinct named-destination form or edge case.
+
+test_name: assert!(a.diff(&b).iter().any(|c| kind_is(c, "OutlineChanged")),
+
+Guidance
+
+Your takeaway
+
+Add explicit tests for Info metadata keys that exist on only one side, covering both addition and removal. Strengthen the rendering checks so every rendered line is tied to the corresponding change path or otherwise contains meaningful change information. One of the two identical named-destination tests should also be removed or changed to cover a distinct scenario.
+
+The agent runs show this is a genuinely difficult but coherent task: most implementations got nearly everything right, then missed named destinations through the catalog name tree or treated an outline target as a physical page position after an unrelated insertion. That low pass rate is healthy for a hard task, not evidence that the requirements or existing checks are unfair.
+
+Keep the deterministic nextest harness, the broad coverage of cycles, inherited page attributes, annotations, page alignment, outline behavior, accessors, and scope toggles, and the focused modular reference implementation. Those parts are solid and fit the repository well.
+
+What the runs showed
+
+
+Three runs compared direct outline destinations but failed to resolve named destinations through the catalog name tree.
+shared blind spot
+3 runs
+
+One run compared outline targets by their physical page numbers, producing a spurious outline change after an unrelated page insertion.
+subtle but fair
+1 run
+Sub-reviewers
+
+
+Description
+3/3
+Stale
+Completed
+Clean, complete, behavior-focused task statement. Its density reflects a broad but coherent and heavily tested public contract, not unnecessary implementation leakage or templated formatting.
+
+The description is dense because the public contract and comparison semantics are extensive, but the hidden tests confirm that nearly all of those details are load-bearing: exact exported types and methods, change categories, path forms, scope toggles, page matching, inherited attributes, cycle handling, decoded stream comparison, annotation ordering, outline destinations, summaries, and accessors are all directly exercised. It begins with the concrete task, uses natural prose without heavy sectioning, describes observable behavior rather than prescribing file layout or helper internals, and is self-contained and objectively verifiable. The repository already provides the relevant Document, object graph, page, stream, annotation, outline, and destination primitives, so the scope is real and solvable within existing conventions. The latest wording also materially reflects the current inline feedback by opening directly with “Add a structural diff for Document” and keeping the object-ID motivation brief. The older V2 feedback concerned a completely different NestJS submission; replacing that over-scoped task with this coherent PDF feature is substantive evolution rather than cosmetic editing.
+
+
+Tests
+1/3
+Stale
+Completed
+Strong, fair, deterministic suite with honest base/new gating, but it misses metadata key presence changes and does not actually validate rendered change content. Those holes permit meaningfully incomplete implementations to pass.
+
+The harness is valid and deterministic: verifyTests reports 241/241 base tests passing and all 48 new tests failing on the clean commit, while verifySolution reports 241/241 pass-to-pass and 48/48 fail-to-pass with the reference patch. Fairness review found no unfair tests, and working-run failures align with explicit or repo-inferable requirements rather than false negatives. However, two concrete coverage holes allow materially incomplete implementations to pass: metadata tests exercise only modification of already-present keys, not addition/removal, and the render tests only count lines despite one test being named as though it verifies paths. Thus an implementation that compares only the intersection of Info keys, or a render implementation that emits one meaningless placeholder line per change, passes the suite. These are required public behaviors rather than marginal edge cases, so T3/T4 support band 1 rather than band 2. Earlier test feedback was materially addressed: the current nextest harness creates per-test fallback cases instead of a single crash-fallback testcase, and the prior unrelated over-scoped NestJS task was replaced rather than cosmetically revised.
+
+Issues
+
+T3/T4
+High
+info_custom_field_change_reported
+Info metadata coverage checks modifications only, so an implementation that compares only keys present in both Info dictionaries can pass while missing required metadata additions and removals.
+
+The description says Info metadata is compared and separately requires dictionary keys present on only one side to be Added or Removed. Missing this branch is a substantive false-positive risk.
+
+Expected: Add tests where an Info key exists on only one side and assert the corresponding Info/<key> path and Added/Removed classification.
+
+test_name: assert!(a.diff(&b).contains_path("Info/Producer"),
+
+T3/T4
+High
+render_includes_each_change_path
+The render tests verify only line count; even render_includes_each_change_path never checks that a change path or any change information appears in the rendered line.
+
+A renderer that returns one placeholder or blank-like line per change would pass both tests while failing to provide a meaningful rendering of each Change.
+
+Expected: For each change, verify that the corresponding rendered line contains its path, without pinning arbitrary wording or formatting.
+
+test_name: assert_eq!(d.render().lines().count(), d.len(), "render prints one line per change: {:?}", d.changes);
+
+T4
+Low
+outline_named_destination_retarget_is_change
+The two named-destination outline tests are exact duplicates and add no independent coverage.
+
+This does not weaken the covered behavior, but it adds maintenance cost and gives a misleading impression of broader named-destination coverage.
+
+Expected: Remove one duplicate or replace it with a distinct named-destination form if another material, fair case is intended.
+
+test_name: assert!(a.diff(&b).iter().any(|c| kind_is(c, "OutlineChanged")),
+
+
+Solution & Code
+3/3
+Stale
+Completed
+Clean, modular structural PDF diff implementation; 48/48 new tests and 241/241 regression tests pass.
+
+The reference solution cleanly implements the requested Document diff API in focused modules, re-exports the new public types, resolves indirect objects during recursive comparison, unwinds visited reference pairs so shared-object differences can be reported at each path, and handles pages, inheritance, annotations, outlines, metadata, trailer IDs, summaries, accessors, and rendering. The dynamic verification is unambiguous: all 48 feature tests pass and all 241 selected existing tests pass with zero failures. The implementation is confined to the new diff subsystem plus the necessary crate-root module/re-export wiring, with no unrelated churn or evident regression/slop. The earlier V2 feedback concerned a completely different NestJS coalescing submission; the current PDF task and implementation replace that scope, so no unresolved solution-code feedback carries forward.
+
+Agent-run discrepancies
+
+Divergences between the reference solution and observed agent runs. Advisory — not scored on the rubric.
+
+Completed
+Stale
+The pass rate is 1/5 (20%), which is appropriate for this hard task rather than too easy. The successful run passed all 48 new tests and all 241 baseline tests; its evaluation reports 1,060 production lines, and its changed-files manifest confirms the raw LOC also includes a focused test file. The four failures likewise produced substantial implementations and passed 46/48 or 47/48 new tests plus all baseline tests, so neither LOC nor message counts suggest a thin or trivial solve. Their failures cluster around outline destination semantics explicitly stated in the task and inferable from the repository: three omitted named-destination resolution, while one used physical page positions rather than content-matched logical page identity. This is evidence of genuine/subtle difficulty, not task incoherence. No trajectory or artifact surfaced the hidden answer, prior upstream implementation, or verifier manipulation. The supplied crossRunAnalysis discusses an unrelated NestJS request-coalescing task and 14 runs, so it is stale for this submission and was not used. Earlier V2 feedback concerned that replaced NestJS task; the current PDF-diff submission is a substantive replacement rather than a cosmetic response, and there is no current agent-run discrepancy arising from that history.
+
+
+
+
+
+17.

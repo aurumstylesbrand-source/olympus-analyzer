@@ -542,7 +542,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
         <button class="navbtn active" data-m="olympus"><svg viewBox="0 0 24 24"><path d="M3 20h18L14 6l-3.5 6.5L8 9l-5 11Z"/></svg><span class="nlabel">Board</span></button>
         <button class="navbtn" data-m="launch"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 2 5.5 6 5.5 10l-2 3h-7l-2-3C4.5 9 8.5 5 12 3Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 19l-1.5 2.5M15 19l1.5 2.5"/></svg><span class="nlabel">Launch</span></button>
       </nav>
-    <div class="sn-standards"><span class="tchip">pass <b>&le;20%</b></span><span class="tchip">LOC <b>800+</b></span><span class="tchip">files <b>6+</b></span><span class="tchip">flaky <b>0</b></span></div>
+    <div class="sn-standards"><span class="tchip">pass <b>30-40%</b></span><span class="tchip">LOC <b>800+</b></span><span class="tchip">files <b>6+</b></span><span class="tchip">flaky <b>0</b></span></div>
     <div class="utilnav">
         <button class="iconbtn" id="themeBtn" title="Toggle light / dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg></button>
         <button class="iconbtn" id="acceptedBtn" title="Accepted-project experience files (new-file watcher)"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span class="navbadge" id="expBadge" style="display:none">0</span></button>
@@ -562,7 +562,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 60;
+const SEED_VERSION = 62;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
@@ -612,7 +612,7 @@ const TIPS=[
    with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive the FP panel). This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
   bar:'Olympus 30-40% band of 10 (sweet spot 30%, HARD CAP 40% (OUR cap; platform wall moved to 50%, 07-31)) - Flakiness MANDATORY - >=1 GENUINE FP-clean solver (floor; 0-solve -> recover to 3/10).',
-  envelope:'400-1380 LOC (800-1000 design target; BINDING platform floor = 700 RAW added lines -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass <=10-20% FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances -- the DESIGN target remains 150+ / 120 min) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 30-40%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
+  envelope:'400-1380 LOC (800-1000 design target; BINDING platform floor = 700 RAW added lines -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (30-40%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances -- the DESIGN target remains 150+ / 120 min) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 30-40%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
     {key:'discovery-gap',name:'Discovery gap',what:'an unfamiliar code path or a non-guessable invariant agents get WRONG BY DEFAULT',proven:'trpc, drizzle (keyset/chunked/relation-agg), mangum, syft result-cache (observer-completeness, 10%), pgx QueryFetchSize (portal suspension + batch-Close lifecycle, 30%)',rule:'pick something agents must DISCOVER, not just implement.'},
@@ -826,7 +826,7 @@ const DOCTRINE = [
  {c:'gold',h:'THE GOAL — capacity + value + acceptance (read this first)',body:`<p>The job is to find repos that can host <b>MANY</b> features that are <b>hard AND valuable AND maintainer-acceptable</b> — not one hard trick. Judge every repo on three things, in order:</p><ol>
    <li><b>VALUE / feature richness</b> — is there a WIDE space of genuinely-missing, valuable capabilities a maintainer would want? (Panel <i>featureRichness</i>: rich / some / thin.)</li>
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
-   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → ≤20% pass)?</li></ol>
+   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → 30-40% band pass)?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
  {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 30-40% band)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+

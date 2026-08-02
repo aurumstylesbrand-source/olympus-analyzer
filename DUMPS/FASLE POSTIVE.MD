@@ -79,3 +79,75 @@ False positive: anonymous recursive surface types are widened to any, breaking t
 
 
 4. 
+
+False-positive review report
+False positive
+Adjudicator · medium confidence · verdict changed by panel evidence
+
+The pass is a functional false positive. The generic span-reconciler in RecipeRunOptOut.restoreProtectedSpans handles insert/delete/reorder-within-span and edits correctly, but when a recipe relocates an existing UNPROTECTED sibling into a protected span it clears the span's index range and reinserts only the original protected items, silently discarding the relocated statement. This is real data loss of unmarked code, reachable by ordinary reorder/sort recipes, and violates the prompt's 'changes anywhere else are kept / only surviving changes remain' guarantee. The reference distinguishes moved-existing items (kept, by id membership in the before-set) from genuinely-new insertions (dropped) and preserves the statement. The hidden suite never exercises a cross-boundary move, which is why the verifier missed it; add such a case. Note the separate identity-replacement gap (whole-subtree replacement with new ids) defeats BOTH candidate and reference and is a genuine specification/coverag…
+
+I re-ran judge-b's probe in both worktrees. When a recipe MOVES an existing unprotected statement (int x = 0;) into a protected span, the candidate's restoreProtectedSpans clears the whole span range and reinserts only the original protected items, so x is silently DELETED (confirmed: candidate output drops the statement entirely). The reference PASSES the same probe (BUILD SUCCESSFUL), preserving x. This discriminates. No reading of the prompt permits an existing unmarked statement to vanish: under a strict 'the region reads exactly as before' reading x must still survive elsewhere (e.g. restored to origin), and under the reference reading x is kept adjacent to the protected items -- both require x to exist somewhere, yet the candidate produces it nowhere. This violates the prompt's guarantee that 'Changes anywhere else in the file are kept' and that a file carries 'only the surviving changes'; silent data loss of unmarked code defeats the very safety purpose of the feature and is reachable by realistic reorder/sort recipes (the suite itself uses sort/reorder recipes). judge-c's competing FP does NOT hold: its identity-replacement probe fails on the reference too (reference makes no change and loses the outside edit), so it is a shared spec-coverage gap, not a fair discriminator.
+
+Judge #1
+Genuine pass
+Generic reflection-based opt-out reconciler; passes all 83 hidden tests and every fair probe (annotated-method protection, deleted-anchor restoration, inner-block scope isolation). Deserved pass.
+
+Judge #2
+False positive
+False positive: the agent's generic reconciler drops moved existing items that fall in the protected span's removal range (data loss), violating 'Changes anywhere else in the file are kept.' A fair probe test discriminates — agent fails, reference passes.
+
+Judge #3
+Not reviewed
+agent failed and wrote no result: Agent timed out: killed at the 1500s solver wall-clock
+
+
+
+5. 
+
+False-positive review report
+False positive
+Adjudicator · high confidence · verdict changed by panel evidence
+
+The implementation is broad and correct across nearly every prompt requirement, but it deliberately removes page Contents from recursive field comparison (src/diff.rs:478) and replaces it with a decoded-byte-only check (src/diff.rs:346-350). Consequently any difference confined to a page content-stream's dictionary (e.g. adding a non-encoding key such as Custom) is silently dropped, producing an empty diff for two genuinely different documents. This violates the prompt's explicit rule that a one-sided dictionary key must be reported as Added/Removed. The fix is to compare the content stream's dictionary as well (as the code already does for every other stream via compare_objects_inner, skipping only Length/Filter/DecodeParms), or to keep Contents in the effective page fields and let the generic stream comparator handle both bytes and dict.
+
+I re-ran judge-c's discriminator in isolated worktrees. Candidate (verifier worktree) returns an empty diff (`all changes = []`) when a non-encoding key `Custom=7` is added to a page's content-stream dictionary while decoded bytes are unchanged; the reference reports `page 1/Contents/Custom` Added and passes the same assertion. The prompt explicitly requires 'a key on one side only is Added or Removed' for dictionaries, and a page content stream is a Stream with an associated Dictionary in the repo's object model. The candidate special-cases page Contents (diff.rs:478 excludes it from effective page fields; diff.rs:346-350 does a decoded-byte-only check), dropping the content-stream dictionary from comparison entirely — even though its own generic stream comparator (diff.rs:650-665) compares stream dicts everywhere else. The failure is material (an empty diff for two genuinely different documents), fair, and prompt-grounded.
+
+Judge #1
+Not reviewed
+agent failed and wrote no result: Agent exited with code 1
+
+Judge #2
+Genuine pass
+Pass is deserved. All 50 hidden tests pass and every prompt-stated requirement holds at its hardest case. The only candidate/reference divergence (outline title-only change labeled OutlineChanged by candidate vs Removed+Added by reference) is an underspecified edge the prompt does not require, so it is not a false positive.
+
+Judge #3
+False positive
+False positive: the candidate skips page content stream dictionaries when decoded bytes are unchanged, violating the explicit dictionary-entry diff requirement.
+
+
+
+6. 
+
+False-positive review report
+False positive
+Adjudicator · high confidence · verdict changed by panel evidence
+
+The candidate is a substantive, mostly-correct implementation that passes all 113 hidden tests, but it is a genuine functional false positive on one central requirement. It restores protected regions only within lists that still exist in the post-recipe tree and lacks a global 'every protected id must still be present, else revert' guarantee (which the reference has via ProtectedRegions.containsEvery). Consequently, when a recipe deletes an unprotected ancestor (e.g. the method enclosing a fenced statement), the nested marked code is silently deleted — violating 'a protected region must read exactly as it did before' and 'a deleted one is still present'. The hidden verifier should add a case for deleting an unprotected intermediate ancestor that contains a nested protected region (analogous to the existing whole-file deletion test) to close this gap.
+
+Judge-c's probe deletes an unprotected ancestor method that CONTAINS a nested '// rewrite:off' protected statement. I re-ran it: the candidate FAILS — its output is `class A {\n\n    void neighbor() {\n    }\n}`, i.e. the protected `int protectedValue = 1;` is entirely deleted — while the reference PASSES (protected content preserved). This directly violates explicit prompt requirements: 'a protected region must read exactly as it did before', 'a deleted one is still present', and the feature's core promise that 'recipes leave marked code alone'. The prompt even makes the ancestor case explicit at the file level ('a recipe that would delete a file holding a protected region does not'); an intermediate ancestor deletion that wipes marked code is the same obligation. Root cause: the candidate only reconciles lists still present in the post-recipe tree, so a deleted ancestor's nested protected region is never restored, and it has no global protected-id survival check. The hidden verifier covered deleting a protected SIBLING and deleting the whole FILE, but not deleting an unprotected intermediate ancestor — the incompleteness the FP exploits.
+
+Judge #1
+Genuine pass
+Deserved pass: candidate implements opt-out fences across all four languages plus scheduler reporting; all 113 comprehensive hidden tests pass (re-verified), fair probes for switch-case and imports pass, and the only failing edge is shared with the reference.
+
+Judge #2
+Genuine pass
+Deserved pass: a comprehensive scheduler-level protected-region implementation passes all 113 hidden tests; aggressive falsification (boundary insertions, closer-comment handling, nested-block fences, cycle/message semantics) found no fair discriminator, and the candidate matches the reference on the two ambiguous design points. The 2 visible test_execution.log failures are agent-authored tests, not verifier failures.
+
+Judge #3
+False positive
+False positive: deleting a method that contains a nested protected statement deletes the protected region, even though the prompt requires it to remain exactly as before.
+
+
+
+7. 
