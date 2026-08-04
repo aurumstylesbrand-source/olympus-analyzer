@@ -553,7 +553,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
   <main class="main">
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass 30-40% band of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 800-1000 (700 floor) · 6+ files · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
+      <p class="foot">Olympus pass 20-30% band of 10 · Verify Flakiness MANDATORY (zero flaky tests) · LOC 800-1000 (700 floor) · 6+ files · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs 150+ (120 min) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
@@ -590,7 +590,7 @@ ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=
 function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
 // General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
 const TIPS=[
- {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is the 30-40% band NOW (sweet spot 30%, cap 40%) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is the 20-30% band NOW (cap 30% (decree 08-04), target 2-3/10) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
  {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
  {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
  {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
@@ -611,8 +611,8 @@ const TIPS=[
    audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED 2026-07-30 -- the Olympus band is 30-40% (sweet spot 30% = 3/10, HARD CAP 40% (OUR cap; platform wall moved to 50%, 07-31)),
    with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive the FP panel). This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
-  bar:'Olympus 30-40% band of 10 (sweet spot 30%, HARD CAP 40% (OUR cap; platform wall moved to 50%, 07-31)) - Flakiness MANDATORY - >=1 GENUINE FP-clean solver (floor; 0-solve -> recover to 3/10).',
-  envelope:'400-1380 LOC (800-1000 design target; BINDING platform floor = 700 RAW added lines -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (30-40%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances -- the DESIGN target remains 150+ / 120 min) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 30-40%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
+  bar:'Olympus 20-30% band of 10 (sweet spot 30%, HARD CAP 40% (OUR cap; platform wall moved to 50%, 07-31)) - Flakiness MANDATORY - >=1 GENUINE FP-clean solver (floor; 0-solve -> recover to 3/10).',
+  envelope:'400-1380 LOC (800-1000 design target; BINDING platform floor = 700 RAW added lines -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (30-40%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances -- the DESIGN target remains 150+ / 120 min) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 20-30%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
     {key:'discovery-gap',name:'Discovery gap',what:'an unfamiliar code path or a non-guessable invariant agents get WRONG BY DEFAULT',proven:'trpc, drizzle (keyset/chunked/relation-agg), mangum, syft result-cache (observer-completeness, 10%), pgx QueryFetchSize (portal suspension + batch-Close lifecycle, 30%)',rule:'pick something agents must DISCOVER, not just implement.'},
@@ -627,7 +627,7 @@ const ACCEPTED_INTEL = {
      act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the MSG floor; the invariants are the gap.',
      anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
     {key:'census',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'Discovery-layer census (if the algorithm is known)',
-     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely lands the 30-40% band; budget 2 batches.',
+     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely lands the 20-30% band; budget 2 batches.',
      anchor:'drizzle-chunked: offset->seek only moved 75->60%; a 2nd layer (non-unique column forcing PK auto-discovery) was needed for 20%.'},
     {key:'composes',when:()=>true,name:'"Composes with X" is a full-lifecycle contract',
      act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
@@ -826,9 +826,9 @@ const DOCTRINE = [
  {c:'gold',h:'THE GOAL — capacity + value + acceptance (read this first)',body:`<p>The job is to find repos that can host <b>MANY</b> features that are <b>hard AND valuable AND maintainer-acceptable</b> — not one hard trick. Judge every repo on three things, in order:</p><ol>
    <li><b>VALUE / feature richness</b> — is there a WIDE space of genuinely-missing, valuable capabilities a maintainer would want? (Panel <i>featureRichness</i>: rich / some / thin.)</li>
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
-   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → 30-40% band pass)?</li></ol>
+   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → 20-30% band pass)?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
- {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 30-40% band)',body:
+ {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 20-30% band)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
    '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
    ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
@@ -844,11 +844,11 @@ const DOCTRINE = [
      <li><b>Scattered context across 5-10 files</b> where components must AGREE on data formats (cross-file format agreement).</li>
      <li>An <b>intermediate-state invariant</b> the naive impl violates while still passing every value check.</li></ol>
    <p>This keeps the description behavioural (WHAT not HOW), gives agents maximum implementation freedom (so it is FAIR), and avoids the iteration cascade. <b>A large API inventory is NOT difficulty.</b> Proof from 14 accepted projects: difficulty always came from a discovery gap or genuine breadth -- never edge-case volume on a known surface, never a big API.</p>`},
- {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> 30% is now the SWEET SPOT of the current 30-40% band -- this exact shape is the target today (a 2nd discovery layer).</p>
+ {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> 30% is now the SWEET SPOT of the current 20-30% band -- this exact shape is the target today (a 2nd discovery layer).</p>
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li><b>Pass rate 30-40% band of 10 runs (sweet spot 30%).</b></li>
+   <li><b>Pass rate 20-30% band of 10 runs (sweet spot 30%).</b></li>
    <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
    <li>Solution LOC 800-1000 (700 floor). Files 6+ (5 ok).</li>
    <li>Description up to 500 words; accepted cluster 479-500. Plagiarism ALL below 0.5.</li>
@@ -1264,7 +1264,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'800-1000 effective (700 OUR floor; platform floor 200)', files:'6+', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'30-40% band of 10 (sweet spot 30%, cap 40%)'};}
+function standardsFor(tier){return {loc:'800-1000 effective (700 OUR floor; platform floor 200)', files:'6+', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'20-30% band of 10 (cap 30% (decree 08-04), target 2-3/10)'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -1376,22 +1376,22 @@ function estPass(r){
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
-      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current band 30-40%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
-      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current band 30-40%))',cls:'ok',tier:'mars'};
+      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current band 20-30%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
+      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current band 20-30%))',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — projected IN the 30-40% band (sweet spot 30% = 3/10). Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — projected ABOVE our 40% cap: add a second independent execution-hard layer to land in the 30-40% band',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — projected IN the 20-30% band (sweet spot 30% = 3/10). Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — projected ABOVE our 40% cap: add a second independent execution-hard layer to land in the 20-30% band',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
   const e=estPass(r),W=460,H=66,padL=8,padR=8,innerW=W-padL-padR,y=26,bh=16;
   const x=v=>padL+(v/100)*innerW;
-  const ceil=e.tier==='mars'?30:40, sweet=e.tier==='mars'?22:30, zlo=e.tier==='mars'?0:30;
+  const ceil=e.tier==='mars'?30:30, sweet=e.tier==='mars'?22:25, zlo=e.tier==='mars'?0:20;
   let body=`<rect x="${padL}" y="${y}" width="${innerW}" height="${bh}" rx="8" fill="${CHC.line}"/>`;
   // zones (tier-aware): green up to the tier ceiling, amber just above, grey beyond
   body+=`<rect x="${x(zlo)}" y="${y}" width="${((ceil-zlo)/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
   body+=`<rect x="${x(ceil)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
-  // markers at the sweet spot and the tier ceiling (Olympus band 30-40%)
+  // markers at the sweet spot and the tier ceiling (Olympus band 20-30%)
   [[sweet,'sweet '+sweet+'%',CHC.green],[ceil,(e.tier==='mars'?'Mars':'Olympus')+' '+ceil+'%',CHC.warn]].forEach(([v,lbl,col])=>{
     body+=`<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+bh+4}" stroke="${col}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
     body+=`<text x="${x(v)}" y="${y+bh+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${col}">${lbl}</text>`;});
@@ -1751,7 +1751,7 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
    pass rate. Capacity is computed from STRUCTURE (parallel-path count + offline core + accepted
    precedent) -- deterministic and more honest than a single-angle LLM verdict. It is the HEADLINE for
    board repos; the panel olympusViable is demoted to a per-ANGLE read. The ONLY true pass is a real
-   10-agent batch in the 30-40% band -- capacity says "this repo can carry that", not "this feature will". */
+   10-agent batch in the 20-30% band -- capacity says "this repo can carry that", not "this feature will". */
 const ACCEPTED_PRECEDENT={
   'trpc/trpc':'PROVEN -- an accepted Olympus project shipped on this repo (20% pass: contextFactory wired across 7 adapters + cross-cutting invariants)',
   'drizzle-team/drizzle-orm':'PROVEN -- THREE accepted Olympus projects shipped on this repo (keyset / chunked / relation-aggregations, all on the RQB)'
@@ -1831,7 +1831,7 @@ function finalVerdict(r){
       : ovv==='no' ? 'the panel flags your CURRENT angle as weak -- pick another (the novelty gate + briefing steer you to a clean one)'
       : ovv==='risky' ? 'the panel says your CURRENT angle needs scoping -- confirm it is hard + unclaimed before building'
       : ovv==='yes' ? 'the panel also likes your current angle' : 'run the panel for a per-angle read';
-    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch in the 30-40% band -- capacity says the repo can carry that, not that this one feature will.';
+    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch in the 20-30% band -- capacity says the repo can carry that, not that this one feature will.';
   }
   else if(t.curated){
     // CURATED BOARD REPO: deep-vetted (our 6-check standard) + user-platform-cleared. That verdict is
@@ -1888,7 +1888,7 @@ function verdictCard(r){
   const confChip=v.confidence?`<span class="confpill ${v.confidence}">confidence: ${v.confidence}</span>`:'';
   const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
   const meaning=(v.cap?{
-    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard 800-1000 LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the 30-40% band — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
+    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard 800-1000 LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the 20-30% band — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
     risky:'RISKY (thin repo) = a shared base carries the contract here, so it hosts FEWER independent hard features. Usable, but scope each feature tightly and do not expect to mine many.',
     refine:'',nogo:'',pending:''
   }:{
@@ -2547,7 +2547,7 @@ document.getElementById('drawerInner').addEventListener('click',async e=>{
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());if(ev)ev.innerHTML='<div class="outbox" style="max-height:340px;overflow:auto;white-space:pre-wrap">'+esc(d.content||d.error||'(empty)')+(d.truncated?'\n\n[...truncated]':'')+'</div>';}catch(err){if(ev)ev.innerHTML='<div class="honest">load failed</div>';}}
   if(cb){const n=cb.dataset.expcopy;
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());
-      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass band is 30-40% now (sweet spot 30%, cap 40%).\n\n--- '+n+' ---\n'+(d.content||'');
+      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass band is 30-40% now (cap 30% (decree 08-04), target 2-3/10).\n\n--- '+n+' ---\n'+(d.content||'');
       await navigator.clipboard.writeText(txt);cb.textContent='Copied for Claude ✓';setTimeout(()=>cb.textContent='Copy for extraction',1600);
     }catch(err){cb.textContent='copy failed';}}
 });
