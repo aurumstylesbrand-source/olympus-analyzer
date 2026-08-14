@@ -1216,3 +1216,12 @@ Real scenario: Auto Review Tests 1/3 -> submitted anyway -> HUMAN ACCEPTED. User
 **HONEST CORRECTION to the entry above:** the "fp_kill ENSEMBLE LAW actually wired" claim was FALSE -- the insert silently no-op'd (anchor "SECOND-INDEPENDENT-REFERENCE" is hyphenated in commands but spelled with spaces in fp_kill; find() missed, no branch printed, and I misread a neighboring success line). The validator caught it twice. LESSON: every scripted edit needs its own printed per-edit verdict AND a post-write grep -- "the batch printed something" is not proof a specific edit landed (LAW 12 applies to scripted edits too).
 **Fixed (all 24, disk-verified):** fp_kill ENSEMBLE ALTERNATIVE now ON DISK (grep=1); CONFIRM_PING ideal 1/10->3/10 band; platform_baseline "never AIM at <=20%" -> 30% sweet spot + wall 50%; platform_spec:319 same; console estPass hard===2 -> 30-40 'ok' (Orion-only = below-band recovery) + hard===1 -> above-cap warn + gauge sweet 14->30/ceil 20->40/green zone 30-40; PING 13->15 COMMANDS; checkpanel_ping lane fixes (mutant-loop-only, conditional probe, repo_evidence on run_check); checkpanel.md:158 conditional-probe lane; olympus_accepted + olympus_experience template floors -> OURS; memory: MEMORY.md board line SEED 60 + console SEED 62, agent-run-corpus 45->471, cross-project 07-25 REVERT annotation + wall-50 note, validated-board frontmatter SEED 35->60 + 13->15 registry, final-verdict "(NOT 30%)" leftover removed, checkpanel-mcp broken LAW-0 ref -> FIELD_CARD, collision-lens BLACKLIST ADDENDUM (zarr/golang/go/esbuild/vue/bleve/luau/OPA/Effect/sqlc/parquet-go/rewrite/tantivy).
 **Next:** round-3 validation (fresh prompts, no cache) until clean.
+
+## 2026-08-12 -- INGESTION: chevrotain grammar-coverage (ACCEPTED)
+Deposited batches 104-107 (25 runs: zips 62/63/64 + cumulative 72) into runs/ under the indexer's
+batch*/run/ layout; archive pointer dir runs/2026-08-12_chevrotain-grammar-coverage-accepted/ holds
+DEPOSIT_NOTE.md (incl. the batch107-recontains-104-106 caveat and the LOST batch1/2 zips record).
+index_runs.py rebuilt: 558 runs / 139 batches; batch rates match platform (2/5, 4/5, 4/5, 1/10).
+NOVA_ATLAS updated: mirror-layer census correction (3x downward miss), stated-semantics-walls-at-10%
+review precedent, 4 wild FP design classes, Orion shallow re-confirmation.
+Debrief: ~/Desktop/olympus-experience/chevrotain_grammar-coverage_exp.md.
