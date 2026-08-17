@@ -1,0 +1,1545 @@
+1.
+
+
+# PROPOSED WORKFLOW UPDATES — from the tinybase commit-consistency run (approved v1; 20 fix waves; 4 stale 0-solve batches + the approved 10% batch; 3 local FP-panel rounds + 1 real-panel GENUINE PASS)
+
+**For the central maintainer.** Every proposal is (a) evidence-tagged to executed events in `/Users/mac/Desktop/OLYMPUS/tinybase2/_artifacts/experience.md` (FIX #N / BATCH #N), (b) written REPO-AGNOSTICALLY (mechanisms, not tinybase specifics), (c) honest about what the current docs ALREADY contain — these target the gaps we hit WHILE following the docs. FP first, as requested.
+
+---
+
+## PART A — FP (the priority)
+
+### A1. THE TEST-ADMISSION GATE (the #1 miss: the pieces exist, the composition does not)
+**Target:** fp_kill_protocol.md (new law above STEP 3) + fix-fp flow.
+**Current state:** the fairness question, the reverse-direction audit, LAW N1, and mining all EXIST — but as separate sweeps run at separate times. There is NO single ritual at the moment a new killing test is born.
+**Measured failure:** two self-inflicted over-pins shipped THROUGH a fully-run protocol and produced four consecutive 0-solve platform batches, 0/10 total (FIX #20; zips 55-58): one test gated a lifecycle corner stated NOWHERE in the prompt (it came from an FP variant-hunt finding, so it FELT like a closure); one pinned a corner via a clever disjunction that still rejected a third compliant reading. Both would have died at birth under a composed gate.
+**Proposal (drop-in):** *No killing test is ADDED to the suite until its map row carries FOUR filled cells: (1) FORCING SENTENCE — the verbatim description sentence that demands exactly this, quoted; a stretch-trace (quantifier arguably covering the member) = STOP, use class N/fence instead; (2) F2P PROOF — the test fails standalone on the pristine base, or is explicitly a FOLD into a named F2P test; base-parity behaviors are ungateable, register silence instead; (3) UNPINNABILITY CHECK — could two correct implementations differ here? if plausibly yes, run the divergence test (A2) before gating; (4) MINING RESULT — the gate passes ≥1 real independent implementation (A3). A test lacking any cell is an over-pin waiting to be measured in a burned batch.*
+**Why global:** every cell is repo-independent (prompt sentence, base repo, implementation plurality, mining).
+
+### A2. THE UNPINNABILITY DETECTOR (new doctrine — the inverse reading of the differential)
+**Target:** fp_kill_protocol.md STEP 3B leg 4 + FP_HANDBOOK.
+**Current state:** the second-independent-reference differential treats EVERY divergence as "resolve which is right, add the killing test." For INVENTED features there is no external spec — some divergences are legitimately unresolvable.
+**Measured:** three independent compliant implementations existed by the end (author reference + two commissioned); divergences measured between pairs — (i) mid-flight reads of just-created definitions (pre-transaction values vs undefined), (ii) notification coalescing for internally-driven transactions — each a case where BOTH sides satisfied the prose verbatim. We registered them as silences with the divergence as EXECUTED PROOF and our LOCAL adjudicator seat issued the explicit overturn rulings; the REAL panel's outcome (genuine pass, 'no fair discriminator') is consistent with those rulings, though it did not enumerate them.
+**Proposal (drop-in):** *Differential divergences classify TWO ways: (a) one side violates a description sentence -> killing test + parity (existing rule); (b) BOTH sides satisfy the prose -> the behavior is UNPINNABLE: register the silence, cite the divergence as its executed defense, and NEVER gate it — a probe asserting either direction fails a compliant implementation and is overturned. The registered-silence entry gains a mandatory third field: the expected probe class it pre-overturns.*
+**Why global:** derives from implementation plurality, which exists for every invented feature on every repo.
+
+### A3. PRE-BATCH-1 MINING = A COMMISSIONED INDEPENDENT IMPLEMENTATION (fixes a real hole in the mining law)
+**Target:** fp_kill_protocol.md "MINE THE CANDIDATE GATE" + FIELD_CARD validation law.
+**Current state:** mining says "you already have N real implementations from the last batch" — **batch 1 has none**, so the only check that catches a 0-solve cliff is undefined exactly when the first (most expensive) batch is at stake.
+**Measured:** commissioning an independent implementation from the DESCRIPTION ALONE (separate worktree, TASK.md only, never shown reference or tests) paid FIVE ways: solvability existence-proof before any batch, the differential oracle, the unpinnability detector (A2), silence-registry evidence, and architecture-class prediction of the eventual real solver. Cost: one agent-hour. The real solve's architecture matched the commissioned one's CLASS, not our reference's.
+**Proposal:** *The independent implementation is commissioned AT CREATION (not submit time) and its full pass of the final gate set is the pre-batch-1 mining artifact. Post-batch, mining runs on real near-miss patches as today — and the near-miss that passes the post-lever gate set IS the Q3 solvability artifact (the strongest one this system can produce; we predicted the approved solve this way, FIX #20).* Commissioning protocol worth codifying: separate worktree + TASK.md = description verbatim + own scratch tests + regression run + report of interpretation choices (the choices ARE the unpinnability data).
+**HONEST LIMIT (measured — do not over-trust this leg):** the commissioned implementation ALSO passed our two over-pinned tests (a commissioned agent, given unbounded care, implements corners that batch agents under real constraints do not) — so pre-batch mining proves solvability-IN-PRINCIPLE and catches true cliffs, but it did NOT predict the 0/10. Batch-solvability is protected by A1's forcing-sentence cell, not by mining alone. The two are complements, not substitutes.
+
+### A4. THE WRONG-BUT-GREEN VARIANT MATRIX (new floor leg — probes and mutation both structurally miss it)
+**Target:** fp_kill_protocol.md STEP 3B (new leg 6) + the 5x sim law.
+**Current state:** the doc already admits mutation "cannot reach architectures the reference does not have" — but offers only the differential/mining as the independent source. Judge-c rehearsal = probe-hunting.
+**Measured:** 10 probe-brief seats across two full local rounds missed a hole that the FIRST seat briefed to BUILD variants found in one pass (round 3; FIX #17: an alternative implementation shape passed all hidden tests while violating a stated sentence); a 16-variant matrix later re-confirmed every kill and adjudicated every survivor (FIX #19).
+**Proposal (drop-in):** *Floor leg: build N plausible WRONG implementations as COPIES of the source tree (aliased test configs; never mutate the live tree), each embodying a distinct wrong ARCHITECTURE (lazy-where-eager, per-event-where-coalesced, registration-at-wrong-lifecycle-point, skip-one-module, order-swapped, guard-dropped). Run the FULL suite AND the base mode against each. Output a table: variant | hidden result | base result | killed-by test | or HOLE. Survivors adjudicate into: fenced / behaviorally-identical / no-reachable-divergence — anything else is a hole. Variant construction beats probe construction because it asks "what would a wrong solver BUILD" instead of "what would a judge ASSERT."*
+
+### A5. THE TWO-MODE HARNESS IS PART OF THE FP SURFACE (new fact, absent everywhere)
+**Target:** fp_kill_protocol.md + platform_spec stage 4.
+**Measured:** the strongest attack our hostile seat constructed — a one-line slip inside the exact function solvers must edit, corrupting an untested aggregate — passed the ENTIRE hidden suite and died ONLY to the base/P2P slice (FIX #19). Conversely: base-mode exclusions carelessly widened would have reopened it.
+**Proposal:** *(1) Every variant/mining run executes BOTH modes — a candidate green on hidden but red on base is caught by the platform, and the base slice must be CREDITED in FP defenses ("this class dies to P2P"). (2) Base-mode exclusions must never touch the modules under test, and each exclusion carries executed evidence (fails/flakes on the UNMODIFIED repo, N-of-M runs). (3) Local FP judges briefed to probe only the hidden suite will report UPHELD-looking holes the base slice already kills — the adjudicator seat must check both.*
+
+### A6. THE PRE-WRITTEN OVERTURN TABLE (ship the defense, don't improvise it)
+**Target:** fp_kill_protocol.md scope-out section + 04_create.
+**Current state:** fences are prescribed; PRE-WRITING the defense table is not.
+**Measured:** we shipped an overturn table (probe class -> verbatim fence/quantifier citation -> executed evidence) built by a local adjudicator seat (FIX #19); the REAL panel then found no fair discriminator — the outcome the table exists to produce, though the panel did not cite it clause-by-clause (honest attribution).
+**Proposal:** *At creation, alongside the silence registry, write the OVERTURN TABLE: every plausible probe class on a fenced/silent behavior, the exact sentence that overturns it, and the executed evidence (divergence proof, base-parity proof, un-F2P-ability). It costs minutes, it is the FP panel rehearsed in advance, and on repeat repos it compounds.*
+
+### A7. LOCAL PANEL SEAT MIX — BRIEFS OVER COUNT (amend the 5x sim law)
+**Target:** pre_submit_gate 6B / fp_kill STEP 9.
+**Current state:** "2 Sonnet + 2 Opus + 1 master, bar 4/5" — counts and model tiers, no brief diversity.
+**Measured:** across three rounds, probe-brief judges PASSED artifacts that variant-matrix and dissent-hunter briefs FAILED (real findings each time); identical bytes, different briefs. A 4/5 bar where the 4 passes are probe-briefs outvoting a variant-brief FAIL would have shipped the hole.
+**Proposal:** *Fix the BRIEFS, not just the count: (1) probe judge, (2) quantifier-exhaustion judge (clause-member matrix), (3) adjudicator (reference==prompt + overturn rehearsal + harness), (4) variant-matrix builder, (5) dissent-hunter (strongest single attack, argued both ways, self-adjudicated). Strongest tier on seats 4-5. A FAIL from seats 4 or 5 is never outvoted — it is closed, overturned-with-citation, or refuted-by-execution.*
+
+### A8. FINDING DISPOSITIONS: CLOSE / OVERTURN / REFUTE (the third one is missing)
+**Target:** fix-fp flow + fix_auto_review.
+**Current state:** findings are closed (gate) or scoped (fence). A third disposition kept occurring: the finding is FACTUALLY WRONG.
+**Measured:** a reviewer proved "dead code" with a 4432-test neutering experiment — refuted by a 10-line probe exercising the one path their experiment never drove (FIX #15); a harness "cannot execute" blocker was contradicted by ten graded runs (FIX #20; we still satisfied the CONCERN structurally — that pairing is the point).
+**Proposal:** *Every finding gets one of THREE dispositions, each with an executed artifact: CLOSE (gate + parity), OVERTURN (fence citation + evidence), REFUTE (a counter-proof by execution — and where cheap, ALSO satisfy the underlying concern structurally so the disagreement never reaches a human). Refutations are pre-empted at creation by putting the executed defense of every "looks-dead / looks-redundant" design choice INTO the approach doc.*
+
+---
+
+## PART B — FLOOR/HARNESS ROBUSTNESS (mechanical, all measured the hard way)
+
+### B1. PROCESS-DEATH-SAFE MUTATION HYGIENE
+**Target:** fp_kill "MUTANT NON-RUNS" block.
+**Measured:** a process restart (not a timeout) killed a battery mid-mutation: the finally-restore never ran, an INERT declared-survivor mutation stayed in the live tree keeping every suite green, plus a stale lock blocked subsequent batteries (FIX #20). Caught ONLY by cmp-vs-solution.patch.
+**Proposal:** *(1) The byte-compare of the staged tree against solution.patch is the FIRST and LAST command of every floor session — not only after reference-touching waves. (2) Lock files carry the writer PID; a lock whose PID is dead is stale and removable. (3) Assertion-text DUPLICATION across tests breaks flip-needle uniqueness — anchor every flip needle with a preceding contextual line, and audit needle counts offline before any battery run. (4) Stray test files under scratch dirs get collected by path-filtering runners — assert zero collectible test files outside the test tree before certifying.*
+
+### B2. CERTIFICATION LOCATION + TRANSPORT
+**Target:** pre_submit_gate / 04_create harness sections.
+**Measured:** /tmp purges destroyed a pristine clone, an independent-implementation worktree, and 24 certification XMLs mid-project (twice). And only THROUGH-test.sh certification exercises the shipped config-loading path — the AR T6 blocker class (config load writing beside root-owned files) is structurally INVISIBLE to raw runner invocations, which is how it survived every raw-vitest certification round we ran. (The 1-in-6 middleware flake, honestly attributed, was caught by a raw 6x round — the through-test.sh rule is about fidelity to the shipped artifact, not about flake sensitivity.)
+**Proposal:** *All certification artifacts live in the session scratchpad or the project tree, never /tmp. Flakiness and F2P certification execute THROUGH test.sh (the artifact that ships), comparing per-testcase outcomes across runs — never exit codes, never a raw runner invocation.*
+
+### B3. ENV LESSONS ENCODE AS TESTABLE PROPERTIES, NOT SURFACE RECIPES
+**Target:** repeat_repo template + platform_spec env section.
+**Measured:** feature 1's lesson was stored as a surface recipe (".mjs, never .ts") — feature 2 obeyed it and STILL drew the same failure class via a different route (config loading writing beside root-owned files; FIX #20/AR T6). The property was "nothing may write outside tmpdirs at config-load time"; the recipe was one instance of it.
+**Proposal:** *Every env lesson is stored as a PROPERTY plus a LOCAL TEST for it. For this class: run both test.sh modes against a read-only repo copy (chmod -R a-w, or as an unprivileged user) — any EACCES = the T6 class caught locally, pre-submission. Generalize: ask "what property did the platform actually enforce?" before recording any env fix.*
+
+---
+
+## PART C — SOLVABILITY x FP UNIFICATION (the user's core ask, stated as one law)
+
+### C1. THE GENUINE-PASS STANDARD (what "solvability intact and genuine" operationally means)
+**Target:** FIELD_CARD (solvability window section) + fp_kill.
+**Measured chain:** gate only stated sentences (A1) + pin only implementation-invariant behaviors (A2) => FP-completeness IS the difficulty, and every remaining pass is genuine by construction. Evidence: the approved batch's only solve was upheld "genuine, high confidence, no fair discriminator" FIRST TRY, on a suite the adjudicator called "an unusually complete encoding of the prompt" — the same suite that, one lever-wave earlier with two unstated gates present, produced 0/10.
+**Proposal (drop-in law):** *SOLVABILITY AND FP ARE THE SAME DISCIPLINE SEEN FROM TWO SIDES: a suite that gates EVERY stated sentence and ONLY stated sentences is simultaneously FP-complete (nothing promised is ungated) and maximally solvable for its difficulty class (nothing unstated blocks a correct solver). Deviations in EITHER direction show up as the OTHER side's failure: an unstated gate = a solvability cliff that LOOKS like difficulty; an ungated promise = an FP hole that LOOKS like solvability. The operational proof of the standard, both required: (1) N>=2 independent implementations pass everything (existence of genuine passes); (2) the executed floor + variant matrix run clean (non-existence of fake passes).*
+
+### C2. ZIP-MATRIX RECOVERY, WITH PASSER COUNTS (sharpen the 0-solve ladder)
+**Target:** prompt_fix_ai_runs / convergence law.
+**Measured:** 0/10 -> 10% in ONE batch via: per-run failing-test matrix from the zips; the 8/10-failed test had 2 PASSERS (so not a cliff — but its behavior was UNSTATED = class F remove); the near-miss's 2-test blocker was stated-but-contested = class N narrow + class S symmetric assert removal; everything else = genuine walls left alone (FIX #20).
+**Proposal:** *The recovery decision table keys on TWO columns per failing test: how many runs failed it AND whether a forcing sentence exists. {many fail, no sentence} = remove (F). {near-miss-only, contested sentence} = narrow + symmetric (N+S). {many fail, clear sentence, some pass} = calibrated wall, keep. {all fail, clear sentence, none pass} = cliff — disclose or restructure (D/R), never weaken (W).* This composes the existing F/N/S/W classes with the existing FDI passer-count correction into one operational table.
+
+---
+
+*Format note: everything above is a PROPOSED WORKFLOW UPDATES block per the read-only-folder rule; nothing in ~/Desktop/olympus-workflow/ was touched. Evidence pointers: tinybase2/_artifacts/experience.md FIX #15-#20, BATCH #1-#3, the FP panel verdict records, and repeat_repo.md's playbook section.*
+
+
+
+
+
+2. 
+
+# WORKFLOW CRITIQUE — why FP keeps failing, and the fixes
+
+**Author:** the agent that just took `eclipse-langium/langium` feature #4 to approval.
+**Cost of the run being critiqued:** 21 FIX waves + **5 FP panel rounds** (3 outright failures), ~67 agent runs consumed.
+**Scope:** every principle below is REPO-AGNOSTIC. Nothing here depends on langium, TypeScript, or a validation feature. Where I cite langium it is as *evidence*, never as the rule.
+**Status:** proposal. Nothing in `~/Desktop/olympus-workflow/` has been edited (READ-ONLY, per standing instruction).
+
+---
+
+## 0. THE HEADLINE
+
+The FP documentation is **not wrong. It is unreachable at the moment it would work.**
+
+I verified this by grep rather than memory:
+
+```
+04_create.md  (33KB, the CREATION doc)   mentions "FP_HANDBOOK"   ->  0 times
+04_create.md                             mentions "atom list"     ->  0 times
+/new-sub, /speed, /validate              mention "FP_HANDBOOK"    ->  0 times
+FP_HANDBOOK is referenced ONLY from: FIELD_CARD, MANIFEST, pre_submit_gate, fp_kill_protocol, DOCTRINE_LEDGER
+```
+
+Every one of those referrers runs **after the artifacts already exist**. `FP_HANDBOOK.md` Part 2 Step 2 says, in the workflow's own words:
+
+> *"Write the atom list before the prose. Enumerate every behavior you intend to gate. Then write the description FROM the atom list. Writing prose first and back-filling tests is how the promise/gate gap opens."*
+
+My own log, line 788: *"This is langium3's stated #1 lesson and I did it in reverse: prose first, atoms extracted afterwards, gates bolted on for 8 waves."* The first reference to `FP_HANDBOOK` anywhere in my 26-wave log is at **FIX #10 — after the first FP panel had already failed.**
+
+**So the defect is not doctrinal. It is one of SEQUENCING and ROUTING.** The workflow teaches FP as a *repair* discipline (`/fix-fp`, `fp_kill_protocol`, "run BEFORE every submit") when FP is overwhelmingly a *creation-time* property. By the time `/fix-fp` runs, the description is written, the tests are written, the reference is frozen — and the only lever still cheap (deleting a promise) now costs a full regeneration, while the expensive lever (adding a gate) is the one the panel's report literally hands you.
+
+Everything below follows from that single misplacement.
+
+---
+
+## PART A — THE FP DEFECTS (priority order)
+
+### A1. FP is filed as a REPAIR discipline; it is a CREATION discipline. `[SEVERITY: CRITICAL]`
+
+**Evidence.** The three biggest FP artifacts are `fp_kill_protocol.md` (70KB, subtitled *"run BEFORE every submit"*), `/fix-fp` (a repair command), and `pre_submit_gate.md` (54KB, terminal). All three are downstream of creation. `04_create.md` — the doc that actually decides the FP surface, because it is where prose and tests are born — contains no FP-design step at all.
+
+**Why this costs iterations.** FP surface is fixed at the instant you write a sentence you will not gate. Every downstream doc can only *discover* that sentence, never *prevent* it. Discovery costs a panel round; prevention costs one line of judgment.
+
+**Concrete proof from my run.** One sentence — *"remembered ... so a later build does not repeat it"* — caused **three separate FP failures across three panels**. It was never gated by any test, because it described machinery the repo already owned rather than anything my feature promised. An atom list would have killed it before it was ever written: it had no atom, therefore no test, therefore no reason to exist.
+
+**FIX A1 — move FP left. Add a mandatory gate to `04_create.md`, before any prose is written:**
+
+> **CREATION GATE F — THE ATOM LIST (blocking; no description sentence may be written before this exists).**
+> 1. Enumerate every behavior you intend to gate, numbered R1..Rn. Expect 30-40 for a 500-word description.
+> 2. For each atom name its killing test *in the same line*. An atom with no named test is deleted, not deferred.
+> 3. **Write the description FROM the numbered list.** Every sentence must cite the atom it came from.
+> 4. Any sentence that cites no atom is deleted before the draft is finished.
+>
+> Artifact: `_artifacts/atom_list.md`. `/validate` refuses to proceed without it.
+
+**Global, not repo-specific:** every submission on every repo has a description and a test suite. The ordering constraint between them is universal.
+
+---
+
+### A2. `/fix-fp` structurally BIASES toward the expensive lever `[SEVERITY: CRITICAL]`
+
+**Evidence.** `FP_HANDBOOK.md` §1.1 states the equation and ranks the levers correctly:
+
+```
+FP SURFACE = what the PROMPT PROMISES  −  what the TESTS GATE
+GATE MORE  = shrinks FP, can DESTROY solvability, high cost
+PROMISE LESS = shrinks FP, costs NOTHING
+```
+
+But `/fix-fp` — the command actually invoked when a panel fails — never states this equation, never ranks the levers, and never requires you to try the free one first. It is 32 lines of ledger discipline, re-verification law, and compliance proof. Its opening instruction is to re-read experience.md; its operational core is *"gate EACH sibling"*. The word "narrow" appears once, buried inside a sentence about scope-as-armor.
+
+**Why this costs iterations.** A panel report arrives naming a divergence. The path of least resistance — and the one `/fix-fp` describes — is to write a test for it. That closes one instance while the class stays open, and spends a solver. This is exactly the mechanism `FP_HANDBOOK` §1.1 diagnoses ("the five failed rounds only ever pulled the first lever") — but the diagnosis lives in a doc `/fix-fp` does not load.
+
+**Measured on my run.** The two class-S narrowings cost **zero solvers** and one of them **restored 30 points of solvability** (0/13 cliff -> 30%). The gates I added cost 0-3 solvers each. Same FP outcome, opposite solvability outcome.
+
+**FIX A2 — put a forced ordering at the TOP of `/fix-fp`, above all ledger discipline:**
+
+> **THE LEVER ORDER (answer in writing before you touch any file).**
+> `FP SURFACE = PROMISED − GATED.` For the flagged behavior, answer in this order and stop at the first YES:
+> 1. **Is this behavior MY FEATURE'S promise, or machinery the repo already owns?** Repo's -> **DELETE the sentence** (free). Log as class S.
+> 2. **Is the promise WIDER than the wall it protects?** -> **NARROW the quantifier** (free). Log as class N.
+> 3. **Is it genuinely mine and genuinely promised?** -> only now **ADD A GATE** — and **MINE it first** (§A3).
+>
+> A `/fix-fp` wave that adds a gate without recording why steps 1 and 2 were both NO is **INCOMPLETE**.
+
+**Global:** the equation is arithmetic over prose and tests. It holds for any repo.
+
+---
+
+### A3. The panel's REMEDY is treated as instruction, not hypothesis `[SEVERITY: HIGH]`
+
+**Evidence.** `FP_HANDBOOK` §1.4 (LAW 5) is unambiguous: *"A panel sees one candidate; it does not see the population. Before adopting any prescribed fix, mine the last batch's patches against it. If it fails 100% of them, it is a 0-solve cliff, not a fix."* `/fix-fp` mentions mining only inside the LOCAL PRE-PLATFORM VALIDATION LAW paragraph, as a pre-submission scoreboard step — **not as a precondition on adopting the panel's proposed remedy.**
+
+**Measured on my run.** A gate I wrote from the reference's behavior alone failed **10 of 10 real implementations** — an invented requirement, not a wall. Mining caught it; nothing else would have. My log, ledger row 60, tags this as *"the exact failure FP_HANDBOOK 1.5 exists to prevent."* I still shipped it into a wave because the command did not stop me.
+
+**FIX A3 — one line, made blocking in `/fix-fp`:**
+
+> **NO NEW GATE SHIPS UNMINED.** Apply the candidate gate to every implementation from the last batch before it enters a regeneration. **0 passers = cliff, do not ship** (find another close, escalate). **100% fail the new test specifically = an invented requirement**, scope it out. **0 solver cost = free closure, always ship.** Record the mined number in the ledger row; a gate with no mined number is not shipped.
+
+---
+
+### A4. Atom coverage is mistaken for path coverage `[SEVERITY: HIGH — this one is missing from the docs entirely]`
+
+**Evidence.** Both `fp_kill_protocol` STEP 1 and `FP_HANDBOOK` §1.8 organise the floor around the **atomic requirement list** — mutate per atom, one mutant per atom. That is necessary and it is **not sufficient**, and no doc currently says so.
+
+**Measured on my run (ledger row 88, my most expensive single lesson).** I proved **30/30 atoms gated** and still shipped **two FP failures**. Cause: every mutant I wrote lived in the *scheduler* — the subsystem the feature was "about" — while all three panel defects lived in the **built-ins / hooks / bookkeeping plumbing around it**. Atoms describe *what you promised*; defects live in *code the feature touches*. Those are different sets, and the second is the one the panel probes.
+
+**FIX A4 — add a second, orthogonal quota to the executed floor (`fp_kill_protocol` §3B + `FP_HANDBOOK` §1.7):**
+
+> **TWO QUOTAS, BOTH MANDATORY — they are orthogonal and neither implies the other.**
+> - **Per ATOM:** >=1 mutant per atomic requirement (existing rule; do NOT sample — sampling lies, see A5).
+> - **Per CODE PATH:** >=1 **KILLED** mutant per subsystem/file the reference diff touches, **plus every pre-existing path the feature re-routes** (hooks it now bypasses, built-ins it now reports, state it now writes).
+>
+> Before mutating, list the subsystems the diff touches and the paths it re-routes. **A subsystem with zero killed mutants is an ungated subsystem, regardless of atom coverage.**
+
+The re-routing clause matters as much as the diff clause: my surviving panel dissent was a `protected` hook the new path no longer called. That hook appears in **no** diff line and maps to **no** atom.
+
+---
+
+### A5. Sampling is permitted where it silently produces false confidence `[SEVERITY: MEDIUM-HIGH]`
+
+**Evidence + measurement (ledger row 85).** FP VALIDATION wave #4 mutated **10 of 30** atoms and found 1 hole. Wave #5 mutated the other 20 and found **a second**. A sampled sweep that reports "clean" is indistinguishable from a complete one in the log — which makes it *worse than not running it*, because it converts an unknown into a false green.
+
+Related, same class (ledger row 83): **mutating all occurrences of a pattern at once hides which site is uncovered.** Three call sites, one ungated; a global replace killed the test and reported "gated". Isolate per site.
+
+**FIX A5 — make it a hygiene rule in the floor, alongside the existing no-op-control rule:**
+
+> **NO SAMPLING, NO GLOBAL REPLACE.** Mutate **all** atoms and **all** paths, or the sweep's verdict is void — report `N/M covered`, never a bare "clean". Mutate **one site at a time**; a pattern replaced at every occurrence hides which site was uncovered. Existing hygiene stands: no-op control MUST survive, positive control MUST die, assert the mutation applied (`count == 1`, `after != before`), rebuild in `finally`, **UNRESOLVED is never a pass**.
+
+---
+
+### A6. Nothing protects the reference from the harness `[SEVERITY: MEDIUM — pure loss, no upside]`
+
+**Evidence.** `FP_HANDBOOK` §1.7 requires "restore-verify byte-identical at the end, and assert it." Correct but insufficient: it protects the *completed* run. An **interrupted or concurrent** battery leaves a mutation applied in the reference and no assertion ever fires.
+
+**Measured:** this corrupted my reference **twice**. Both times it was caught only by an explicit `cmp` against a snapshot — never by the battery's own hygiene. A corrupted reference is maximally expensive: every subsequent test result is meaningless and the failures look like real defects.
+
+**FIX A6:**
+
+> **REFERENCE INTEGRITY PREFLIGHT.** Before every battery run and before every regeneration: `cmp` the reference against the newest panel-confirmed snapshot and **abort on any difference**. Snapshot each wave (`reference_snapshots/solution.N.patch`). Never run two batteries concurrently — take a lock. **An interrupted battery is assumed to have corrupted the reference until `cmp` proves otherwise.**
+
+---
+
+### A7. The 5x simulation gate is measurably not paying for itself `[SEVERITY: MEDIUM — cost, not correctness]`
+
+**Evidence, from the workflow's own text.** `/fix-fp` carries this admission: *"on the lopdf2 straight approval the sims cost 15+ agent-hours across three rounds and produced 0 of 9 real FP defects — all nine came from serially-executed mutants or from reading tests back against the prompt."* It then requires the gate anyway, pending two more projects of data.
+
+**This project is one of those projects, and it is now reportable: `FOUND-ONLY-BY-SIM = 0`.** All five of my FP-decisive findings came from executed mutants, mining, or reading the panel verdict against the prompt. n=2 with 0 unique yield across ~20 agent-hours.
+
+**FIX A7 — do not delete it; demote it and redirect the budget:**
+
+> Demote the 5x sim from **mandatory** to **conditional**: required only when the executed floor cannot run (no prior batch to mine, or a repo where the battery cannot execute). Reallocate the freed budget to the executed floor's two quotas (A4), which is where **9/9 and 5/5** of the real defects have actually come from. Keep logging `FOUND-ONLY-BY-SIM`; restore the gate the moment it scores non-zero.
+
+I flag this as the one recommendation the user should weigh personally: it *relaxes* a gate, and my standing instruction is that relaxation needs sign-off. The measurement supports it; the decision is yours.
+
+---
+
+### A8. The FP corpus has no INDEX, so each project rediscovers it `[SEVERITY: MEDIUM]`
+
+**Evidence.** FP knowledge is spread across `fp_kill_protocol.md` (378 lines), `FP_HANDBOOK.md` (405), `community_fp_tips.md` (110), `FP_AUDIT_PING.md` (34), `/fix-fp` (32) — **959 lines, with real overlap and no map.** `/fix-fp` instructs "read `fp_kill_protocol.md` IN FULL" (70KB) but never mentions `FP_HANDBOOK.md`, which contains the lever equation that decides the whole fix.
+
+**FIX A8:** one **FP QUICK CARD** at the top of `/fix-fp` — the equation, the lever order, the two quotas, mine-before-ship, no-sampling — with pointers to the long docs for detail. `FP_HANDBOOK` already ends with exactly such a card; it is simply not routed to the command that needs it.
+
+---
+
+## PART B — NON-FP DEFECTS (same read, lower priority)
+
+### B1. The DISCLOSURE RATCHET has no counter-force at creation `[HIGH]`
+
+Every rule in the system adds disclosure; none removes one. The DIFFICULTY RESTORATION GATE correctly catches this **per wave** — but a project that starts over-promised is already deep in the hole before wave 1. **Fix:** run the atom list (A1) as an anti-ratchet at creation — write the *narrow* form first (`FP_HANDBOOK` LAW 2), so later waves have room to disclose without collapsing. Concretely: **budget the description to 490 words, not 500.** I sat at 499-500 for 12 waves with no headroom and had to scope out to 454 to buy room.
+
+### B2. A wall with one observable consequence is a tripwire `[HIGH]`
+
+The system optimises *pass rate* but never *wall shape*. My accepted batch scored 1/10 while every failing run passed 69-73 of 74 tests — and drew the only scored criticism I received: an advisory that the rate "understates broad task completion". **Fix:** at atom-list time, every intended wall must name **>=2 independent observable consequences** (different describes, different subsystems). One-test walls read as thin final-mile tripwires. Pairs with the FIELD_CARD corollary already in the docs: *if missing one requirement fails exactly one test, that test IS the wall and disclosing it ends the project.*
+
+### B3. Verdict severity is treated as priority; it is a schedule `[HIGH — cheapest fix in this document]`
+
+I deferred an Auto Review **MEDIUM** (*"tests do not verify the custom `thisObj` receiver is preserved"*) because it was advisory. **That exact finding came back as my final FP failure and cost a full batch.** The panel and the reviewer are looking at the same artifact through different lenses; a reviewer's low-severity note is a *preview* of a probe. **Fix, one line in `/fix-auto-review` and `/fix-fp`:**
+
+> **An Auto Review finding at ANY severity — including MEDIUM/advisory — is a PREDICTION OF THE NEXT FP PROBE. Close it in the wave it appears. Deferring an advisory finding is how it returns priced at a full batch.**
+
+### B4. `/fix-*` commands carry ~60% identical preamble `[MEDIUM]`
+
+The MISSION / AUTO SELF-AUDIT / ALL-CHECKS COEXISTENCE / DILIGENCE blocks are duplicated near-verbatim across all five fix commands. The genuinely check-specific content in `/fix-fp` is roughly 6 of 32 lines. This dilutes the specific instruction and makes the docs drift apart on edit. **Fix:** extract the shared preamble to one `FIX_PREAMBLE.md`, include by reference, and let each command be *only* its distinctive method.
+
+### B5. Reference-integrity discipline is FP-scoped but is universal `[MEDIUM]`
+
+`cmp`-against-snapshot appears only in FP contexts. It should be a **global preflight before any regeneration of any deliverable**, on any repo. A corrupted reference is equally fatal to Quality and Agent Runs.
+
+---
+
+## PART C — THE ONE-PAGE ANSWER TO "HOW DO WE PASS FP FIRST TIME"
+
+Six rules. All repo-agnostic. In sequence.
+
+1. **ATOM LIST BEFORE PROSE.** Number every behavior you will gate; name its killing test on the same line; write the description *from* the list. Delete every sentence that cites no atom. *(would have removed 3 of my 5 FP rounds)*
+2. **THE OWNERSHIP QUESTION, per atom.** *"Is this MY feature's promise, or machinery the repo already owns?"* Anything the repo owns is cut before it is written. *(the single question that kills the most FP surface, at zero cost)*
+3. **STATE EVERY DELIBERATE SILENCE POSITIVELY.** Not omission — an explicit sentence: *"where no declaration separates two stages, either may run first."* This is the sentence an adjudicator quotes back to overturn a dissenting judge. *(both my final overturns turned on exactly this)*
+4. **TWO MUTATION QUOTAS: per atom AND per code path** — including every pre-existing path the feature re-routes. All atoms, all paths, one site at a time, no-op control survives, positive control dies. *(atom coverage alone gave me 30/30 and two FPs)*
+5. **MINE EVERY GATE BEFORE SHIPPING IT.** 0 passers = cliff. 100% fail the new test = invented requirement. 0 cost = free closure. *(caught a gate that failed 10/10 real implementations)*
+6. **CLOSE EVERY VERDICT FINDING AT ANY SEVERITY, IN ITS OWN WAVE.** The advisory you defer is the probe you meet next round. *(my deferred MEDIUM became my final FP failure)*
+
+**And the honest limit, so this is not oversold:** of my 5 FP probes, **2 were free** — prose discipline (rules 1-3) would have deleted them outright. The other **3 were real defects** in the reference. Rules 4-6 do not make those disappear; they move them **off the panel and into the pre-batch floor**, where a miss costs a day instead of a batch. That is the realistic target: **FP-first-time becomes likely, not guaranteed** — and the residual failures become cheap.
+
+---
+
+## PART D — WHAT THE WORKFLOW GETS RIGHT (do not touch these)
+
+Stated so the proposal is not read as a teardown. These were load-bearing and correct:
+
+- **The lever taxonomy (D/R/S/N/W/X).** The classification is right, W and X are correctly banned, and class S is what ended my FP series.
+- **`FP_HANDBOOK` §1.1 and §1.5.** The equation and mine-before-ship are the two most valuable paragraphs in the system. They need *routing*, not editing.
+- **The executed floor's hygiene** (no-op control, rebuild-in-`finally`, assert-the-mutation-applied, UNRESOLVED-is-never-a-pass). Every clause has caught something real for me.
+- **THE SATISFY-ALL LAW / third-state arbitration.** Prevented me from trading a green check for another. Genuinely load-bearing.
+- **THE ADAPTABILITY LAW.** The reason this project reached approval at all — it licensed me to stop following the sequence when the sequence was wrong for the situation, and to test three variants side by side instead of trusting one paraphrase.
+- **THE DILIGENCE LAW.** Every FP hole I found came from executing something I was tempted to reason about instead.
+
+---
+
+## PART E — SUMMARY TABLE
+
+| # | defect | severity | fix | where |
+|---|---|---|---|---|
+| A1 | FP filed as repair, is creation | **CRITICAL** | CREATION GATE F: atom list before prose | `04_create.md` |
+| A2 | `/fix-fp` biases to the expensive lever | **CRITICAL** | forced lever order at top of command | `/fix-fp` |
+| A3 | panel remedy adopted untested | HIGH | no new gate ships unmined | `/fix-fp` |
+| A4 | atom coverage != path coverage | HIGH | two quotas: per atom AND per code path | `fp_kill_protocol` §3B, `FP_HANDBOOK` §1.7 |
+| A5 | sampling / global-replace permitted | MED-HIGH | no sampling, one site at a time, report N/M | floor hygiene |
+| A6 | reference unprotected from harness | MEDIUM | `cmp` preflight, lock, assume corrupt if interrupted | floor hygiene |
+| A7 | 5x sims: 0 unique yield at n=2 | MEDIUM | demote to conditional; redirect budget **(needs your sign-off)** | `/fix-fp`, `pre_submit_gate` |
+| A8 | 959 lines of FP docs, no index | MEDIUM | FP QUICK CARD atop `/fix-fp` | `/fix-fp` |
+| B1 | ratchet has no creation-time counter | HIGH | narrow form first; budget 490 words | `04_create.md` |
+| B2 | one-test walls are tripwires | HIGH | >=2 independent consequences per wall | `04_create.md`, `prompt_difficulty` |
+| B3 | severity treated as priority | HIGH | any-severity finding = next FP probe | `/fix-auto-review`, `/fix-fp` |
+| B4 | ~60% duplicated preamble | MEDIUM | extract `FIX_PREAMBLE.md` | all `/fix-*` |
+| B5 | reference integrity is FP-scoped | MEDIUM | global preflight before any regeneration | global |
+
+---
+
+## PART F — VERIFICATION NOTE
+
+Claims here are grep-verified or measured, not recalled:
+
+- `04_create.md`: 0 occurrences of `FP_HANDBOOK`, 0 of "atom list" — **verified by grep**.
+- `/new-sub`, `/speed`, `/validate`: 0 occurrences of `FP_HANDBOOK` — **verified by grep**.
+- First `FP_HANDBOOK` reference in my project log is at FIX #10, post-first-FP-failure — **verified by grep on `_artifacts/experience.md`**.
+- 30/30 atoms gated with 2 FPs shipped — ledger row 88.
+- Sampling 10/30 found 1 hole; the remaining 20 found a second — ledger row 85.
+- A gate failing 10/10 real implementations — ledger row 60.
+- Reference corrupted twice by an interrupted battery, caught only by `cmp` — FIX #10 and FIX #19.
+- 5x sims `FOUND-ONLY-BY-SIM = 0` on this project — sim yield ledger, all 5 rounds.
+- Lever costs: class-S narrowings 0 solvers (one restored 0/13 -> 30%); added gates 0-3 solvers each — mining runs, FIX #15/#17/#20.
+
+**Not verified / stated as judgment:** the claim that A1+A2 would have collapsed 5 rounds to ~2 is a counterfactual. What is measured is that 2 of my 5 probes were pure prose defects and 3 were real reference defects. The rest is inference from that split.
+
+
+
+
+3. 
+
+# WORKFLOW CRITIQUE — the FP lane (and four other flows)
+
+**From:** the project chat that just took `eclipse-langium/langium` alignment-groups to acceptance
+(3/10 = 30% all-genuine · FP 3/3 · Auto Review 3/3 3/3 3/3 · human Final Review Approved).
+**Basis:** **five consecutive FP panel failures** on that project, plus the four-acceptance corpus on that repo,
+plus a full read of `fp_kill_protocol.md` (378 lines), `~/.claude/commands/fix-fp.md`, `FIELD_CARD.md`,
+`community_fp_tips.md`, `prompt_difficulty.md`, `verifier_audit_study.md`.
+**Nothing under `olympus-workflow/` was edited.** Every item below is a PROPOSAL for the maintainer.
+
+**Every principle here is stated repo-agnostically and gated by the `olympus_accepted.md` §12 five bars**
+(strip-the-nouns · corpus fire-count · existing-home · evidence provenance · cost-of-wrong). Where a proposal is
+n=1 I say so and scope it down rather than dressing it as global.
+
+---
+
+## PART 0 — WHAT THE PROTOCOL ALREADY GETS RIGHT (so the rest is read in context)
+
+I want to be precise that this is **not** a "the doc is bad" memo. `fp_kill_protocol.md` already contains, and
+already contains *correctly*: the CLOSE-vs-SCOPE duality · the umbrella-fence rule · handling-a-probe-by-verdict
+(including the inverse-reject trap) · symmetric silence · the same-check-failing-twice law · the atomic
+requirement list · the living requirement↔test map · the cheat sweep · the executed floor · the reverse-direction
+audit · the clause cross-product law · survivor triage · constructed reachability · harness self-discrimination ·
+no-FP-CLEAN-without-an-independent-source · the FP stopping rule · the promise-minus-gate equation with LAWS
+N1–N3 and the class-N guardrail · mine-the-candidate-gate with LAW M1.
+
+That is a strong document. **The defects below are almost all STRUCTURAL rather than doctrinal** — the right laws
+are present but sit in the wrong place, are phrased as introspection instead of execution, or are counted instead
+of instrumented. That distinction matters because it means most of the fixes are cheap.
+
+---
+
+# PART 1 — THE FP DEFECTS
+
+## ⛔ DEFECT A — THE DOCUMENT'S PROCEDURE CONTRADICTS ITS OWN NEWEST AND BEST LAW
+### *(highest value item in this file; costs nothing but a renumber)*
+
+**WHAT THE DOC SAYS NOW.** The executable spine runs:
+`STEP 1 atoms → STEP 2 living map → STEP 3 cheat sweep → STEP 3B executed floor → STEP 4 reverse map →`
+**`STEP 5 — CUT THE OVER-PROMISES`**. And the framing section near the top lists the two survival routes in this
+order: *"1. **CLOSE it** … 2. **SCOPE it out**"*.
+
+Meanwhile **LAW N1 — THE SHIELD** (*"read the description CLAUSE BY CLAUSE … If NO → **NARROW or DELETE the
+clause** FIRST. Adding the test is the fallback, not the reflex"*) was appended **~100 lines BELOW the step it is
+supposed to govern**, in a block after the numbered protocol ends.
+
+**WHAT WENT WRONG (measured).** An agent executing the document top-to-bottom builds gates for **four steps**
+before it is ever invited to delete a promise. I did exactly that, five rounds running. Each round I closed the
+reported instance while the *class* stayed open, and the ratchet ran until one such closure measured **0 solves**.
+The round that passed pulled the free lever — and the free lever is step 5 of 9 in a 70 KB document.
+
+**This is not a doctrine gap. It is an ordering bug, and ordering is what an executing agent obeys.**
+
+**THE FIX (exact, minimal):**
+1. Renumber so the free lever is **STEP 2**: `STEP 1 ATOMS → STEP 2 THE PROMISE AUDIT (narrow/delete first) →
+   STEP 3 living map over WHAT SURVIVED → STEP 4 cheat sweep → STEP 5 executed floor → …`
+   The map and the floor then run over a *smaller, honest* surface, which also makes them faster.
+2. Move LAW N1/N2/N3 + the class-N guardrail **into STEP 2's body**, leaving a pointer where they are now.
+3. Swap the framing list to **"1. SCOPE it out (free) … 2. CLOSE it (costs solvers)"**, and add one line:
+   *"Try route 1 on every finding before route 2. Route 2 is never wrong, but it is never free."*
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes (no repo noun). Fire-count **(re-verified over the full 11-debrief corpus): 7 of 11** contain an out-of-contract / prompt-silent /
+scope-fence episode. On the four same-repo projects the FP-round counts are **1, 3, 5, 5** — and the **1** is the
+project whose debrief says *"symmetric silence killed the only panel dissent"*, i.e. **the only one that scoped
+early is the only one that passed FP on the first panel.** (I first wrote "4 of 4 … 3, 3, 5, 5"; the 1 was never
+verified and is wrong. The corrected figure argues the point *better* than the wrong one did.) Existing-home: yes — this is a reorganisation of existing text, not new doctrine. Provenance:
+EXECUTED-BY-ME on one project, corroborated by the corpus. Cost-of-wrong: ~zero; the worst case is that an agent
+narrows a clause it should have gated, which the existing class-N guardrail (reverse-direction audit) already
+catches. **VERDICT: ADOPT — structural, no new doctrine.**
+
+---
+
+## ⛔ DEFECT B — "ATOM COVERAGE" IS TREATED AS "SURFACE COVERAGE"
+
+**WHAT THE DOC SAYS NOW.** STEP 2 builds requirement→test with zero empty cells; STEP 3B runs the executed floor.
+The stopping rule's condition (1) is *"every description clause maps to a killing test with zero empty cells."*
+The string **"per subsystem" appears zero times** in the protocol.
+
+**WHAT WENT WRONG (measured, two projects).** A sibling langium project **proved 30/30 atoms gated** and shipped
+**2 false positives in the very next panel round**. Cause: every mutant it had written lived in the *scheduler*,
+while all three real defects lived in the *plumbing around it* (registry wiring, lifecycle hooks, state
+bookkeeping). On my own project, two FP rounds died the same way — the defect lived in a code path the reference
+reached but no mutant touched.
+
+**Coverage of the PROMPT is not coverage of the SURFACE.** A 100%-atom map and a 45-mutant floor can both be green
+while an entire *file* the diff touches has never had a single mutant killed in it.
+
+*(The doc's nearest existing rule, "ATTACK THE UNSAMPLED AXIS", is about **fixture** axes — which values a fixture
+happened to hold. This is a different axis: the **distribution of your mutants across the code you shipped**.)*
+
+**THE FIX.** Add to STEP 3B a required output — the **KILL MATRIX**, one row per file/subsystem the solution diff
+touches, and a hard rule: **≥1 KILLED mutant per subsystem.** A subsystem with zero killed mutants is an untested
+surface no matter how green the atom map is. Report it as:
+
+```
+SCHEDULER    6 killed /  9        REGISTRY   3 killed / 3
+VALIDATOR   12 killed / 12        BUILDER    8 killed / 9      <- any 0-killed row blocks the claim
+```
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(re-verified): 2 of 11** — but the two are **different repos** (a langium project and a tinybase
+project), which matters more for transferability than the raw count. **CANDIDATE by the letter (2), cross-repo in
+substance.** I originally claimed 3 of 8; that was wrong in both numerator and denominator.
+Existing-home: STEP 3B. Provenance: one EXECUTED-BY-ME, one READ-SECOND-HAND. Cost-of-wrong: adds work to the
+floor; mitigated because it usually *reduces* total mutants (it redistributes rather than adds).
+**VERDICT: ADOPT-AS-EXTENSION to STEP 3B, evidence scoped to "two projects."**
+
+---
+
+## ⛔ DEFECT C — SILENCE IS DOCTRINE'D AS OMISSION AND SYMMETRY, NEVER AS **POSITIVE PROSE**
+### *(this is the one I would fix second, and it is a genuine CORRECTION to an existing law)*
+
+**WHAT THE DOC SAYS NOW.** §3 SYMMETRIC SILENCE: *"UNSPECIFIED IN PROMPT ⇔ UNIMPLEMENTED IN REFERENCE … for every
+behavior you scope OUT of the prompt, scope it out of the REFERENCE too … **asymmetric silence invites the probe;
+symmetric silence kills it**."* The strings **"positively" and "state the silence" appear zero times.**
+
+**WHERE THAT IS WRONG (measured counterexample).** On the accepted project, the disputed behaviour was
+**implemented in the reference** and therefore *asymmetric* by the doc's definition — the condition under which
+the doc predicts you get probed and lose. A judge did build a probe, and it **genuinely discriminated**
+(candidate 1 space, reference 5). **The dissent was overturned anyway**, because the description carried a
+*positively stated* scope clause the adjudicator could quote verbatim:
+
+> *"the prompt scopes priority arbitration to align-vs-ordinary (**'when an ordinary one on that same side wants
+> it too'**) … and says nothing about two same-side appended actions converging on one target."*
+
+The sibling langium project won **both** of its final probes the same way, on two positively stated silences:
+*"either may run first"* and *"left as it is today."* Its own debrief calls this *"the single highest-leverage
+sentence-level technique in the whole project."*
+
+**THE PRINCIPLE, repo-agnostically.** An adjudicator adjudicates on **quotable text**. They can quote a sentence;
+**they cannot quote an omission.** Symmetric silence works by making the probe *undiscriminating* — it needs the
+reference to share the gap. Positive scoping works by making the probe *out-of-contract* — it holds **even when
+the reference implements the behaviour**, which is the strictly larger and more useful case.
+
+**THE FIX.**
+1. Add **LAW N4 — STATE THE SILENCE POSITIVELY.** *"Do not merely omit a behaviour you do not intend to gate;
+   write one sentence that positively bounds the contract ('either order is allowed', 'left as it is today',
+   'for direct children only'). An adjudicator can quote a sentence at a dissenting judge; they cannot quote an
+   omission."*
+2. **Correct §3**: demote symmetric silence to the *fallback* used when the behaviour cannot be positively bounded
+   in prose, and delete the implication that asymmetric silence necessarily loses. Replace with: *"asymmetric
+   silence loses only when it is also UNSTATED. Asymmetric + positively scoped survived a genuinely
+   discriminating probe (measured, 2026-08-10)."*
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(re-verified): 2 of 11**, both langium → **n=2 same-repo → CANDIDATE, not GLOBAL.** Count unchanged
+from my original claim; only the denominator was wrong. Existing-home: §3 + the class-N block. Provenance: one
+EXECUTED-BY-ME, one READ-SECOND-HAND. Cost-of-wrong: **the real risk** — an agent could positively state a scope
+it *does* gate, creating prose/test disagreement. Mitigated by the existing class-N reverse-direction audit, which
+must be cited inside LAW N4.
+**VERDICT: ADOPT-AS-EXTENSION with honest scope ("measured on two projects, same repo — watch for a third").**
+I flag deliberately: this is the item I am most confident about *practically* and least able to prove *globally*.
+
+---
+
+## ⛔ DEFECT D — "TRIPLE-CONFIRM" COUNTS REPETITIONS INSTEAD OF INSTRUMENTS
+
+**WHAT THE DOC SAYS NOW.** *"run STEPS 1–8 in FULL at least **3 separate times** … Only when THREE independent
+passes each come back FP-clean … If any pass finds a gap, fix it and RESET the counter."*
+
+**WHAT WENT WRONG (measured).** My FP AUDIT #1 was three full adversarial passes of the protocol. It returned
+FP-CLEAN. **The platform panel falsified it within hours.** Repeating a pass whose instruments are *mutation +
+cheats I wrote myself* has near-zero marginal power, because pass 2 and pass 3 share pass 1's blind spot. Resetting
+the counter makes it worse: it rewards the agent for producing three *identical* clean runs.
+
+What actually found defects, across five rounds, was **structurally different instruments**:
+
+| instrument | what it can find | its blind spot |
+|---|---|---|
+| mutation floor | behaviours the reference implements | architectures the reference does not have |
+| cheat hunt | plausible-but-incomplete solutions | anything needing a real agent's design |
+| independent second implementation | reference bugs, spec ambiguity | shared misreadings of the prose |
+| real-patch mining | what actual agents get wrong | corners no agent happened to hit |
+| cross-product cell probe log | interaction defects | single-rule defects |
+
+The doc *already knows this in one place* — *"Forward and reverse are DIFFERENT audits with DIFFERENT blind
+spots"* — but the confirm rule never generalises it.
+
+**THE FIX.** Replace "3 clean passes" with: **"N INDEPENDENT INSTRUMENTS, each named with its blind spot and each
+paired with a known-defective control it must catch. A repeat of the same instrument does not count as a second
+confirmation."** Keep the reset rule but reset only the *instrument that fired*, not all of them.
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(re-verified): 3 of 11** — a clean-verdict audit later falsified (dolt, and two langium projects).
+I originally claimed 4 of 8; the lopdf case I cited lives in the WORKFLOW doc, not in a debrief, so it does not
+count as corpus evidence. **Still GLOBAL at 3, but on weaker evidence than I first wrote.** Existing-home: STEP 9. Provenance: EXECUTED-BY-ME. Cost-of-wrong: low; strictly more diverse evidence for
+the same or less work. **VERDICT: ADOPT.**
+**Scope note:** this critique covers **TRIPLE-CONFIRM**. I did **not** run the submit-time *5× model-mix
+simulation* (2 Sonnet + 2 Opus + 1 master), so I make **no claim** about it — see Part 3.
+
+---
+
+## ⛔ DEFECT E — "THE REFERENCE MUST BE GOLD" IS INTROSPECTION, NOT A METHOD
+
+**WHAT THE DOC SAYS NOW.** *"Before submit, per requirement ask: 'does my reference do this CORRECTLY, or did I
+take a shortcut the panel will find?'"* — and, correctly, *"no scope sentence saves a genuine reference bug."*
+
+**WHAT WENT WRONG (measured).** My project shipped **three genuine reference bugs** into panel rounds:
+edit-ordering, zero-width-edit stacking, and order-based claim resolution. **Zero of the three were found by
+asking myself that question.** All three were found by **constructing a cross-product cell and executing it
+against the reference**. Asking a builder whether their own reference is correct returns "yes" — that is what
+building it meant.
+
+The doc has the CLAUSE CROSS-PRODUCT LAW, but it frames the sweep as a **test-coverage** activity: *"record each
+intersection as covered / scoped-out / NEW GAP."* All three of those outcomes are about *tests*. There is no
+outcome for *"I ran this cell and the reference did something I did not expect."*
+
+**THE FIX.** Make the cross-product sweep **execute against the reference before any test is authored**, and add a
+fourth outcome to the intersection log:
+
+```
+covered  |  scoped-out  |  NEW GAP  |  REFERENCE SURPRISED ME  <- new
+```
+A `REFERENCE SURPRISED ME` cell is **either a reference bug or an unstated requirement** and must be resolved as
+one or the other *before* a test is written for it. Writing the test first freezes the bug into the contract.
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(re-verified by READING every hit, not just counting them): 7 of 11 fire, and 1 is an explicit
+COUNTER-EXAMPLE.** go-git states: *"In all five rounds the reference was CORRECT and the SUITE was blind. Not one
+FP was a reference bug"* — I had counted that as a fire because my grep matched the words. **The counter-example
+is worth keeping:** it marks the condition under which this defect does not apply — when the reference is solid
+and the *suite* is the weak side, the reference-probe log costs time and returns nothing. Still the
+best-evidenced defect in this file after A, at 7 of 11. Existing-home: the CLAUSE
+CROSS-PRODUCT LAW + "THE REFERENCE MUST BE GOLD" — join them. Provenance: EXECUTED-BY-ME. Cost-of-wrong: near
+zero; it is a logging column plus an ordering requirement. **VERDICT: ADOPT-AS-EXTENSION.**
+
+---
+
+## ⛔ DEFECT F — THE FP DOC NEVER WARNS THAT THE PLATFORM'S PASS RATE IS UNAUDITED
+
+**WHAT THE DOC SAYS NOW.** Nothing. `raw → genuine` and `unaudited` return **zero hits** in the protocol.
+
+**WHAT WENT WRONG (measured twice, two projects).**
+- One project's banner read **"50%, healthy"**; **3 of those 5 passes were false positives.** True rate ~20%.
+- Mine read **"30% pass rate, good difficulty, ready to submit"** — at **1/10 genuine.**
+
+The platform computes the headline over **unadjudicated** passes, so the number shown *before* the FP panel is not
+a measurement of anything. An FP protocol that never says this lets you ship on a fake number, and — worse — lets
+you *stop hardening* on one.
+
+**THE FIX.** One line in the protocol's front matter, and one in the stopping rule:
+*"Every rate is reported RAW → GENUINE. The platform banner is computed over UNAUDITED passes and is not a
+measurement until the panel has ruled. Never enter or exit an FP wave on a raw number."*
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(re-verified): 2 of 11** (two langium projects). Low count, but the cost of the sentence is zero and
+both instances were outright false readings of the headline number. Existing-home: front matter + stopping rule. Provenance: one EXECUTED-BY-ME, one READ-SECOND-HAND.
+Cost-of-wrong: zero. **VERDICT: ADOPT — one sentence, high value.**
+
+---
+
+## ⛔ DEFECT G — `/fix-fp` HAS NO ENTRY TRIAGE: EVERY FINDING GETS THE FULL 70 KB
+
+**WHAT THE COMMAND SAYS NOW.** *"READ NOW: fp_kill_protocol.md IN FULL … Iterate the fix 3× through the whole
+protocol before resubmitting."*
+
+**WHY THAT IS WRONG.** Findings come in three kinds and **the correct first move is different for each**:
+
+| finding class | correct first move | cost | how you know |
+|---|---|---|---|
+| **(a) out-of-contract** — the probe demands more than you promised | **NARROW the clause** | ~10 min, 0 solvers | no sentence in the prompt forces the behaviour |
+| **(b) real gap** in a behaviour you genuinely promised | **GATE it — but mine the gate first** | 0–3 solvers | a prompt sentence demands it |
+| **(c) reference bug** | **FIX THE REFERENCE** | varies | the reference itself gets the cell wrong |
+
+Routing (a) into the full close-the-gap protocol is how five rounds became five rounds: the protocol is *built*
+to help you add a gate, so given a finding, it adds one. The doc **already has this taxonomy** — but only inside
+the SAME-CHECK-FAILING-TWICE law, i.e. as something you reach for on the **second** failure of the same check.
+
+**THE FIX.** Make it **STEP 1 of `/fix-fp`, on the first failure**: *reproduce the probe by execution → classify
+a/b/c → route.* Only classes (b) and (c) open the full protocol. And keep the doc's own excellent warning attached
+to (a): an overturned probe **must not** be given a test — that is the inverse reject.
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(THIRD pass — my "9 of 11" was INVALID).** That grep matched *"a probe was OVERTURNED"*, which is
+evidence that **scoping worked**, not evidence that **gating was wrongly attempted first**. Those are different
+propositions and I counted one as the other — the identical loose-term error I flag in Defect I, committed twice
+in one file. Measured against the rule's ACTUAL mechanism (a project stating it only ever pulled the gate lever):
+**2 of 11**, both langium. **CANDIDATE, not GLOBAL.** The fix stays worth adopting because it is a 15-minute
+structural change and a corollary of Defect A (7 of 11), but **do not adopt it on a fire-count.** Existing-home: `fix-fp.md` STEP 1 + the same-check law
+(promote, don't duplicate). Provenance: EXECUTED-BY-ME. Cost-of-wrong: an agent misclassifies (a) as (b) and adds
+a test it did not need — the status quo. **VERDICT: ADOPT on the ARGUMENT (it is Defect A's corollary), NOT on the fire-count (2 of 11).**
+
+---
+
+## ⛔ DEFECT H — ONLY THE 💡 HINTS ARE ELEVATED; AUTO REVIEW FINDINGS ARE NOT
+
+**WHAT THE DOC SAYS NOW.** STEP 7 correctly makes the Test-Fairness 💡 suggestions mandatory — *"advisory is NOT
+permission to skip."* That rule stops at the 💡 hints.
+
+**WHAT WENT WRONG (measured, two projects).** A sibling project deferred an Auto Review **Tests T4 Medium /
+advisory** finding — which named the exact test to write — and **the FP panel found that same defect twice in the
+next round**. On my project, an Auto Review **Medium** about an untested numeric bound became a gate I had to add
+anyway, one wave later than necessary.
+
+**THE PRINCIPLE.** Auto Review and the FP panel are **two readers of the same surface**. An AR finding of *any*
+severity is a **prediction of the next FP probe**, because it is a report that a promised behaviour is ungated —
+which is the definition of FP surface. Severity describes how confident *that* reviewer was, not how likely the
+next one is to find it.
+
+**THE FIX.** Generalise STEP 7: *"Every Auto Review finding, at every severity including Medium and advisory, is
+a PREDICTION of the next FP probe. Close it in the wave it appears. A deferred Medium has already been observed
+returning as an upheld FP."*
+
+**FIVE-BAR GATE.** Strip-the-nouns: passes. Fire-count **(THIRD pass — the claim had to be SPLIT).** Reading the six hits shows two different propositions:
+**H1 — "advisory / Medium findings are REAL gaps, not noise": 5 of 11** (tinybase: *"all three were real
+promise-minus-gate holes"*; lopdf2: an advisory *"created the wall that carried the acceptance"*; link-retention:
+*"7 total, all 7 acted on"*; plus two more) → **GLOBAL.**
+**H2 — "DEFERRING one costs you a later FP round": 2 of 11** (langium4's deferred `thisObj` Medium returning as
+the final FP; one instance on my own project) → **CANDIDATE.**
+My "6 of 11" conflated them. H1 is already doctrine for 💡 hints (STEP 7); the genuinely new part is extending it
+to **Auto Review** findings, and that part rests on H2's **2**. Existing-home: STEP 7 — a one-clause generalisation. Cost-of-wrong: you close a finding you could have
+deferred; cheap. **VERDICT: ADOPT-AS-EXTENSION** — generalise STEP 7 to Auto Review findings on H1's strength (5 of 11), and state
+the deferral-cost evidence honestly as **2 of 11**.
+
+---
+
+# PART 2 — NON-FP FLOWS
+
+## ⚠️ DEFECT I — THE MSG TARGETS ARE STILL WRITTEN AS TARGETS
+
+`FIELD_CARD.md` line 32 still reads *"Solver msgs 150+ TARGET (DIAGNOSTIC … floor 100)"*, and the global context
+still carries the full msg table (*"solve <80 = WAY TOO EASY", "<80 = env or vague"*).
+
+**Measured against the accepted batch:** median **69 msgs**, every run 59–89 — i.e. **below the stated floor of
+100 and deep inside "WAY TOO EASY"** — on a batch that scored **30% all-genuine, FP 3/3, Auto Review 3/3 3/3 3/3,
+human-approved.** Separately, `trajectory.total_steps` was `None`/constant in all ten runs, and solver-vs-failer
+effort differed by 10% (52.8k vs 48.0k completion tokens) — **noise**.
+
+A number labelled TARGET and floor invites chasing even when a parenthetical says diagnostic. The caveat is
+already there; the number should go.
+
+**THE FIX.** Delete the numeric msg targets from FIELD_CARD and the msg tables from the startup context. Replace
+with the two instruments that are actually measured: **the pass-rate band** and **failing-test cluster
+diversity + how many runs passed the dominant cluster's test** (already doctrine, FDI second question).
+**VERDICT: ADOPT — deleting a known-unreliable instrument, cost-of-wrong ~zero.** Fire-count **(re-verified):
+3 of 11**. My first pass claimed 4 of 8 from a grep for the bare word "msgs", which matched all 11 and proved
+nothing — a textbook case of the §12 caution about loose fire-count terms. Refined to *effort/msg numbers
+contradicting the outcome*: 3.
+
+## ⚠️ DEFECT J — THE "SEAM CENSUS" HAS NO DECAY RULE
+
+Every accepted feature burns a subsystem, and the census is re-run per feature — but nothing tells you when the
+repo is *finished*. My repo is now at **four accepted features**; the honest state is "a fifth is plausible but
+the census is tight," and I only know that because I wrote it down manually.
+
+**THE FIX.** Add to `repeat_repo_prompt.md`: *"State the burn count and the REMAINING priced seams in every
+entry. At ≥3 burned cores, the census verdict must be re-derived from scratch, not inherited, and the entry must
+name the specific axis (LOC / Nova-hard / deterministic / GATE-0 / non-overlap) on which each remaining lead is
+still UNVERIFIED."* Fire-count **(re-verified): 3 of 11** (repos reaching a 3rd+ feature). **VERDICT: ADOPT-AS-EXTENSION.**
+
+## ⚠️ DEFECT K — `catch-up` ADVANCES THE MARKER WITHOUT PROVING THE PROJECT STILL PASSES
+
+Already partly fixed (ledger row 38 makes `/catch-up` end with `/validate`). I flag only that the ordering should
+be explicit: **run `/validate` BEFORE advancing the sync marker**, so a project that a new law has just broken
+cannot record itself as synced. One-word fix; **VERDICT: ADOPT** (ordering clarification to an adopted row).
+
+---
+
+# PART 3 — WHAT I COULD NOT VERIFY (stated so the maintainer can discount it)
+
+1. **The 5× model-mix local simulation.** I never ran it as specified. My Defect-D critique covers
+   TRIPLE-CONFIRM only. *Open question for the maintainer:* has the 5× sim ever caught an FP that the panel then
+   confirmed? If not, it is a candidate for the same instrument-diversity rewrite.
+2. **Fire-counts were re-run mechanically over the full corpus (11 debriefs, not the 8 I first used) after the
+   user challenged them.** Six of the ten were wrong: B 3→2, D 4→3, **E 3→8**, **G 5→9**, **H 2→6**, I 4→3, and
+   every denominator was 8 instead of 11. Three defects (**E, G, H**) were materially UNDER-claimed; one (**I**)
+   rested on a grep so loose it matched all 11 debriefs. Defects **C and F** remain **2 of 11** and stay
+   CANDIDATE. The corrected table is in Part 5.
+3. **I did not read** `01_analyze.md`, `02_verify.md`, `platform_spec.md`, or `pre_submit_gate.md` in full — only
+   grepped them for the concepts above. Anything they already contain, discount accordingly.
+4. **One thing I got wrong in the accepted project** that no doc caused: I ran the mutation battery against a
+   stale build for a full diagnosis cycle. The doc's HARNESS SELF-DISCRIMINATION rule already covers it. My fault,
+   not the workflow's.
+
+---
+
+# PART 4 — THE PATCH SET, ORDERED BY VALUE PER UNIT OF EFFORT
+
+| # | change | file | effort | expected effect |
+|---|---|---|---|---|
+| 1 | **Renumber so the promise audit is STEP 2**; move LAWS N1–N3 into it; flip the two-ways list to SCOPE-first | `fp_kill_protocol.md` | 30 min, no new text | the single biggest FP-round reducer; makes the free lever the default |
+| 2 | **`/fix-fp` STEP 1 = classify a/b/c, then route** | `fix-fp.md` | 15 min | stops class-(a) findings entering the gate-building machine |
+| 3 | **LAW N4 — state the silence positively**; correct §3's asymmetry claim | `fp_kill_protocol.md` | 20 min | the technique that won the last two acceptances |
+| 4 | **KILL MATRIX — ≥1 killed mutant per subsystem** | STEP 3B | 20 min | closes "atoms green, surface untested" |
+| 5 | **`REFERENCE SURPRISED ME` outcome; sweep executes before tests are authored** | cross-product law | 15 min | the only method that has actually found reference bugs |
+| 6 | **Instruments, not repetitions** (TRIPLE-CONFIRM rewrite) | STEP 9 | 20 min | kills the false-confidence clean-pass streak |
+| 7 | **RAW → GENUINE** in front matter + stopping rule | `fp_kill_protocol.md` | 5 min | stops shipping/stopping on a fake number |
+| 8 | **Every AR finding is an FP prediction** | STEP 7 | 5 min | removes one round |
+| 9 | **Delete the msg targets** | `FIELD_CARD.md` + startup | 10 min | removes a known-unreliable instrument |
+| 10 | **Seam-census decay rule** | `repeat_repo_prompt.md` | 10 min | keeps repeat repos honest past feature 3 |
+
+**If only ONE is adopted, adopt #1.** The document already contains the law that would have saved five rounds; it
+is simply positioned where an executing agent reaches it last.
+
+---
+
+# PART 5 — FIRE-COUNT CORRECTION LOG (re-run after the author was challenged)
+
+My first draft asserted ten fire-counts. **Only three had actually been executed; the rest were estimates, and the
+denominator was wrong throughout** (I used 8 debriefs; the corpus holds **11** — `tinybase_nested-savepoints`,
+`langium_validation-stages` and one other had landed since). Every count below was then re-run mechanically over
+all 11 and hand-checked. Reporting the corrections in full, because a proposal file whose evidence is guessed is
+worth less than no proposal file.
+
+| defect | draft 1 | pass 2 (count) | **pass 3 (READ the hits)** | net |
+|---|---|---|---|---|
+| A ordering bug | 7 of 8 | 7 of 11 | **7 of 11** + FP rounds are **1,3,5,5** not 3,3,5,5 | unchanged — ADOPT; the corrected 1 *strengthens* it |
+| B kill matrix | 3 of 8 | 2 of 11 | **2 of 11**, two *different repos* | CANDIDATE, cross-repo |
+| C positive silence | 2 of 8 | 2 of 11 | **2 of 11**, both langium | CANDIDATE — unchanged all three passes |
+| D instruments not repetitions | 4 of 8 | 3 of 11 | **3 of 11** | GLOBAL, weak |
+| E reference-probe method | 3 of 8 | 8 of 11 | **7 of 11 + 1 explicit COUNTER-EXAMPLE** | best-evidenced after A |
+| F raw→genuine | 2 of 8 | 2 of 11 | **2 of 11** | unchanged |
+| G `/fix-fp` triage | 5 of 8 | 9 of 11 | **2 of 11 — the 9 was INVALID** | adopt on argument, not count |
+| H AR findings | 2 of 8 | 6 of 11 | **split: H1 5 of 11 · H2 2 of 11** | ADOPT-AS-EXTENSION |
+| I delete msg targets | 4 of 8 | 3 of 11 | **3 of 11** | unchanged |
+| J seam decay | 3 of 8 | 3 of 11 | **3 of 11** | unchanged |
+
+**THREE PASSES WERE NEEDED AND EACH FOUND REAL ERRORS.** Pass 1: estimates. Pass 2: ran the greps, fixed six
+counts and a stale denominator. **Pass 3: READ the matching text, and found that two of pass 2's "corrections"
+were themselves wrong** — G's 9 measured a different proposition entirely, H's 6 conflated two propositions, and
+E's 8 included a debrief that says the opposite of what I claimed.
+
+**THREE meta-proposals for the §12 gate itself — each earned by an error above:**
+1. **Re-derive the corpus size at count time.** Mine was 3 debriefs stale, silently shifting every ratio.
+2. **A fire-count term must name the rule's OWN mechanism.** My Defect-I grep for `msgs` matched 11 of 11 and meant
+   nothing; my Defect-G grep matched *"probe overturned"* for a rule about *"a test was added first."*
+3. **A fire-count is not complete until the HITS ARE READ.** Counting matches is not evidence. Reading them turned
+   E from 8 to *7 plus an explicit counter-example*, collapsed G from 9 to 2, and split H into two propositions
+   with different support. **Require the proposer to paste one matching line per fire** — that single requirement
+   would have caught every error in this file at pass 1.
+
+**Net effect on the patch set:** the Part 4 ordering still does not change — **#1 (the renumber) is untouched by
+all of this**, because Defect A's evidence survived all three passes. **E moves up** (7 of 11, second-best
+evidenced). **G moves down sharply** — still worth doing as a cheap structural corollary of A, but its fire-count
+is 2, not 9. **H must be adopted as the split H1/H2**, not as one rule.
+
+**And read this as a data point about the gate, not just about me:** a proposal file written by someone who had
+just quoted the §12 CAUTION still shipped two loose-term fire-counts and one counter-example-as-evidence. The
+gate's weak point is that counting is cheap and reading is not — which is exactly why meta-proposal 3 above is the
+one I would adopt first.
+
+---
+
+## ONE-PARAGRAPH SUMMARY FOR THE MAINTAINER
+
+The FP protocol's *content* is strong and has already absorbed the promise-minus-gate equation, class N, mining,
+and remedy-is-a-hypothesis. What is still wrong is mostly **structure and epistemics**: the free lever is step 5 of
+9 while the expensive lever is step 1 (A); confirmation counts repetitions rather than instruments (D); the
+reference-correctness check is introspective rather than executed (E); coverage of the prompt is being read as
+coverage of the shipped surface (B); and silence is doctrine'd as omission rather than as a quotable sentence (C).
+Fix the ordering first — it costs a renumber and it is the difference between pulling the free lever first and
+pulling it fifth.
+
+
+
+
+
+4. 
+
+
+# WORKFLOW CRITIQUE — FP doctrine, from one acceptance (REVALIDATED v3)
+
+**Source project:** tinybase / nested-transaction savepoints. ACCEPTED 2026-08-11. 4/10 genuine, FP panel clean,
+Auto Review approved (Description 2/3, Tests 3/3, Solution 3/3, Agent runs 3/3).
+**Cost:** 15 local fix waves; 8 platform failures (3 Verify Solution, 2 Solution Quality, 2 Task Quality,
+1 Docker build, 1 Auto Review revision).
+
+> ## ⚠️ READ THIS FIRST — v1 OF THIS FILE WAS WRONG IN FOUR PLACES
+> I wrote v1 after reading `fp_kill_protocol.md` **lines 1-291 of 379** while listing seven documents as "read."
+> The 88 lines I skipped contain most of what I claimed was missing. **Four proposals are RETRACTED below.**
+> Absence-claims ("the doctrine has no X") are the one class of claim a partial read cannot support, and they
+> were exactly the claims I made. The retractions are kept visible rather than deleted — they are the most
+> useful thing here for calibrating how much weight to give the rest.
+
+> ## ⚠️ v3 VALIDATION ROUND — MY VERIFICATION TOOL WAS BROKEN, TWICE
+> Asked "are you sure" a second time, I re-checked v2's four surviving ABSENCE-claims (S-1, S-3, S-6, S-8)
+> against the files I had NOT read in full. **The first re-check returned "not found" for all four — because
+> the grep was broken** (the file list was word-split into a single filename; a sanity control then showed it
+> reporting 0 hits for the word "test" across 8 files that contain it 400+ times). **This is the SECOND time
+> today the same bug produced a clean-looking false negative** — the first was the corpus fire-count. Both were
+> caught only by a sanity control. Re-run correctly, per-file: **S-8 confirmed absent across all 9 documents;
+> S-1 and S-6 survive with adjacent rules now cited; S-3 is DOWNGRADED** (see below).
+> **The transferable lesson outranks the findings: an audit tool that has only ever reported "clean" has not
+> been validated — including the one-line grep you wrote thirty seconds ago.**
+
+**EVIDENCE BASIS (v3).** READ IN FULL: `fp_kill_protocol.md` (379), `/fix-fp` (32), `FP_HANDBOOK.md` (405,
+earlier in the project). **GREP-VERIFIED per-file, sanity-controlled**, for every absence-claim in this file:
+`pre_submit_gate.md` (573), `prompt_difficulty.md` (440), `community_fp_tips.md` (110), `CONVERGENCE_LAW.md`
+(56), `FIELD_CARD.md` (170), `04_create.md` (465), `03_creation_prep.md` (80), `02_verify.md`, `NOVA_ATLAS.md`.
+NOT read line-by-line: the six grep-verified files — so my claims about them are **term-scoped**, and a
+maintainer using different terms may find a hit I missed. **Workflow folder NOT edited.**
+
+---
+
+## PART 0 — RETRACTIONS (I proposed these; they are already doctrine. I violated them, they did not fail me.)
+
+| v1 item | What the doctrine already says | Verdict |
+|---|---|---|
+| **FP-4 "narrow the promise first"** | **LAW N1 — THE SHIELD** (line 322): *"read the description CLAUSE BY CLAUSE… If NO -> **NARROW or DELETE the clause** FIRST. Adding the test is the fallback, not the reflex."* Plus the full **PROMISE-MINUS-GATE EQUATION** with its lever table, N2, N3 and the reverse-direction GUARDRAIL (307-326). | **RETRACTED — already the doctrine's self-described "single highest-value FP law."** |
+| **FP-5 "no positive control on probers"** | Line 303: *"Pair every **probe**/battery with a KNOWN-DEFECTIVE control that it must catch."* Says probe, not just battery. | **RETRACTED — I broke an existing rule.** My prober had no known-defective control because I didn't follow this. |
+| **FP-7 "mutation anchors drift silently"** | Line 348: *"**assert the mutation actually applied** (`count(needle)==1` and `after != before`)"* — with the measured case of a silent no-op reporting 43/43 PASS. | **RETRACTED — already doctrine.** My four UNRESOLVED anchors were a compliance failure. |
+| **FP-2 "3× is repetition, not diversity"** | STEP 3B already embeds the diversity legs *inside* the loop — independent second decomposer, second independent reference (the phrase appears 5× in the file). Running STEPS 1-8 three times runs those three times. | **RETRACTED as framed.** My early passes under-executed 3B; the loop was not the problem. |
+
+**What this means for the maintainer:** on this project the doctrine's FP core was *right and I was
+under-executing it*. That is a materially different diagnosis from "the doctrine is broken," and it should
+lower the prior on everything below.
+
+**One correction to my own earlier deliverable:** `FP_TEMPLATE.md` in this project folder presents
+`FP SURFACE = PROMISED − GATED` as distilled from this acceptance. **It is the doctrine's own law** (2026-08-10,
+sourced to `FP_HANDBOOK.md`, which I did read). Attribution is being corrected in that file.
+
+---
+
+## PART 1 — WHAT SURVIVES REVALIDATION
+
+### ⛔ S-1. **ASSERTION BLINDNESS — the decorative-flip rule exists, I ran it, and it did not catch this.**
+*(Strongest surviving item. Better founded now than in v1.)*
+
+**What exists.** Line 353, THE DECORATIVE-ASSERTION TEST: *"flip the expected value to something wrong and
+re-run — suite still green = the assertion asserts nothing (is_ok, len>0, contains-without-exact-value are the
+usual suspects)."*
+
+**I ran it. 15 of 15 assertions were load-bearing.** The blindness survived anyway, and a human reviewer found
+a real requirement violation my suite was structurally incapable of detecting.
+
+**Why the existing rule cannot catch this class.** Flipping an expected *value* catches an assertion that
+asserts *nothing*. My assertions asserted plenty — they were blind to a **different key set**. The framework's
+default equality treats *key present with an undefined value* as *identical to key absent*, so `{a:1}` compared
+EQUAL to `{a:1, phantom:undefined}`. Deletions in my feature were encoded exactly that way. Flip any value in
+that object and the test dies correctly; add a phantom key and it stays green. **Value-sensitivity and
+shape-sensitivity are different properties, and only the first is currently tested.**
+
+Same root cause hit three tools in one project: the assertion library ignored the distinction, the serialiser
+dropped it, and the repo's own map helper deleted on it.
+
+**Nearest existing rule (v3 check, cited for honesty):** `pre_submit_gate.md:165` — *"Sentinel value (undefined
+vs null) not stated -> unfair."* That governs the PROMPT side (state your sentinel or the test is unfair). It
+does not govern the ASSERTION side (can your comparison SEE the sentinel). Adjacent, not overlapping.
+
+**PROPOSED — one clause appended to the DECORATIVE-ASSERTION TEST:**
+> Flipping the VALUE proves the assertion is not vacuous. It does NOT prove the comparison is SHAPE-sensitive.
+> Additionally feed your comparison the pair it must distinguish — present-but-empty vs absent, zero vs unset,
+> empty collection vs null — and assert it reports them DIFFERENT. A comparison that cannot separate a pair your
+> contract separates is BLIND, and every row it backs is unproven regardless of its RED-PROOF.
+
+**Bar 1 strip-the-nouns:** passes. **Bar 2 fire-count:** 0/9 pass 1, **1/9** pass 2 (dolt). **Bar 3:** existing
+home = the decorative-assertion test → **ADOPT-AS-EXTENSION, one clause.** **Bar 4:** EXECUTED-BY-ME, 3
+instances, 1 project. **Bar 5:** two extra lines per audit; no disclosure, no Restoration-Gate debt.
+**My honest read:** the fire-count says project-local; I think it is under-counted because a blind comparison is
+invisible by construction and therefore under-reported in debriefs. **The bar should win unless your terms fire
+higher.** Suggested terms: `deep.?equal|equality|sentinel|empty vs|null vs|undefined|absent`.
+
+---
+
+### ⛔ S-2. **THE 5× SIMS: the doctrine asked for two more project rows. This is row #2.**
+
+`/fix-fp` line 22 is explicit: lopdf2 produced **0 of 9** real FP defects from 15+ agent-hours of sims, *"That
+is ONE project… **Two more projects of rows do** [justify a change]."*
+
+**Row #2, this project: 0 FOUND-ONLY-BY-SIM.** All six real defects came from execution or a different mind:
+
+| Defect | Found by |
+|---|---|
+| Reference coerced an uninitialised flag, changing an unrelated public API | second independent implementation |
+| Defaulted value got an empty CRDT stamp | survivor triage |
+| A test unfairly pinned an initialisation quirk | second implementation + repo ground truth |
+| Reference inconsistent across its own two API surfaces | FP judge dissent (see S-3) |
+| Stale scoped history after a deeper rollback | **human reviewer** |
+| Prober blind to a known-observable defect | positive control (the rule I'd broken) |
+
+**PROPOSED:** don't delete the gate — **demote to MANDATORY-ONCE on the final pre-submit wave**, reallocate the
+budget to the second-reference leg (measured 3 defects here vs 0 for sims across two projects). Keep the yield
+ledger; a third 0-row demotes to OPTIONAL. **This is the one item where the doctrine has pre-committed to the
+decision rule and only needs the data.** **Bar 4:** my row EXECUTED-BY-ME; the lopdf2 row is the doc's own.
+
+---
+
+### ⛔ S-3. **AN OVERTURNED PROBE CAN STILL CONTAIN A REAL DEFECT.** *(Absence re-verified by grep.)*
+
+Line 67: *"OVERTURNED (ruled unfair / out-of-scope): your scope sentence WORKED. **Do NOT add a test for it.**"*
+Correct about the test. **Incomplete as a stopping rule** — nothing in the file tells you to check whether the
+probe nevertheless describes something your reference gets wrong.
+
+**Measured:** one of my overturned dissents (throwing-callback probe, correctly ruled non-discriminating)
+pointed at a genuine defect — **my reference behaved differently on its own two API surfaces for the same
+event.** Applied literally, the doctrine would have closed it and shipped an inconsistent reference into the
+next review, where Solution Quality was already docking me.
+
+**PROPOSED — one sentence after line 67:**
+> An overturned probe settles the FAIRNESS question only. Separately ask: *does it describe behaviour my
+> reference gets WRONG or INCONSISTENT?* If yes, fix the reference (no test added). Never close a dissent on the
+> fairness verdict alone.
+
+**v3 DOWNGRADE (verified against FIELD_CARD + 03_creation_prep).** The PRINCIPLE already exists —
+`FIELD_CARD.md:101`: *"Reference must be GOLD -- you can't scope out a real reference bug."* What is missing is
+only the PROCEDURAL WIRING: the overturned branch (`FIELD_CARD:100`, `fp_kill:67`, `03_creation_prep:53-55`)
+defines "overturned" purely as a fairness verdict and routes you straight to "not tested," with no step that
+re-asks the gold-reference question. So this is a **one-line wiring fix on an existing principle, not a new
+law** — materially weaker than v2 claimed. **Bar 3:** existing home → **ADOPT-AS-EXTENSION.** **Bar 4:** n=1.
+
+---
+
+### ⚠️ S-4. **THE UMBRELLA-FENCE RULE COST ME THE ONLY POINT I LOST. Live internal contradiction.**
+
+Line 64 mandates: *"Every umbrella clause MUST be immediately FENCED by an enumeration… NO umbrella ships
+without its fence."* I obeyed literally: *"That guarantee covers the six things below and nothing beyond them."*
+
+**Auto Review docked exactly that sentence** — P4/Medium, Description **2/3**: *"an unnecessarily contractual
+transition that makes the description feel more like a formal specification than natural maintainer prose."*
+The only thing between this and a clean 3/3 sweep.
+
+**Resolution:** **the ENUMERATION is the fence; the META-ANNOUNCEMENT of the fence is what reads contractual.**
+Listing the six guarantees concretely bounds the promise exactly as well. The sentence declaring the list
+exhaustive adds legal tone and **zero additional scope protection** — the grist precedent the rule cites was
+saved by the enumeration ("type, label, options and formula"), not by a meta-sentence.
+
+**PROPOSED — amend the rule:**
+> Fence every umbrella with a CONCRETE ENUMERATION. Do **not** add a meta-sentence announcing the fence
+> ("covers exactly the following and nothing else"). The enumeration bounds the promise; the announcement only
+> costs description tone. Fence in the maintainer's voice, not the lawyer's.
+
+**Highest-confidence non-FP item:** a direct, measured collision between two workflow rules. Any project obeying
+the current wording risks the same dock. **Bar 3:** existing home → **ADOPT-AS-EXTENSION.**
+
+---
+
+### ⚠️ S-5. **WALL INDEPENDENCE IS REQUIRED EVERYWHERE BUT NEVER TESTED.** *(Reframed — v1 overstated this.)*
+
+**What exists (I was wrong to imply it doesn't):** the FAILURE-DIVERSITY LAW demands *"a PORTFOLIO of
+independent walls at moderate p"*, gives portfolio arithmetic, and the DESIGN-TIME DUTY flags any design where
+one wall carries >50% of projected failures. NOVA_ATLAS: *"at minimum TWO INDEPENDENT INVENTED"* walls.
+
+**The gap is narrower and real: independence is ASSUMED, never VERIFIED.** Every rule protects the CLIFF
+direction (one wall carries most failures → fake *low* rate). **I hit the opposite failure**, which no rule
+covers: six walls that were **facets of one capability**, so one correct architectural choice cleared all six at
+once. Product model projected **9-32%**; measured **80%**. Error 2.5-9×. All five batch-1 agents chose the same
+architecture and cleared all six facets together — perfectly correlated, counted as independent.
+
+**PROPOSED — two clauses on the census:**
+> **(a) FACET-CORRELATION TEST (before multiplying):** ask *would ONE correct architectural choice clear several
+> of these at once?* If yes they are **ONE wall**, not N. Count independent walls, not enumerated guarantees.
+> **(b) After batch 1, RETIRE the product model** — re-project as `measured_rate × measured p_clear per wall`
+> from the junit data. My post-batch-1 projection this way was 40%; measured 40%.
+
+**Bar 3:** existing home (FAILURE-DIVERSITY / census) → **ADOPT-AS-EXTENSION.** **Bar 4:** EXECUTED-BY-ME with a
+measured before/after on both models.
+
+---
+
+### ⚠️ S-6. **MINING ASKS THE CLIFF QUESTION BUT NOT THE DIVERGENCE QUESTION.**
+
+Lines 328-343 are excellent and I followed them. The table answers *"does ≥1 real implementation still pass
+everything?"* — a **cliff check on a candidate gate you already invented.**
+
+**What it does not do: help you FIND the gate.** After my 80% batch I ran **26 behavioural probes against all 5
+real agent patches**; exactly **ONE** surface diverged. Gating that one divergence plus one new stated
+requirement took the batch **80% → 40%**. Every wall I *invented* was cleared by every agent; the wall I
+*measured* produced 5 of 10 failures.
+
+**PROPOSED — extend MINING with a second question:**
+> Mining answers two questions. **(1) Does ≥1 implementation pass everything?** (cliff check — existing).
+> **(2) WHERE do the implementations diverge from the reference and from each other?** Those divergences are
+> your only evidence-backed wall candidates. Where implementations AGREE there is no wall to build. Before
+> gating a divergence, verify the reference is RIGHT there.
+
+**v3 check — this got STRONGER.** `FP_HANDBOOK.md` mentions divergence 8 times and every one treats it as a
+THREAT TO NEUTRALISE (LAW N3, lines 237-242: *"You do not prevent agents from having out-of-contract
+divergences… You make divergences irrelevant by not promising the behavior they diverge on."*). Correct — and it
+means the doctrine currently has **no use for divergence as a SIGNAL**. The same measurement that tells you what
+to stop promising also tells you where the only real walls are.
+
+**Bar 2:** 1/9 pass 1, **2/9** pass 2 (two langium debriefs) → **CANDIDATE.** **Bar 3:** existing home →
+**ADOPT-AS-EXTENSION**, scoped *"where a prior batch or second implementation exists."*
+
+---
+
+### ⚠️ S-7. **NO REHEARSAL OF THE TEST ENTRYPOINT UNDER COMBINED EVALUATOR CONSTRAINTS.** *(Reframed.)*
+
+**What exists (v1 ignored this):** `04_create` mandates the NON-ROOT `model` user (uid/gid 1000); `02_verify`
+requires the build+test path to work OFFLINE at the pinned commit; `pre_submit_gate` requires all tooling
+preinstalled for offline runtime.
+
+**The gap:** those are *creation-time constructions*, not a **rehearsal that runs the entrypoint under all the
+constraints at once**. Nothing checks whether the entrypoint WRITES INTO THE REPO DIRECTORY. Four of my eight
+platform failures were here, none feature-related: a package manager that can't install from a lockfile that is
+out of sync upstream; a shared test-setup file fatal in-container; **a config loader that writes a temp file
+beside itself and dies on a read-only working directory**; a rendering surface broken in the eval image. A
+four-round staircase, each fix correct and each exposing the next.
+
+**PROPOSED — one pre-submit item:**
+> **HOSTILE HARNESS REHEARSAL.** Before first submission run the test entrypoint with: no pre-built artifacts, a
+> **NON-WRITABLE repository directory**, non-root user, fresh dependency resolution (not your warm lockfile),
+> and no network. Assert it produces the required report and writes nothing inside the repo dir.
+
+**Bar 1:** passes. **Bar 4:** EXECUTED-BY-ME, 4 measured failures, 1 project. **Suggested maintainer
+fire-count:** `env blocker|Verify Solution|EACCES|offline` — I expect this to fire higher than my other items.
+
+---
+
+### ⚠️ S-8. **MID-FLIGHT OBSERVATION MANUFACTURES DISCRIMINATORS.** *(Absence verified — not in the file.)*
+
+I built a wall on a probe that read state *before* the operation completed. Two implementations "diverged"; once
+driven to a committed end state they agreed exactly. The divergence was an artifact of my observation point.
+
+**PROPOSED — one line in STEP 8:** *drive every probe to a committed/rolled-back/flushed END STATE before
+calling a difference a divergence; intermediate state is not contract.* n=1, near-zero cost.
+
+**v3: the best-verified absence in this file** — 0 hits across all 9 documents (`fp_kill_protocol`,
+`FP_HANDBOOK`, `pre_submit_gate`, `community_fp_tips`, `prompt_difficulty`, `CONVERGENCE_LAW`, `FIELD_CARD`,
+`04_create`, `03_creation_prep`) on a sanity-controlled grep.
+
+---
+
+### ⚠️ S-9. **`/fix-fp` IS ~28 LINES OF PREAMBLE AND ~4 OF PROCEDURE.**
+
+The FP procedure is one line: *"read fp_kill_protocol in full."* The most valuable diagnostic sentence in the
+system — the SAME-CHECK-FAILING-TWICE law naming the three deep layers (unfenced umbrella / reference bug /
+unenumerated partition) — sits at line 93 of a different 379-line file.
+
+**PROPOSED:** hoist a 5-line **FP TRIAGE** above the preamble: *(1) reproduce by execution; (2) classify —
+unfenced umbrella / reference bug / unenumerated partition / assertion blindness; (3) pick the lever (GATE MORE
+vs NARROW, per the promise-minus-gate table); (4) apply + re-run the executed floor; (5) log the class + measured
+rate delta.* Pure ordering; cost-of-wrong none.
+
+---
+
+## PART 2 — THE HONEST SUMMARY
+
+**Of 13 items in v1: 4 RETRACTED (already doctrine), 9 survive** — and of those, 6 are one-clause EXTENSIONS to
+rules that already exist, 1 is a data row the doctrine explicitly requested, and 2 are new-but-n=1.
+
+**The real finding is uncomfortable and worth more than the proposals:** on this project the FP doctrine was
+substantially correct and my failures came from **under-executing it** — no positive control on my prober
+(line 303), unresolved mutation anchors (line 348), narrowing not tried first (LAW N1). The one genuine
+FP-doctrine hole is **shape-sensitivity of assertions (S-1)**, and it is one clause on a rule that already
+exists.
+
+**If only three things change:** S-1 (assertion shape-sensitivity), S-4 (drop the fence meta-sentence), S-7
+(hostile harness rehearsal). Those three account for the defect that reached a human reviewer, the only lane
+point I lost, and half my platform failures respectively.
+
+---
+
+## VALIDATION NOTES FOR THE MAINTAINER
+
+1. **Discount v1 entirely; this is the file.** The retraction table is the honest measure of my error rate.
+2. **Re-run bars 1-3 yourself.** My fire-counts are pasted but my terms may be narrow — the doc's own caution.
+3. **S-1 is where I most disagree with my own bar.** Count says project-local; I think it under-counts.
+   Your terms decide.
+4. **S-2 needs no argument, only a decision** — the rule pre-committed and this is row #2.
+5. **Everything is n=1 to n=2.** One acceptance is not a corpus, and I have now demonstrated on this very file
+   what happens when I generalise past my evidence.
+
+
+
+
+
+
+AND BELOW ARE MAJOR SOME FP GUIDES GENERATED BUT THE AGENTS THEMSELVES :
+
+# THE FP HANDBOOK
+
+**How to make the False-Positive panel pass on the first try, without killing solvability.**
+
+Derived from a project that failed FP **five consecutive times** and then passed **3/3 genuine** — every
+claim below is backed by a measurement from those runs, not by reasoning. Written 2026-08-10 off
+`eclipse-langium/langium` batch 28 (10 runs, 80 artifacts, all read), plus the four preceding FP panels.
+
+Three sections:
+1. **UNIVERSAL** — applies to every repo, every feature, every submission.
+2. **THE DESIGN METHOD** — how to build a feature that is FP-proof *before* the first test is written.
+3. **REPO APPENDIX: langium** — reusable facts for other submissions on this repo.
+
+---
+
+# PART 1 — UNIVERSAL
+
+## 1.1 The one equation that explains every FP failure
+
+```
+        FP SURFACE  =  what the PROMPT PROMISES  −  what the TESTS GATE
+```
+
+An FP verdict needs a probe that is **fair AND prompt-grounded**. A judge who finds a divergence must
+still show the prompt *demanded* that behavior. So the surface has **two** edges, and you can shrink it
+from either side:
+
+| lever | effect on FP | effect on solvability | cost |
+|---|---|---|---|
+| **GATE MORE** — add a killing test | shrinks | **can destroy it** (every added gate is another wall) | high, sometimes fatal |
+| **PROMISE LESS** — narrow the prose | shrinks | **none** | free |
+
+**The five failed rounds only ever pulled the first lever.** Each FP report was answered with "add a test
+for the reported corner", which (a) closed one instance while the *class* stayed open, and (b) ratcheted
+difficulty until a fix measured **0 solves**. The round that passed pulled **both** levers in one
+regeneration.
+
+### The measurement that proves the second lever wins
+
+Batch 28 had three passing runs. **Two of them diverged from the reference and were still ruled genuine —
+purely because of prompt narrowness:**
+
+- **Run 9** (panel "Nova·2") dedups converging same-side appends by *source order* instead of priority. A
+  judge built a discriminating probe, ran it, and the candidate genuinely failed while the reference
+  passed. **Adjudicator: genuine pass.** Reason, quoted: *"the prompt scopes priority arbitration to
+  align-vs-ordinary ('when an ordinary one on that same side wants it too') ... and says nothing about two
+  same-side appended align actions from different source nodes converging on one target."*
+- **Run 5/10** (panel "Nova·1") diverges on fractional `spaces` and `tabSize: 0`. **Adjudicator: genuine
+  pass** — *"neither of which the prompt constrains ... polish, not correctness gaps."*
+
+The words **"on that same side"** were added the wave before as a scope-narrowing edit. That five-word
+clause is what converted a would-be FP into a genuine pass. **Silence is a shield. Every sentence you
+write is a liability you must gate.**
+
+> **LAW 1 — THE SHIELD.** Before shipping, read the prompt sentence by sentence and ask of each clause:
+> *do I have a killing test for exactly this?* If no — **delete or narrow the clause**. Do not add the
+> test reflexively; adding is the expensive lever, narrowing is the free one.
+
+> **LAW 2 — NEVER PROMISE A SUPERSET.** "priority settles which action claims a gap" promises priority
+> arbitration *everywhere*. "priority settles it when an ordinary one **on that same side** wants it too"
+> promises it in one place. Same difficulty, a fraction of the surface. Write the narrow form first.
+
+## 1.2 Where FP holes actually live: the cross-product
+
+All four FP findings on this project had the identical shape, and it was never the shape being reported:
+
+| round | the rule I tested | the axis I did not cross it with |
+|---|---|---|
+| 1 | widest gap wins | widest-gap member ≠ widest-content member |
+| 2 | prepend enrols region nodes | a node whose *token type is named* like a comment |
+| 3 | append skips comments | the comment **begins its own line** |
+| 4 | claim ownership / priority | a **line-changing** ordinary action; **unequal** priorities |
+| 5 | blank line divides a group | the blank line holds **only whitespace** |
+
+**Every single one lived at the cross-product of two rules, not inside one rule.** Testing each rule once
+is what a careful person does, and it is exactly what leaves the surface open.
+
+> **LAW 3 — TEST THE MATRIX, NOT THE LIST.** Enumerate your rules as axes and probe the *cells*. For each
+> pair of rules that can touch the same object, ask: can both apply at once? What are the sub-cases (from
+> the front / from behind, higher / lower / equal priority, empty / non-empty, same / different group)?
+> Probe every cell against the reference **before** writing a single test. Cells where the reference
+> surprises you are either a reference bug or an unstated requirement — both are FP holes.
+
+This project found **three real reference bugs** this way (edit ordering, zero-width edit stacking,
+order-based claim resolution). None were found by reading the code; all three by constructing the cell.
+
+## 1.3 The highest-yield wall class: ORDER OF RESOLUTION
+
+This is the most valuable single finding in the handbook, because the same wall separated solvers from
+failers **and** was FP-proof at the same time.
+
+The feature had two operations: **pick the winning claim** and **aggregate the widest request**. Both
+orders compile, both pass almost every test:
+
+```
+resolve-then-aggregate   (correct)   one claim per member  ->  max across MEMBERS
+aggregate-then-resolve   (wrong)     max across CLAIMS     ->  then pick a winner
+```
+
+Measured across the 10 real implementations:
+
+| | per-member claim aggregation | result |
+|---|---|---|
+| runs 2, 3, 4, 6, 7, 8 | `member.spaces = Math.max(member.spaces, spaces)` (or `.reduce(max)`, or a plural `requests[]`) | **all failed** |
+| runs 5, 9, 10 | no per-member merge — one claim per member, max only across the segment | **all solved** |
+
+Nothing else separated them. Architecture was identical (all 10 independently found the two-phase
+preview design). LOC did not correlate (solvers 707 / 491 / 579; failers up to 641). **Effort did not
+correlate**: solver median completion 52.8k vs failer 48.0k tokens — a 10% gap, i.e. noise.
+
+Why this class is ideal:
+
+- **It is a genuine invariant**, not a constant to look up — so it is not "unfair".
+- **The wrong order is a superset behavior**: identical output on every input except one constructed
+  cell. Local tests an agent writes for itself will never catch it.
+- **It is one sentence to state**, so it is fair and it is gateable in both directions.
+- **It cannot be reached by guessing**; it has to be reasoned about.
+
+> **LAW 4 — HUNT FOR ORDER-OF-RESOLUTION INVARIANTS.** In any feature with two composable operations
+> (resolve/aggregate, dedup/sort, filter/clamp, validate/normalize, expand/merge), one order is correct
+> and the other is silently wrong. That is your major wall and your FP gate at the same time. Ask early:
+> *"which two operations here commute in the common case but not in a constructible one?"*
+
+## 1.4 Never take a panel's remedy on trust
+
+The FP panel on round 4 diagnosed the defect precisely **and prescribed the wrong fix**:
+
+> *"The fix is to pick the spaces from the priority-winning claim (ties -> later action), mirroring the
+> collector's own existingPriority<=priority rule."*
+
+I implemented exactly that. It built clean and kept the whole suite green. Then I mined all 10 real
+implementations against it: **no implementation passed both directions, and the two that passed the new
+gates each failed an older one — the priority doctrine scored ZERO solves.** The same matrix showed the
+survivors were *front-ownership* implementations, which is what the prompt already said and what the
+untouched reference already did. I reverted and shipped front-ownership instead.
+
+> **LAW 5 — DIAGNOSIS IS EVIDENCE, REMEDY IS A HYPOTHESIS.** A panel sees one candidate; it does not see
+> the population. Before adopting any prescribed fix, mine the last batch's patches against it. **If it
+> fails 100% of them, it is a 0-solve cliff, not a fix.**
+
+## 1.5 Mine every new gate before shipping it
+
+The single cheapest insurance in this whole system. You already have N real implementations from the
+previous batch. Applying a candidate gate to all of them costs one script and answers the only question
+that matters: *does at least one real implementation still pass everything?*
+
+```
+for each run: clean tree -> apply agent's solution-patch -> apply YOUR test.patch -> run the suite
+```
+
+Outcomes and what they mean:
+
+| mining result | meaning | action |
+|---|---|---|
+| **0 runs pass everything** | cliff | do not ship; find a different close (escalate) |
+| **1+ runs pass everything** | calibrated wall | ship |
+| **100% fail the NEW test specifically** | the gate demands something no architecture produces | scope it out (class S) or it is a reference bug |
+| **the new test costs zero solves** | free FP closure | always ship |
+
+The whitespace-only-line gate added in the final audit was measured at **zero cost** — no implementation
+failed it, so closing that hole was free. The front-claim gate cost one run that was itself carrying the
+flagged defect. That is the difference between a gate that removes a false positive and a gate that
+removes a solver, and **you cannot tell them apart without mining.**
+
+## 1.6 Reachability is CONSTRUCTED, never assumed
+
+Two suspected holes, same audit, opposite verdicts — settled only by trying to build them:
+
+- **Whitespace-only line counts as blank** (real hole). A whitespace-only line normally cannot survive:
+  the formatter rewrites inter-token whitespace, so the obvious input produces a truly empty line. It
+  survives **inside a comment**, whose interior is never rewritten. Constructed, divergence confirmed,
+  test added.
+- **CRLF counted as two line breaks** (not a hole). Three constructions attempted — plain CRLF endings,
+  CRLF inside a comment, CRLF inside the one gap alignment leaves alone — and **no produced document
+  retained a `\r` pair**. The mutated path cannot be reached, so it cannot diverge.
+
+> **LAW 6.** "This looks like a hole" and "this is a hole" are separated by an executed construction. Try
+> three ways to reach it. If all three fail, it is unobservable and you write down the three attempts.
+
+## 1.7 The executed floor, and how to read survivors
+
+Maintain a **mutation battery**: N single-edit mutants of your reference, each violating one behavior,
+each run against the full suite. A mutant that survives is a behavior your tests do not enforce.
+
+Non-negotiable hygiene, all learned the hard way:
+
+- **Rebuild inside `finally`.** A battery that restores sources but not the build grades the *next*
+  mutants against the *last* mutant's compiled output. This produced four phantom "defects".
+- **Restore-verify byte-identical** at the end, and assert it.
+- **Include a no-op control mutant that MUST survive** — it proves the battery is not trivially green.
+- **Assert your mutation actually applied**: `assert src.count(needle) == 1` and `assert after != before`.
+  A silent no-op once reported "43/43 PASS" for a cheat probe that never modified the file.
+- Build failure / no junit / zero tests collected = **UNRESOLVED**, never "killed".
+
+**Reading survivors — the rule that keeps this from becoming infinite work:**
+
+> **LAW 7 — A SURVIVING MUTANT IS AN FP HOLE ONLY IF A *DESCRIBED* REQUIREMENT STOPS BEING ENFORCED.**
+
+Classify every survivor into exactly one of: **control** (must survive) / **unobservable** (three failed
+constructions) / **inert** (the change cannot alter output — e.g. enrolling an element that a later rule
+discards anyway) / **undescribed** (defensive branch: zero-size inputs, inverted ranges, redundant sorts —
+no prompt sentence maps to it) / **registered silence** (deliberately scoped out, written down). Anything
+that does not fit one of those five is a hole.
+
+## 1.8 The audit protocol (run this before every batch)
+
+1. **ATOMS.** Split the prompt into atomic requirements — one per assertable behavior. Expect 30–40 for a
+   500-word description. For each, name the killing test. **A missing name is a hole.**
+2. **REVERSE DIRECTION.** Sweep every test for assertions the prompt does not state. Those are *unfair
+   tests*, the other failure mode, and reviewers score them at band 1.
+3. **EXECUTED FLOOR.** Run the battery. Triage survivors by Law 7.
+4. **MATRIX.** For each pair of rules that can touch one object, probe the cells against the reference.
+5. **CHEAT HUNT.** Try to pass the suite without implementing the feature (stub the API, hardcode the
+   fixtures, no-op the entry point). Anything green is a hole.
+6. **MINE.** Apply the final test.patch to every implementation from the last batch. Confirm ≥1 passes.
+7. **SOLVABILITY.** State the measured number, not a projection.
+
+Finish with a verdict: **FP-CLEAN (evidence per item)** or **the exact holes + the fix for each**. "Probably
+fine" is not a verdict.
+
+## 1.9 What "genuine solve" actually means — and how to make it likely
+
+The judge's bar, from the batch-28 evals, is:
+
+```
+baseline_passed = true
+new_tests_passed = true
+no test manipulation
+the implementation GENERALIZES (not fixture-shaped)
+```
+
+All ten runs were rated `difficulty: challenging`, all seven failures were
+`was_mentioned_in_description = true` and `was_inferable_from_new_tests = false`. **Zero unfair verdicts.**
+That is the target state, and it comes from three properties:
+
+1. **Every gated behavior is stated** — so a failure is a missed requirement, never an ambush.
+2. **Nothing is stated that is not gated** — so an out-of-contract divergence cannot be held against a
+   passer (Law 1).
+3. **At least one real implementation passes everything** — proven by mining, not hoped for.
+
+You do **not** prevent agents from having out-of-contract divergences. Run 9 shipped with one and passed.
+You make divergences **irrelevant** by not promising the behavior they diverge on.
+
+## 1.10 Calibration signals that are real, and ones that are not
+
+From batch 28 (10 runs, all artifacts parsed):
+
+| signal | value | reading |
+|---|---|---|
+| genuine pass rate | **3/10 = 30%** | the sweet spot; band is 30–40%, hard cap 40% |
+| batch median completion tokens | **50.4k** | healthy (≥~120k median = too hard) |
+| solver vs failer effort | 52.8k vs 48.0k | **effort does not distinguish** — do not diagnose from it |
+| `trajectory.total_steps` | `None` / constant | **useless**, a platform-preview artifact |
+| UI msgs median | 74 | the msg targets are folklore; ignore against a 30% all-genuine batch |
+| top failure cluster | **86% of failing runs** | see below |
+
+**The FDI nuance, corrected here.** The rule "top cluster ≥70% of failing runs = CLIFF" fired at 86% — yet
+the batch scored 30% with three genuine passes. The rule is incomplete on its own:
+
+> **LAW 8 — FDI NEEDS THE SECOND QUESTION.** A dominant cluster is a **cliff** only if *no* run passes
+> that test. If some runs pass it and others fail it, a high share means you have found the **one decisive
+> major wall** — which is exactly what a well-calibrated task looks like. Always report
+> `top-cluster share` **together with** `how many runs passed that same test`.
+
+## 1.11 The disclosure ratchet, and the only safe levers
+
+Every rule in this system adds disclosure; none removes it. A fully compliant project drifts *easier*
+every wave, and the drift looks like diligence. Classify every solvability lever before pulling it:
+
+| class | lever | FP-safe? |
+|---|---|---|
+| **D** | disclose the behavior; killing test unchanged | **yes**, by construction |
+| **R** | make the seam discoverable in the repo | yes |
+| **S** | symmetric scope-out — drop from prose **and** tests together | yes |
+| **W** | delete/loosen a test, widen an assertion | **BANNED** — that IS the false positive |
+| **X** | weaken the reference | banned |
+
+A disclosure whose killing test is intact is **not** an FP hole. FP means *"passes without doing the
+task"*, never *"the task was explained"*. Keep a **solvability ledger** — {what was disclosed, which
+requirement, which test still gates it} — and never close an FP finding by deleting a ledgered lever.
+
+And pair every disclosure with a wall in the same regeneration, or prove by census that a major still
+stands. Otherwise the project ratchets toward trivial.
+
+---
+
+# PART 2 — THE DESIGN METHOD (do this before writing any test)
+
+**Step 1 — Pick a feature with a resolution ORDER, not just an output.** Look for two operations that
+compose. That is your major wall (Law 4).
+
+**Step 2 — Write the atom list before the prose.** Enumerate every behavior you intend to gate. Then write
+the description *from the atom list*. Every sentence traces to an atom; every atom gets a test. Writing
+prose first and back-filling tests is how the promise/gate gap opens.
+
+**Step 3 — Build the rule matrix and probe every cell against your reference.** Do this *before* the
+suite exists. Cells where the reference surprises you: fix the reference or delete the promise.
+
+**Step 4 — For every cell you will NOT gate, remove its promise from the prose.** This is the shield. Be
+ruthless; you are deleting future FP findings for free.
+
+**Step 5 — Gate each remaining cell in BOTH directions.** One-directional gates are passed by
+implementations that always pick one side.
+
+**Step 6 — Build the battery from the atom list**, one mutant per atom, plus a control.
+
+**Step 7 — Mine the gate set against real implementations.** Ship only with ≥1 full passer.
+
+**Step 8 — Record deliberate silences.** Anything you chose not to gate goes in a written registry so a
+future wave does not "helpfully" gate it and cliff the batch.
+
+---
+
+# PART 3 — REPO APPENDIX: eclipse-langium/langium
+
+Facts worth carrying into any future submission on this repo.
+
+## 3.1 Environment and harness
+
+- **Node 22+ breaks two example CLI tests.** `examples/domainmodel/test/domainmodel-cli.test.ts:56` and
+  `examples/statemachine/test/statemachine-cli.test.ts:30` call
+  `fs.rmdirSync(dest, { recursive: true })`; `options.recursive` was removed in Node 22 and this box runs
+  **v25.2.1**. **Pre-existing, upstream (`eea5bc2b`), unrelated to any patch.** Exclude `examples/**` from
+  your slices or expect three red tests locally.
+- `packages/langium/test/workspace/document-builder.test.ts > Sorting a large number of documents` is
+  **timing-sensitive**. Filter it out of the base slice:
+  `-t "^(?!.*Sorting a large number of documents)"`.
+- Platform baseline is **1105** tests; local `test.sh` base slice is **1097** (the delta is the filters).
+  Whole-repo `npx vitest run` is ~1279 including examples.
+- **Never build the Docker image locally** — the Dockerfile is a deliverable; the platform builds it.
+- Test-file path convention is loose: agents scattered their own tests across
+  `test/lsp/`, `test/grammar/lsp/`, `test/grammar/` — the harness strips patch-created tests before
+  verification, so this is not a cheat signal.
+
+## 3.2 Formatter subsystem map (`packages/langium/src/lsp/formatter.ts`)
+
+The richest seam on this repo — three accepted/near-accepted submissions have come out of langium, one of
+them here.
+
+- `AbstractFormatter` walks the CST via `iterateCstFormatting`, collecting actions into a map keyed
+  **`${offset}:${end}:${mode}`**, resolved by `existingPriority <= priority` (**later wins on a tie**).
+  *Two actions on the same node+mode dedup; two actions from **different source nodes** landing on the
+  same target do NOT.* That asymmetry is the single most productive FP seam in this file.
+- A `FormattingMove` is only `{ characters, tabs, lines }` — there is no way to express a cross-line
+  relationship. Any column/table/alignment concept therefore **requires a second pass**, which is what
+  makes it a genuinely hard feature.
+- `FormattingContext.indentation` is maintained *during* the walk, so you cannot short-circuit the walk
+  without desynchronising indentation for everything after it.
+- `avoidOverlappingEdits` tests `currentStart < lastEnd` — **false for zero-width edits**, so two
+  zero-width inserts at one position both survive and stack. A real reference bug lived here.
+- Edits are not inherently ordered by position; an append emitted at the appending node's offset can have
+  a range *after* skipped comments. A **stable sort by (start, insertion index)** is required.
+- `createHiddenTextEdits` **re-indents multi-line comment interiors** — which normalises `\r\n` to `\n`.
+  This makes CRLF-in-produced-text effectively unreachable, but leaves **whitespace-only lines inside
+  comments** intact, the one place they survive.
+- CST helpers: `getNextNode(node, hidden = true)`, `getPreviousNode(node, hidden = true)`,
+  `getInteriorNodes`. Pass `hidden = false` to skip comments.
+
+## 3.3 Test infrastructure that works here
+
+```ts
+createServicesForGrammar({ grammar, module: { lsp: { Formatter: () => new F() } } })
+expectFormatting(services)({ before, after })
+```
+
+- A **parameterised fixture class** (one `setup` object, one `switch`) keeps 60+ tests to one grammar and
+  makes the matrix cheap to express. **Delete unused fixture branches** — a reviewer flagged two
+  never-invoked `crossOrdinary` configurations as a High finding.
+- Any test resolving paths from `process.cwd()` must be run **from the repo root**, not
+  `packages/langium`.
+- Vitest JUnit reporter; `--reporter=basic` does not exist in this version.
+
+## 3.4 Prior art / GATE-0 status for this repo
+
+Authenticated searches (issues + PRs, `is:issue` / `is:pull-request` required by the API) across
+`align formatter`, `alignment column`, `FormattingAction align`, `formatter blank line group`:
+**0 hits.** No formatter.ts commits since 2026-02. The formatter subsystem is **open territory** — no
+maintainer stance, no closed-unmerged precedent, and a real in-core extension seam (the `Formatting`
+namespace + action collector). Re-run the gate anyway before any new feature; a two-week-old maintainer
+issue is enough to kill one.
+
+## 3.5 Accepted-shape notes
+
+Three submissions on this repo so far: link-retention (`workspace/`), traced-embedding (`generate/`), and
+this alignment feature (`lsp/`). **Different subsystem each time** — keep that up; same-repo plagiarism is
+scored on the central idea, and the formatter, workspace, and generator are far enough apart to read as
+distinct. Remaining unexplored seams with comparable depth: the scope/reference resolution pipeline, the
+document lifecycle/build phases, and the CST/AST mapping layer.
+
+---
+
+# QUICK CARD
+
+```
+FP SURFACE = PROMISED - GATED.  Shrink from BOTH ends. Narrowing prose is FREE.
+Holes live at the CROSS-PRODUCT of two rules, never inside one rule.
+The best wall is an ORDER-OF-RESOLUTION invariant: resolve-then-aggregate vs aggregate-then-resolve.
+A panel's DIAGNOSIS is evidence; its REMEDY is a hypothesis -- MINE IT.
+Mine every new gate against last batch's patches. 0 passers = cliff, do not ship.
+Reachability is CONSTRUCTED (three attempts), never assumed.
+A surviving mutant is a hole ONLY if a DESCRIBED requirement stopped being enforced.
+Effort does not distinguish solvers from failers. Do not diagnose from tokens or msgs.
+FDI >=70% is a cliff ONLY if nobody passed that test; otherwise it is your major wall.
+Levers: D / R / S only. W (weaken a test) is the false positive itself.
+```
+
+
+
+
+
+-- RANDMLY FOUND THIS ON THE DEV CHAT (DISCORD CHAT OF OLYMPUS LOOK INTO IT TO MIGHT BE HELPFUL):
+
+One of the biggest things you need to focus on is the False Positive (FP) check. Your goal is to make sure there are no gaps in your test suite that would allow a buggy or partially implemented solution to pass. The best way to avoid this is by writing comprehensive tests that cover all the important behaviors and edge cases.
+
+A good place to start is the Test Fairness quality check. Besides checking whether the task is fair, it also provides 💡 suggestions for improving your tests. Go through these suggestions carefully and address as many as possible. They are not always correct, so if you believe a suggestion is a false positive, it's completely fine to skip it. Ideally, you should continue until there are either no suggestions left or the remaining ones are genuinely incorrect.
+
+Another useful check is the Verifier Completeness Audit (VCA). During your first few iterations, this is a great way to identify major gaps in your test suite before spending a lot of tokens refining smaller details. Since starters have limited token budgets, finding and fixing the largest issues early is much more efficient.
+
+When you move to the quality checks, avoid running every check at once. Your initial goal should be to pass the prechecks and then focus primarily on Test Fairness. Use VCA during the early iterations, which will naturally require running the verifier solution a few times. You should also run the Solution Quality check a few times until your reference solution consistently receives a 3/3 in both categories. Once you're confident the solution is complete and high quality, you can spend most of your remaining iterations focusing on Test Fairness.
+
+To reduce the number of iterations needed, make sure your problem description, tests, and reference solution are all aligned before you begin refining the task. Remove unnecessary information, avoid requirement leaks, and ensure everything describes the same observable behavior.
+
+A technique that helps significantly is to break your reference solution down into states. Think of each state as a milestone where a specific goal has been achieved. Once you've identified these states, list all the functionality required within each one, including helper functions, edge-case handling, validation logic, and other behaviors. Then verify that your test suite covers every one of them. This makes it much harder for an incorrect implementation to slip through your tests while still passing.
+
+After you've covered each individual state, step back and look at the task as a whole. Consider how the different pieces interact and whether there are any additional scenarios that only appear when multiple components work together. If you discover one, add a test for it.
+
+Whenever possible, write tests that verify observable behavior rather than private implementation details. This keeps the task fair while still ensuring the required functionality is implemented correctly.
+
+Finally, if the Solution Quality check points out an issue in your reference solution, don't just fix the solution itself. Ask whether that bug could also appear in a participant's implementation. If the answer is yes, consider adding a test for it so the same mistake can't slip through in future submissions.
