@@ -562,7 +562,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 69;
+const SEED_VERSION = 70;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
@@ -612,7 +612,7 @@ const TIPS=[
    with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive the FP panel). This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
   bar:'Olympus 10-30% band of 10 (sweet spot 10-30%, HARD CAP 40% (OUR cap; platform wall moved to 50%, 07-31)) - Flakiness MANDATORY - >=1 GENUINE FP-clean solver (floor; 0-solve -> recover to 3/10).',
-  envelope:'400-1380 LOC (260-800 effective (DEFAULT) design target; BINDING platform floor = 700 RAW added lines -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (10-30%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances; the old 150+ DESIGN target is WITHDRAWN -- the metric behind it is broken and passing vs failing runs are statistically indistinguishable on effort) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 10-30%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
+  envelope:'accepted LOC has ranged 261-1380; there is NO design target and NO floor (platform floor is 200) -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (10-30%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances; the old 150+ DESIGN target is WITHDRAWN -- the metric behind it is broken and passing vs failing runs are statistically indistinguishable on effort) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and is now exactly our SWEET SPOT (band 10-30%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
     {key:'discovery-gap',name:'Discovery gap',what:'an unfamiliar code path or a non-guessable invariant agents get WRONG BY DEFAULT',proven:'trpc, drizzle (keyset/chunked/relation-agg), mangum, syft result-cache (observer-completeness, 10%), pgx QueryFetchSize (portal suspension + batch-Close lifecycle, 30%)',rule:'pick something agents must DISCOVER, not just implement.'},
@@ -1203,7 +1203,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'260-800 effective (DEFAULT) effective (700 OUR floor; platform floor 200)', files:'6+', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'10-30% band of 10 (sweet spot 10-30%, cap 40% (decree 08-05))'};}
+function standardsFor(tier){return {loc:'260-800 effective -- a DEFAULT, never a gate (no floor; approved work shipped 390/261/451). Size follows SPAN.', files:'as the feature routes require (DEFAULT -- approved work ranged 4 to 42)', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'10-30% band of 10 (sweet spot 10-30%, cap 40% (decree 08-05))'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
