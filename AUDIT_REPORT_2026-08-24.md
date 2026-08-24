@@ -1,6 +1,6 @@
 # Olympus slash-system audit and operating map — 2026-08-24
 
-Scope: the shared Olympus/Mars workflow, its 14 slash commands, Claude Code and Codex ports, generalized
+Scope: the shared Olympus/Mars workflow, its 16 slash commands, Claude Code and Codex ports, generalized
 Olympus memory, the 49-file workflow manifest, and the Olympus Console deployment. ERIS and ULH are excluded.
 
 ## Executive verdict
@@ -11,7 +11,7 @@ canaries which demonstrate the checks can fail.
 
 ```mermaid
 flowchart TD
-    U[User sends one of 14 slash commands] --> C{Execution surface}
+    U[User sends one of 16 slash commands] --> C{Execution surface}
     C -->|Claude Code| CC[Canonical Claude command]
     C -->|Codex prompt| CP[Generated Codex prompt]
     C -->|Codex skill| CS[Generated olympus skill]
@@ -37,15 +37,28 @@ The fixed bar is not adapted. The **method** is adapted from the current repo, f
 disk/platform execution wins, the contradiction is recorded, and the workflow is corrected rather than
 forcing the project to fit stale doctrine.
 
+### Installed automation foundation
+
+| Component | Installed evidence | Role and boundary |
+|---|---|---|
+| Shipd Olympus CLI | `@shipd-ai/olympus-cli` 0.1.0 at `~/.npm-global/bin/olympus` | Local CLI transport; profile state is isolated per routed account |
+| Firecrawl CLI | `firecrawl-cli` 1.14.8 at `~/.npm-global/bin/firecrawl` | Research/scraping tool; no credits were consumed in this setup |
+| Browser runtime | Playwright 1.62.0 plus Chrome for Testing 151 in `~/olympus-tools/pwenv` | Headed sign-in and read-only inspection; the user enters authentication directly |
+| Router | `~/.local/bin/olympus-router` | Project/profile binding, ordered phase gate, budget/TTL/allowlist, receipts, and OFF switch |
+| Browser helper | `~/.local/bin/olympus-browser` | `login` and `inspect` only at installation time; no paid platform click was executed |
+
+The installation itself created no Shipd project binding, triggered no rollout/check, and spent no platform
+tokens. A project remains unbound until its first live platform step.
+
 ## Claude Code and Codex: one canonical system
 
 | Surface | Authority and behavior | Audit proof |
 |---|---|---|
-| Claude commands | `~/.claude/commands/*.md` is canonical. Claude reads the matching file in full. | 14 canonical command files exist and pass route/content checks. |
-| Codex prompts | `~/.codex/prompts/*.md` is generated from the Claude command. | Sync installed and verified all 14 prompt copies. |
-| Codex skills | `~/.codex/skills/olympus-*/SKILL.md` wraps the same canonical command. | Sync installed and verified all 14 skill copies. |
+| Claude commands | `~/.claude/commands/*.md` is canonical. Claude reads the matching file in full. | 16 canonical command files exist and pass route/content checks. |
+| Codex prompts | `~/.codex/prompts/*.md` is generated from the Claude command. | Sync installed and verified all 16 prompt copies. |
+| Codex skills | `~/.codex/skills/olympus-*/SKILL.md` wraps the same canonical command. | Sync installed and verified all 16 skill copies. |
 | Manual fallback | If slash expansion is unavailable, read the canonical Claude command file in full and execute it. | Codex global instructions explicitly provide this fallback. |
-| General memory | Claude's Olympus memory directory is canonical; Codex memory is a generated mirror. | Sync verified 22 memory triples and 24 installed Codex memory files. |
+| General memory | Claude's `OLYMPUS_MEMORY.md` source is canonical for Olympus lessons; Codex-native `MEMORY.md` remains separately owned. | Sync verified 23 memory triples and 26 installed Codex memory files; memory audit passed 22/22 indexed notes. |
 | Shared workflow | `~/Desktop/olympus-workflow/` is read live by both tools; it is not copied into Codex. | Manifest and on-disk inventory agree at 49/49. |
 
 ```mermaid
@@ -55,20 +68,22 @@ flowchart LR
     CM --> SYNC[sync_from_claude.sh]
     SYNC --> XM[Codex generalized memory mirror]
     CC[Canonical Claude commands] --> SYNC
-    SYNC --> XP[14 Codex prompts]
-    SYNC --> XS[14 Codex skills]
+    SYNC --> XP[16 Codex prompts]
+    SYNC --> XS[16 Codex skills]
 ```
 
 If memory contradicts current evidence, **evidence wins**. The correction belongs in the project records first;
 only a durable cross-project lesson is promoted to canonical memory and then synchronized to Codex.
 
-## The complete 14-command route matrix
+## The complete 16-command route matrix
 
 Every command begins with the common opening shown above. This table identifies the command-specific symptom,
 first decisive action, adaptation point, and proof of completion.
 
 | Command | Send it when | First command-specific actions | Evidence-driven adaptation | Required finish |
 |---|---|---|---|---|
+| `/autopilot-on` | The agent should execute the whole bounded platform workflow | Resolve project context; at the first live step ask once for only the signed-in Chrome profile label and exact submission link if missing; verify identity/challenge read-only; require budget, TTL, and allowlist | Executes the ten ordered phases below; current artifacts and visible platform results decide whether to advance, reset, repair, or stop UNKNOWN | A READY or NOT_READY consensus artifact after the entire workflow; a lease alone is never completion |
+| `/autopilot-off` | Stop new platform mutations and paid operations | Revoke the project lease without requiring a binding; retain read-only observation and reconcile accepted jobs by receipt | Existing server work is observed, never guessed cancelled; unreadable state remains UNKNOWN and is not refired | OFF transition, spend/receipts/outstanding jobs recorded; local validation remains available |
 | `/new-sub` | Starting a new Olympus submission | Resolve repeat-repo vs fresh-repo; read the appropriate accepted corpus/debrief; run invention route 01→02→03→04 and both GATE ZERO checks before implementation | Candidate, repo seams, prior art, constructed wrong variants, and measured walls determine the feature and difficulty dossier | Six deliverables, complete FP floor, then `/validate`; no separate speed mode |
 | `/new-chat` | Resuming a project in a fresh context | Reconstruct truth from disk and full `experience.md`; if the log is lost, use recovery; if disk disagrees, disk wins | Chooses normal recovery, lost-log reconstruction, doctrine catch-up, submitted-state reconstruction, or `/new-sub` if nothing exists | Current state/constraints restored, `/catch-up` applied, then resume the exact open item |
 | `/continue` | Continuing interrupted work or adding an instruction mid-wave | Read the latest resume/fix ledger; verify partial artifacts rather than trusting prose | Selects mid-fix resume, compacted-context recovery, half-regeneration integrity, new-instruction satisfy-all, or contradiction third-state route | One coherent completed wave with records updated |
@@ -83,6 +98,32 @@ first decisive action, adaptation point, and proof of completion.
 | `/fix-auto-review` | Any auto-review lane is below the local bar | Parse every lane and build one historical demand list; determine whether a batch changed the reviewed surface | Fix the full class, not one sentence; post-batch passer code is audited because it affects Solution/Code | Post-batch auto review rerun, all demands disposed, triad re-entered if FP/passers changed |
 | `/validate` | Before platform submission, after a material fix, or transforming an old project | Preflight manifest; choose Mode V (prove) or Mode T (transform); require an artifact for each of five stages | Current project evidence chooses the implementation of each proof; no stage can be replaced by confidence or memory | Five-row scoreboard, mined passer, predicted verdict, and GO/NO-GO |
 | `/validate-triad` | FP, solvability, and auto review must be brought to one consensus | Create a unique run directory; execute FP first, solvability second, post-batch auto review last | Each lane may force return to an earlier lane; fixes are accepted only if Q1/Q2/Q3 still hold | Six immutable files plus checksum and a ≥95%-confidence READY/NOT READY report |
+
+### `/autopilot-on` is the full workflow
+
+The controller lease is only the safety boundary. It does not satisfy the command. The agent must execute and
+evidence these phases in order; a material edit resets dependent phases and an unreadable trigger/result is
+`UNKNOWN`, never permission to refire it.
+
+```mermaid
+flowchart LR
+    A[0 setup and bound context] --> B[1 local floor]
+    B --> C[2 upload and readback]
+    C --> D[3 browser Prechecks]
+    D --> E[4 browser Scope Gate]
+    E --> F[5 seven quality checks]
+    F --> G[6 Nova/Nova rollouts]
+    G --> H[7 download all runs and FP plus solvability]
+    H --> I[8 post-batch Auto Review]
+    I --> J[9 triad consensus READY or NOT READY]
+    J -->|artifact edit or failed gate| B
+```
+
+The first live step is the authentication boundary. If the project is unbound, the agent asks once for exactly
+two non-secret values: the already signed-in Chrome profile label and exact Shipd submission link. The user
+signs in directly in Chrome. Passwords, cookies, session tokens, API keys, recovery codes, and OTPs are never
+requested or stored. No mutation or paid action is accepted unless its operation is allowlisted, its maximum
+budget and TTL remain valid, the phase is next in order, and its receipt is recorded.
 
 ### `/validate-triad` artifact contract
 
@@ -176,7 +217,7 @@ explicitly routed in `SYSTEM_MAP.md`.
    41-50% spent-margin route.
 
 All six were repaired. Ledger row 160 records the doctrine/routing change. Round 6 now has independent
-canaries for prompt reachability, the exact 14-command overview, and manifest-artifact consumption.
+canaries for prompt reachability, the exact 16-command overview, and manifest-artifact consumption.
 
 ## How to use the repaired system in an existing project
 
@@ -206,6 +247,8 @@ that exact commit. The public console returned `{"ok":true}` from `/health`; its
 20-30% design / 10-40% ship / 41-50% spent-margin / >50% broken doctrine and `solvability`, with no old band or
 mistaken lane label. The Git remote remains sanitized and contains no plaintext credential.
 
-The shared Olympus/Mars system is therefore **READY FOR RERUN**. This verdict applies to the shared workflow;
+The shared Olympus/Mars system is therefore **READY FOR FIRST AUTHENTICATED CALIBRATION**. The local controller,
+command port, and audit harness are proven; an actual two-profile Shipd run has deliberately not been triggered.
+This verdict applies to the shared workflow;
 each historical project must still run `/new-chat` followed by `/catch-up` and accept that command's project-
 specific `/validate` result before a platform rerun.

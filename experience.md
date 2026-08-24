@@ -1552,3 +1552,113 @@ gates remain green.
 **Lesson:** Naming a corpus is not applying it. A mandatory replay must say what current artifacts it attacks,
 produce per-source row-count evidence, block on OPEN/BUG, and execute automatically rather than ending as a
 handoff.
+
+---
+
+### FIX #N+2 -- 2026-08-24 -- THE INDEX OWNERSHIP SPLIT (Codex memory reachability)
+
+**Trigger:** After the deployment report claimed `ALL CHECKS PASS`, an independent re-run returned
+`CHECKS FAILED` on one gate: `memory-audit: codex index: does not reach 21 note(s)`.
+**Category:** Memory / Codex port integrity
+
+**Diagnosis -- structural, not a slip:**
+- Codex's NATIVE memory engine is enabled (`~/.codex/config.toml` -> `[memories] generate_memories = true`,
+  `use_memories = true`) and **OWNS `~/.codex/memories/MEMORY.md`**, rewriting it on its own schedule.
+- `codex/sync_from_claude.sh` shipped the Olympus index under that SAME filename, then `cmp`-enforced it.
+- **Measured by mtime:** sync wrote the 21 notes + our index at **05:39:41**; Codex's engine replaced
+  `MEMORY.md` (and `memory_summary.md`) at **11:18:16**, `raw_memories.md` at 11:12. The 21 note files
+  stayed byte-identical -- only the INDEX stopped naming them, so Codex recall could not reach any of them.
+- The gate then demanded OUR content inside THEIR file: **unsatisfiable**, and it failed the whole harness.
+- **The latent second bug was worse:** the next `sync_from_claude.sh` would have copied Claude's `MEMORY.md`
+  over Codex's native index, **destroying Codex's accumulated task-group memory** to satisfy the check.
+  The two systems were in a mutually destructive loop over one path.
+- `memory_audit.py` already contained the correct principle -- *"Codex GENERATES memory_summary/raw_memories/
+  MEMORY.md itself -- each side owns its own index"*, with `MEMORY.md` excluded from mirror parity -- and then
+  **contradicted itself four lines later** by requiring reachability inside that same file.
+
+**Fix Applied -- separate ownership by FILENAME, not by convention:**
+- `sync_from_claude.sh`: the canonical index installs as **`OLYMPUS_MEMORY.md`**; the verify loop maps
+  `MEMORY.md -> OLYMPUS_MEMORY.md`; `MEMORY.md` / `memory_summary.md` / `raw_memories.md` are Codex-native
+  and are **never written by the sync**.
+- Generated `AGENTS.md` now routes Codex to `OLYMPUS_MEMORY.md` **and states why**, so the next maintainer
+  does not "helpfully" rename it back.
+- `checks/memory_audit.py` now checks three things it structurally could not check before: the index
+  **EXISTS**, it is **BYTE-IDENTICAL** to the canonical `MEMORY.md`, and it **REACHES** every note.
+
+**Results:**
+- All three new checks **canaried** (missing / drifted / one row dropped) -- each failed with the right
+  message, then restored byte-identical.
+- `bash checks/run_all.sh`: **ALL CHECKS PASS**. Self-test 42 forms; retired-token gate PASS on 209 files;
+  semantic 12/12, behavioral 25/25, doctrinal 58/58, arithmetic 11/11, reachability 37/37.
+- **Codex's 21,705-byte native index was preserved intact** through the repair (verified against a
+  pre-edit copy); `OLYMPUS_MEMORY.md` is byte-identical to the canonical `MEMORY.md`.
+
+**Side effects:** `~/.codex/memories` now holds 25 files (24 + the Olympus index). Both engines coexist.
+
+**Also corrected in the reported figures:** the deployment report's "356 headings / 352 IDs" was already
+stale on arrival (another session is actively filing FP entries -- 370/366 at time of writing), the first
+scoreboard's round-6 "26/26" was superseded by 37/37, and "Final GitHub commit: ad79666" is the PARENT of
+the actual tip `ddbe9c7`. Render serving `ad79666` is harmless: `ddbe9c7` touched only the audit report and
+this log, no runtime code -- confirmed by fetching the live console (0 retired band tokens, `solvability`
+present, `{"ok":true}`).
+
+**Lesson:** **When two systems write the same path, a gate that enforces one of them is enforcing a race.**
+Give each owner its own filename BEFORE writing the check -- and when a check's own comment already says
+"each side owns its own index", believe the comment and finish the thought.
+
+### FIX #N+5 -- 2026-08-24 -- full autopilot execution, two-profile isolation, and 16-command port
+
+**Trigger:** The user corrected the meaning of `/autopilot-on`: it must run the complete agent-on-autopilot
+workflow from setup through triad consensus, not merely enable a mutation lease. The user also required the
+same slash system and generalized Olympus memory in Claude Code and Codex, while keeping authentication direct
+in two separate Chrome profiles.
+
+**Category:** Platform automation / slash routing / memory synchronization / audit integrity
+
+**Diagnosis:**
+- The initial safety design correctly bounded mutations but could allow an agent to call the lease itself
+  "autopilot complete" without executing the quickstart's platform workflow.
+- A live project needs two separate facts -- Chrome profile label and exact submission URL -- but asking for
+  either before the first live step would violate the intended lazy binding.
+- The prior audit report and port proofs still described 14 commands after adding `/autopilot-on` and
+  `/autopilot-off`.
+- The final harness exposed a concurrent FP intake wave: FP-393 through FP-399 lacked baseline attestation and
+  FP-394 used a descriptive parenthetical inside the controlled Class field.
+
+**Fix Applied:**
+- Installed Olympus CLI 0.1.0, Firecrawl CLI 1.14.8, Playwright 1.62.0, and Chrome for Testing 151 without
+  starting any live Shipd check or paid operation.
+- Added an isolated per-profile CLI/browser router and an ordered ten-phase workflow state machine:
+  setup/context, local floor, upload/readback, browser Prechecks, browser Scope Gate, seven quality checks,
+  Nova/Nova rollouts, post-batch FP plus solvability, post-batch Auto Review, and final triad consensus.
+- Enforced project-local evidence artifacts, phase order, reset-on-edit, operation allowlist, budget, TTL,
+  accepted-receipt provenance, OFF behavior, and READY/NOT_READY as the only terminal consensus.
+- Added both autopilot commands to Claude, all shared command routers, both canonical registries, system map,
+  command table, manifest, doctrine ledger, global instructions, memory, and Codex generation.
+- Updated the human audit report to a complete 16-command matrix and added the full autopilot phase diagram.
+- Audited FP-393 through FP-399; normalized FP-394 Class to `GENUINE PASS`, then attested all seven new Verdict
+  hashes only after the schema checker reported no remaining intake error.
+
+**Results:**
+- Router unit tests: 12/12 PASS, including skip rejection, off/allowlist/budget blocks, project-local artifact
+  enforcement, invented-receipt rejection, full ten-phase completion, and backward-only reset.
+- Claude-to-Codex sync: 16 prompt/skill pairs, 23 memory triples, workflow 49/49; memory audit 22/22 clean.
+- Full `checks/run_all.sh`: exit 0, `ALL CHECKS PASS`; retired-token canary 42 forms x 3 contexts; rounds 2-6
+  12/12, 25/25, 58/58, 11/11, and 48/48.
+- FP integrity: 401 headings, 397 unique IDs, marker FP-400, 401 Verdict hashes, 48 schema-controlled entries,
+  hash canary PASS, schema canary PASS.
+- No profile, submission link, password, cookie, token, API key, recovery code, or OTP was requested. No live
+  Shipd mutation/check/rollout ran and no platform budget was spent.
+
+**Q1 broke anything else?** No submission artifact or live platform state changed. `.DS_Store` remains an
+unrelated user/worktree modification and is excluded from the scoped commit.
+
+**Q2 FP re-validated?** Yes for the shared workflow and corpus: the complete five-source/fidelity/integrity
+harness is green after the concurrent intake audit. A particular submission must still run its mandatory
+current-submission replay when autopilot reaches the post-batch triad phase.
+
+**Q3 still solvable?** Preserved. The workflow names `solvability` throughout and does not alter any project's
+tests or walls. Its post-batch phase enforces FP before solvability and Auto Review last.
+
+**Lesson:** An automation lease answers "may this agent mutate?"; it does not answer "did the agent execute the
+workflow?" Completion needs an ordered, artifact-backed state machine whose final state is READY or NOT_READY.
