@@ -79,7 +79,7 @@ first decisive action, adaptation point, and proof of completion.
 | `/fix-prechecks` | A platform precheck fails | Identify the exact precheck/group; reproduce it; route similarity findings to plagiarism logic | Repairs the whole visible failure class while preserving unrelated gates | Full pre-submit gates rerun, including affected FP mapping and records |
 | `/fix-quality` | Fairness, environment, flakiness, task, solution, or description check fails | Classify exact lane; reproduce; ask the fairness question; inspect all sibling findings and coverage suggestions | A disclosure must preserve/restore difficulty; flakiness gets repeated execution; stated requirements are not weakened | Fixed quality lane plus affected full gate/FP validation and logs |
 | `/fix-agent-runs` | A batch over-solves, under-solves, looks unfair, or has suspicious passers | Read all eight artifacts for every run; fingerprint regime; audit every passer; compute histogram, FDI, and counterfactual | Failure shape selects over-solve, zero-solve, environment, unfairness, or cheat route; solver proxies remeasure changes before another batch | At least one mined genuine passer, honest failure distribution, and evidence for the next triad/validate step |
-| `/fix-fp` | An FP panel/verifier finding arrives | Ingest the full verdict before fixing; reproduce candidate/reference/base; classify contract, real bug, or reference bug | Remedy order is narrow → delete → gate; Layer A and Layer B choose the actual surface; panel remedy is not blindly trusted | Seven FP passes, five-source replay, executable floors/canaries, and handoff to triad solvability |
+| `/fix-fp` | An FP panel/verifier finding arrives | Ingest the full verdict before fixing; reproduce candidate/reference/base; classify contract, real bug, or reference bug | Remedy order is narrow → delete → gate; Layer A and Layer B choose the actual surface; panel remedy is not blindly trusted | Automatically create a fresh triad bundle in the same invocation; apply every live-verdict block and dump heading to the current submission; then finish solvability and post-batch auto review |
 | `/fix-auto-review` | Any auto-review lane is below the local bar | Parse every lane and build one historical demand list; determine whether a batch changed the reviewed surface | Fix the full class, not one sentence; post-batch passer code is audited because it affects Solution/Code | Post-batch auto review rerun, all demands disposed, triad re-entered if FP/passers changed |
 | `/validate` | Before platform submission, after a material fix, or transforming an old project | Preflight manifest; choose Mode V (prove) or Mode T (transform); require an artifact for each of five stages | Current project evidence chooses the implementation of each proof; no stage can be replaced by confidence or memory | Five-row scoreboard, mined passer, predicted verdict, and GO/NO-GO |
 | `/validate-triad` | FP, solvability, and auto review must be brought to one consensus | Create a unique run directory; execute FP first, solvability second, post-batch auto review last | Each lane may force return to an earlier lane; fixes are accepted only if Q1/Q2/Q3 still hold | Six immutable files plus checksum and a ≥95%-confidence READY/NOT READY report |
@@ -89,6 +89,22 @@ first decisive action, adaptation point, and proof of completion.
 The six ordered artifacts are `00_CONTEXT.md`, `01_INTAKE.md`, `02_FP_SWEEP_<RUN_ID>.md`,
 `03_SOLVABILITY.md`, `04_AUTO_REVIEW.md`, and `05_FINAL_VALIDATION_REPORT.md`. `MANIFEST.sha256` protects the
 bundle. Missing/empty/reused files, count mismatches, or checksum mismatches void the run.
+
+### Blocking current-submission FP replay
+
+Both `/fix-fp` and `/validate-triad` now expose the same named stage:
+`CURRENT-SUBMISSION TWO-CORPUS REPLAY`. It is not satisfied by reading, path mentions, grep-only vocabulary
+checks, or corpus-integrity checks. It must apply every current block in
+`/Users/mac/Desktop/olympus-workflow/FP_LIVE_VERDICTS.md` and every current heading in
+`/Users/mac/Desktop/OLYMPUS/FP DUMP.MD` to the submission's description, tests, reference, and passing agent
+patches. `02_FP_SWEEP_<RUN_ID>.md` records separate source counts and written-row counts; every GATED row names
+a current killing test and executed kill proof; the pass condition is matching counts with 0 OPEN and 0 BUG.
+Any artifact edit invalidates the replay.
+
+`/fix-fp` no longer calls this a handoff. It automatically creates a fresh `/validate-triad` bundle and runs
+STEP 0 through STEP 5 in the same invocation, so an agent cannot report the local FP repair and defer the
+submission-wide proof to the user. Round 6 guards this contract with exact-path, automatic-continuation,
+per-source-count, zero-OPEN/zero-BUG, and registry-visibility canaries.
 
 ## Every workflow artifact has a live job
 

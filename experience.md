@@ -1501,3 +1501,54 @@ every declared artifact and a canary that proves a dummy artifact cannot pass as
 permission summary is not proof that a fine-grained token has Contents write scope; use the harmless blob-write
 probe before promising a push or deployment. After permission changes, repeat that probe, then verify the live
 page's content rather than treating a successful deploy status as content proof.
+
+### FIX #N+4 -- 2026-08-24 -- current-submission FP replay made explicit and automatic
+
+**Trigger:** The user could not see `/fix-fp` or `/validate-triad` proving the current submission against
+`/Users/mac/Desktop/olympus-workflow/FP_LIVE_VERDICTS.md` and
+`/Users/mac/Desktop/OLYMPUS/FP DUMP.MD`, and clarified that revalidation means applying every recorded FP to
+the submission rather than merely reading or naming the libraries.
+
+**Category:** Slash routing / FP evidence / Claude-Codex synchronization
+
+**Diagnosis:**
+- The deep `/validate-triad` STEP 2 already named both corpora and required one row per entry, but the obligation
+  was not visible enough at the opening route or high-level registry.
+- `/fix-fp` claimed "ALL FIVE SOURCES" in its symptom router while visibly listing only `FP DUMP.MD` plus the
+  three accepted-project libraries -- four sources -- and called the final replay a HANDOFF. An agent could
+  close the local finding, defer the submission-wide replay, and still sound complete.
+- The durable `fp-corpus-law` memory still described the seven FP documents as superseded and did not name
+  `FP_LIVE_VERDICTS.md` as a primary current-submission corpus.
+
+**Fix Applied:**
+- Added one identical named contract to both commands: `CURRENT-SUBMISSION TWO-CORPUS REPLAY`.
+- Required application to current `problem_description.md`, `test.patch`, `solution.patch`, and every passing
+  agent patch; reading, path mentions, grep-only checks, and corpus-integrity checks are explicitly insufficient.
+- Required separate source and written-row counts, one row per entry, named killing test plus executed proof for
+  GATED, and 0 OPEN / 0 BUG. Any artifact edit invalidates the replay.
+- Made `/fix-fp` automatically create a fresh `/validate-triad` bundle and run STEP 0-5 in the same invocation.
+- Updated both byte-identical registries, `COMMAND_TABLE`, `SYSTEM_MAP`, doctrine ledger, Claude memory, Codex
+  prompt/skill/memory mirrors, and this audit report.
+- Added Round 6 exact-path, semantic-contract, automatic-continuation, count, verdict, and registry canaries.
+
+**Results:**
+- First full harness run correctly failed Round 4 because the clearer triad heading had replaced a universal
+  preamble marker. The marker was restored without removing the new contract; focused checks then returned
+  Round 4 **58/58** and Round 6 **37/37**.
+- Final `bash ~/Desktop/olympus-workflow/checks/run_all.sh`: exit 0, `ALL CHECKS PASS`; self-test 42 forms x 3
+  contexts; rounds 2-6 **12/12, 25/25, 58/58, 11/11, 37/37**.
+- Port sync: **14 command prompt/skill pairs, 22 memory triples, workflow 49/49**.
+- No project submission artifacts or console runtime code changed; `.DS_Store` remains unrelated and excluded.
+
+**Q1 broke anything else?** The full harness initially caught and then verified the universal marker repair;
+the final run is green across all rounds.
+
+**Q2 FP re-validated?** This was a workflow-system change, not a particular submission. The commands now make
+the submission-specific replay mechanically unavoidable and evidenced; the shared corpus fidelity/integrity
+gates remain green.
+
+**Q3 still solvable?** Preserved. This strengthens proof and routing, not any task, test, solution, or wall.
+
+**Lesson:** Naming a corpus is not applying it. A mandatory replay must say what current artifacts it attacks,
+produce per-source row-count evidence, block on OPEN/BUG, and execute automatically rather than ending as a
+handoff.
