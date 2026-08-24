@@ -1481,11 +1481,11 @@ is `solvability`, and the outstanding console/audit changes are committed and de
 - Console: `node --check` passes for `server.js`, `analyze.js`, and the 260,185-byte inline script. Local
   `/health` returns `{"ok":true}`; served HTML contains the new 20-30/10-40/41-50/>50 doctrine and
   `solvability`, with no old band or mistaken lane label.
-- Deployment: a scoped local commit was created, but GitHub rejected the push. The configured token
-  authenticates as `aurumstylesbrand-source` and reads the repository, yet a harmless Git blob-write probe
-  returns HTTP 403 `Resource not accessible by personal access token`; SSH has no authorized key. The local
-  remote was also sanitized so it no longer embeds a plaintext credential. Render cannot deploy this commit
-  until it exists on GitHub, so the live console is honestly **NOT UPDATED** in this wave.
+- Deployment: after the user granted the token effective Contents write access, the harmless Git blob-write
+  probe returned HTTP 201, commit `9768d01` pushed to `main`, and Render deployment
+  `dep-da5s8kou01pc738avadg` reached `live` on that exact commit. Public `/health` returned `{"ok":true}`;
+  the served page contains the new 20-30/10-40/41-50/>50 doctrine and `solvability`, while the old band and
+  mistaken lane label are absent. The local Git remote remains sanitized with no embedded plaintext token.
 
 **Q1 broke anything else?** No project submission artifacts were touched. `.DS_Store` remains an unrelated
 user/worktree modification and is deliberately excluded from the commit.
@@ -1499,4 +1499,5 @@ tests. The triad order is mechanically `FP -> solvability -> auto review`.
 **Lesson:** A manifest proves inventory, not utilization. A live system needs a routed incoming consumer for
 every declared artifact and a canary that proves a dummy artifact cannot pass as operational. A repository
 permission summary is not proof that a fine-grained token has Contents write scope; use the harmless blob-write
-probe before promising a push or deployment.
+probe before promising a push or deployment. After permission changes, repeat that probe, then verify the live
+page's content rather than treating a successful deploy status as content proof.

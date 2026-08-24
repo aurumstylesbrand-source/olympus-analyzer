@@ -184,13 +184,12 @@ ready merely because the shared workflow is ready.
 
 ## Commit and deployment state
 
-The console, evidence log, and this report are committed locally. The commit is not on GitHub and
-is not deployed: GitHub accepts the configured identity for reads but rejects a harmless blob-write probe with
-HTTP 403 because the fine-grained token lacks effective Contents write access. SSH has no authorized key, and
-the connected browser could not complete GitHub navigation. The local Git remote was sanitized so it no longer
-stores a plaintext token.
+The user granted the configured token effective Contents write access. The write canary returned HTTP 201,
+commit `9768d01` pushed to GitHub `main`, and Render deployment `dep-da5s8kou01pc738avadg` reached `live` on
+that exact commit. The public console returned `{"ok":true}` from `/health`; its served HTML contains the new
+20-30% design / 10-40% ship / 41-50% spent-margin / >50% broken doctrine and `solvability`, with no old band or
+mistaken lane label. The Git remote remains sanitized and contains no plaintext credential.
 
-This is the only incomplete requested action. Once the token at `API KEY` has **Repository permissions →
-Contents: Read and write** for `aurumstylesbrand-source/olympus-analyzer`, the remaining evidence sequence is:
-push `main` → trigger Render service `olympus-analyzer` → wait for live → verify `/health`, the new band, and
-`solvability` on the served page. Until then the correct terminal verdict is **NOT READY FOR RERUN**.
+The shared Olympus/Mars system is therefore **READY FOR RERUN**. This verdict applies to the shared workflow;
+each historical project must still run `/new-chat` followed by `/catch-up` and accept that command's project-
+specific `/validate` result before a platform rerun.
