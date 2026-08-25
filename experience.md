@@ -1713,3 +1713,36 @@ not project tests or difficulty walls.
 
 **Lesson:** Browser identity is an observed boundary, not a file to export. A green local controller proves policy
 enforcement; it does not prove a live platform phase until connected Chrome emits the matching receipt.
+
+### FIX #N+7 -- 2026-08-25 -- two-account Olympus CLI authentication
+
+**Trigger:** `olympus auth login` returned command-not-found even though the npm installation had previously been
+reported complete; the user required AURUM and OLATHEDEV to remain independently authenticated.
+
+**Category:** CLI installation / authentication / profile isolation
+
+**Diagnosis:**
+- `@shipd-ai/olympus-cli@0.1.0` and Firecrawl CLI 1.14.8 were installed under `/Users/mac/.npm-global`, but that
+  bin directory was absent from the active non-interactive shell PATH.
+- The upstream CLI stores credentials under `os.homedir()/.shipd/olympus/credentials.json`, so un-routed direct
+  logins would share one credential file.
+- The router's existing preload correctly overrides `os.homedir()` with each registered `cliStateRoot`; this had
+  to be proved through the actual routed CLI rather than inferred from the environment variable alone.
+
+**Fix Applied:**
+- Invoked the installed CLI through an explicit PATH and completed fresh browser-token handoffs into two isolated
+  homes. No token or account identifier was printed to an artifact.
+- Bound each observed user identity as an HMAC fingerprint to `AURUM/1` and `OLATHEDEV/2`.
+- Re-ran `olympus-router profile cli --name 1|2 -- auth status --json` and reduced the output to non-secret status.
+
+**Results:**
+- AURUM routed authentication: PASS, 31 days remaining.
+- OLATHEDEV routed authentication: PASS, 31 days remaining.
+- Distinct routed account identities: PASS.
+- The first AURUM bearer token was accidentally pasted into chat and was not submitted to the CLI. A fresh token
+  was used; the exposed token should still be revoked in Shipd session/security controls if available.
+
+**Side effects:** Authentication only. No submission was bound, uploaded, checked, mutated, or charged.
+
+**Lesson:** A globally installed package is not operational until a fresh shell resolves its executable, and a
+multi-account claim is not proven until the canonical routed command returns two distinct authenticated identities.
