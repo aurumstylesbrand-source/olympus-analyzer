@@ -18,16 +18,16 @@ The current evidence supports these conclusions:
 
 | Surface | Current verdict | Evidence |
 |---|---|---|
-| Canonical slash-command set | **PASS** | 16 Claude commands, 16 Codex prompts, 16 Codex Olympus skills |
-| Claude-to-Codex synchronization | **PASS** | Sync verified 16 command pairs, 23 memory triples, workflow 49/49 |
-| Router implementation | **PASS** | 17/17 unit tests; Python compilation passed |
+| Canonical slash-command set | **PASS** | 17 Claude commands, 17 Codex prompts, 17 Codex Olympus skills |
+| Claude-to-Codex synchronization | **PASS** | Sync verified 17 command pairs, 23 memory triples, workflow 49/49 |
+| Router implementation | **PASS** | 24/24 unit tests; Python compilation passed |
 | Retired-doctrine detection | **PASS** | 50 token forms tested in 3 contexts; zero misses |
 | Semantic workflow checks | **PASS** | Round 2: 12/12 |
 | Behavioral workflow checks | **PASS** | Round 3: 25/25 |
 | Doctrinal coherence | **PASS** | Round 4: 59/59 |
 | Arithmetic/outcome checks | **PASS** | Round 5: 11/11 |
-| Reachability and registry parity | **PASS** | Round 6: 51/51 |
-| FP DUMP integrity | **PASS at last check** | 438 headings, 434 unique IDs, marker FP-437, both canaries PASS |
+| Reachability and registry parity | **PASS** | Round 6: 55/55 |
+| FP DUMP integrity | **PASS at last check** | 446 headings, 442 unique IDs, marker FP-445, both canaries PASS |
 | AURUM/1 CLI authentication | **PASS** | Routed status authenticated; 31 days remaining at verification time |
 | OLATHEDEV/2 CLI authentication | **PASS** | Routed status authenticated; 31 days remaining at verification time |
 | Account isolation | **PASS** | Routed user identities are distinct; separate credential roots |
@@ -211,7 +211,24 @@ Before enabling ON, the controller requires:
 - an operation allowlist;
 - read-only verification that the visible account, challenge, and current version match the binding.
 
-The default budget is **50 finite tokens**. Literal unlimited mode is forbidden.
+Ordinary `/autopilot-on` defaults to **50 finite tokens**. When those 50 are used, the agent pauses paid work,
+shows completed work, receipts, exact spend, current phase, blockers, and the next priced action, then asks before
+any renewal. It cannot silently release another tranche. Literal unlimited mode is forbidden.
+
+### 6.3 `/overnight`
+
+`/overnight` is the single explicit independent-work mode. It executes the same complete 11-phase route under:
+
+- 150 tokens and six hours initially;
+- a 50-token initial working envelope;
+- smallest-needed 10-token releases backed by new project-local evidence;
+- a protected 20-token closeout reserve;
+- one machine-checked minor-closeout extension to 200-250 absolute, only at >=95% confidence with at least one
+  FP-genuine passer, 0 FP OPEN/BUG, no UNKNOWN/redesign/platform instability, and one or two minor blockers;
+- a hard absolute ceiling of 250 tokens.
+
+The user-reported Gold refill rate of 30 tokens/hour is rechecked from the live balance surface. It is planning
+capacity, not an hourly throttle or spending authorization. `/autopilot-off` deactivates normal or overnight mode.
 
 The standard allowlist contains:
 
@@ -322,7 +339,7 @@ Historical VCA evidence may remain as historical evidence only.
 
 ---
 
-## 8. The 16 slash commands
+## 8. The 17 slash commands
 
 The canonical source is `~/.claude/commands/<name>.md`. Codex prompts and skills are generated snapshots.
 If a Codex slash prompt does not expand, read the canonical Claude command file in full and execute it manually.
@@ -333,6 +350,7 @@ Every command starts by reading `SYSTEM_MAP.md`, matching its own symptom router
 | Command | Purpose | First routing decision | Required finish |
 |---|---|---|---|
 | `/autopilot-on` | Execute the complete bounded Shipd route | Resolve/verify profile and exact project URL; establish budget, TTL, allowlist | All 11 phases and READY/NOT_READY consensus |
+| `/overnight` | Execute the same route under the self-work governor | Verify route and live balance; start 150/6h with 50 released | READY/NOT_READY, stop at 150 without qualifying closeout evidence, never exceed 250 |
 | `/autopilot-off` | Revoke new mutation/spend authority | Inspect current lease and accepted receipts | OFF recorded; read-only observation preserved |
 | `/new-sub` | Start a new invention-only submission | Repeat-repo versus fresh-repo fork, then GATE ZERO | Complete creation route and local validation state |
 | `/continue` | Resume an interrupted task in the same chat | Read current experience state and newest instruction | Continue the exact open task without re-planning finished work |
@@ -473,16 +491,18 @@ are not superseded by `FP_LAW.md`; `FP_LAW.md` is the entry point that names and
 10. Pre-batch Auto Review is capped at three attempts.
 11. Rollouts use Nova only; never Orion or Vega.
 12. Standard cohort is 5 then 10; conditional +3 only under the defined 0/10 near-miss condition.
-13. Budget is finite; default 50 tokens; literal unlimited is forbidden.
-14. FP, solvability, and post-batch Auto Review are one ordered problem.
-15. Every fix triggers a current-submission replay against `FP_LIVE_VERDICTS.md`, `FP DUMP.MD`, and the three
+13. Ordinary budget is 50 tokens and then pause/report/ask; it never silently renews.
+14. `/overnight` explicitly authorizes 150 tokens / 6 hours with evidence-gated releases and a conditional 250
+    absolute closeout ceiling; `/autopilot-off` stops either mode.
+15. FP, solvability, and post-batch Auto Review are one ordered problem.
+16. Every fix triggers a current-submission replay against `FP_LIVE_VERDICTS.md`, `FP DUMP.MD`, and the three
     accepted FP method libraries.
-16. Difficulty targets are counted in FP-genuine passers: design 20-30%, ship 10-40%, 41-50% only as spent
+17. Difficulty targets are counted in FP-genuine passers: design 20-30%, ship 10-40%, 41-50% only as spent
     margin with every passer genuine, above 50% broken, zero broken.
-17. Aim for at least two genuine passes; one is acceptable; zero is broken.
-18. Solver message counts, LOC floors, and file-count floors are not gates. Never pad.
-19. Every command reads both project instruments before a fix and writes/re-reads both afterward.
-20. A completeness check must have a canary proving it can fail.
+18. Aim for at least two genuine passes; one is acceptable; zero is broken.
+19. Solver message counts, LOC floors, and file-count floors are not gates. Never pad.
+20. Every command reads both project instruments before a fix and writes/re-reads both afterward.
+21. A completeness check must have a canary proving it can fail.
 
 ---
 
@@ -490,7 +510,7 @@ are not superseded by `FP_LAW.md`; `FP_LAW.md` is the entry point that names and
 
 ### 11.1 Router validation
 
-The 17 tests cover:
+The 24 tests cover:
 
 - untrusted URL rejection;
 - unbound-project missing context;
@@ -498,6 +518,12 @@ The 17 tests cover:
 - connected-Chrome mode without exported browser state;
 - HMAC identity verification and mismatch blocking;
 - exact live policy encoding;
+- the normal 50-token hard ceiling with no silent renewal;
+- `/autopilot-off` deactivating an active overnight mission;
+- the overnight 150-token / six-hour defaults with only 50 initially released;
+- unique evidence-gated smallest-tranche release and reserve protection;
+- current displayed-balance enforcement before paid operations;
+- closeout-extension proof, one-use enforcement, and the 250-token absolute ceiling;
 - canonical project binding with autopilot initially OFF;
 - read-only observation while OFF;
 - allowlist and budget blocking;
@@ -512,14 +538,21 @@ The 17 tests cover:
 
 ### 11.2 Workflow validation
 
-The last complete proof was composite because a concurrent session appended FP-436 during the first full harness:
+The proof remained fail-closed while concurrent sessions appended new FP entries:
 
 1. The retired-token self-test completed successfully: 50 forms x 3 contexts, zero misses.
-2. The full harness then correctly failed FP integrity because FP-436 had arrived without baseline attestation.
-3. FP-436's raw attachment hash and matching msw3 project records were independently verified.
-4. The new Verdict was attested only after schema validation had no errors.
-5. FP integrity passed at marker FP-437.
-6. The entire post-canary suite was rerun and returned `POST-CANARY ALL CHECKS PASS`.
+2. An earlier run correctly failed FP integrity when FP-436 arrived without baseline attestation; its raw receipt
+   and matching msw3 records were verified before attestation.
+3. The current run then stopped on FP-437 through FP-442 rather than silently blessing them.
+4. Their schema, unique signatures, marker order, and project provenance were audited. FP-441 and FP-442 had
+   copied the project-report label `SUBMISSION-SPECIFIC` into the FP outcome-class field; those values were
+   corrected to `FALSE POSITIVE` and `GENUINE PASS` according to their recorded FAIL/PASS results.
+5. All six new Verdict fields were attested only after the integrity checker reported no schema or historical
+   mismatch. FP-443 and FP-444 then arrived during the final rerun; both were matched to the unctx intake,
+   triad sweep, platform report, and experience ledger before their already-valid outcome classes were attested.
+   FP integrity then passed at marker FP-445.
+6. The new `/overnight` command initially failed two universal-preamble guards. Its canonical project-report
+   route, `SYMPTOM INDEX`, corpus-law marker, and `SEVEN-PASS SWEEP` requirement were restored before resync.
 
 Final round totals:
 
@@ -528,19 +561,19 @@ Round 2 semantic:                 12 PASS / 0 FAIL
 Round 3 behavioral:               25 PASS / 0 FAIL
 Round 4 doctrinal coherence:       59 PASS / 0 FAIL
 Round 5 arithmetic/outcome:        11 PASS / 0 FAIL
-Round 6 reachability/registry:     51 PASS / 0 FAIL
+Round 6 reachability/registry:     55 PASS / 0 FAIL
 ```
 
 ### 11.3 Current FP state at report generation
 
 ```text
 FP DUMP INTEGRITY PASS
-headings=438
-unique_ids=434
-marker=FP-437
+headings=446
+unique_ids=442
+marker=FP-445
 known_gaps=FP-099,FP-100
-verdict_hashes=438
-schema_entries=85
+verdict_hashes=446
+schema_entries=93
 hash_canary=PASS
 schema_canary=PASS
 ```
@@ -553,7 +586,7 @@ these counts. A newly appended entry is not a defect by itself; an unaudited ent
 The last Claude-to-Codex sync reported:
 
 ```text
-16 command prompt/skill pairs
+17 command prompt/skill pairs
 23 memory triples
 workflow 49/49
 ```
@@ -677,13 +710,25 @@ olympus-router bind \
 
 ```bash
 olympus-router autopilot on \
+  --mode normal \
   --project <absolute-project-path> \
-  --budget 50 \
-  --ttl 2h \
   --allow standard
 ```
 
 Enabling this lease is only the authorization envelope. Continue through every workflow phase.
+
+### Enable independent self-work mode
+
+Invoke `/overnight`, which internally starts:
+
+```bash
+olympus-router autopilot on \
+  --mode overnight \
+  --project <absolute-project-path> \
+  --allow standard
+```
+
+Use `/autopilot-off` to deactivate either mode.
 
 ### Inspect workflow state
 
@@ -784,8 +829,8 @@ project: absolute local project path, if it is not already obvious from the work
 ```
 
 Claude should then perform read-only binding verification and report the resolved account/challenge/version before
-any live mutation. `/autopilot-on` may begin only after that confirmation and an explicit finite authorization
-envelope.
+any live mutation. Ordinary `/autopilot-on` itself authorizes the 50-token default after confirmation;
+`/overnight` explicitly authorizes its separate 150/6h governor.
 
 ---
 
@@ -796,4 +841,3 @@ envelope.
 **Claude/Codex slash synchronization:** READY.  
 **Project-specific live Shipd workflow:** NOT STARTED because no exact project/submission binding was supplied.  
 **Safe next state:** bind one project to one verified alias, then execute the ordered workflow with receipts.
-

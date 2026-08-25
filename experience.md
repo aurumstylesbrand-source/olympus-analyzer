@@ -1760,3 +1760,54 @@ sections present; no JWT-shaped material; no email-shaped material; `git diff --
 
 The report deliberately says that the shared system and profile authentication are ready while project-specific
 live Shipd execution is NOT STARTED until an exact project/profile/submission binding is supplied.
+
+### FIX #N+8 -- 2026-08-25 -- simple 50-token normal mode and `/overnight`
+
+**Trigger:** The user corrected the automation contract: ordinary work must default to 50 tokens total and pause
+with a progress report, while a simple `/overnight` command authorizes bounded self-work. `/autopilot-off` must
+stop both modes, so a second deactivation command would be unnecessary complexity.
+
+**Category:** Platform automation / budget governance / slash synchronization / FP intake integrity
+
+**Diagnosis:**
+- The earlier renewable-envelope design did not make the user's ordinary 50-token ceiling obvious enough.
+- The six-hour plan needed executable release and extension conditions, not prose that could be self-certified.
+- The first full audit exposed missing universal preamble markers in the new command.
+- Concurrent FP-437 through FP-442 correctly stopped the corpus gate; FP-441 and FP-442 used a project-report
+  classification in the controlled FP outcome-class field.
+
+**Fix Applied:**
+- Added normal and overnight modes to the router. Normal refuses budgets above 50 and has no auto-renewal path.
+- Added unique project-local evidence releases, current live-balance enforcement, a protected closeout reserve,
+  and a one-use 200-250 minor-closeout extension with an absolute 250 ceiling.
+- Added canonical `/overnight`; updated `/autopilot-on`, `/autopilot-off` semantics, all registries, doctrine,
+  shared memory, controller policy, tests, and generated Codex prompts/skills/memory.
+- Added a direct OFF-versus-overnight test and Round 6 canaries for the normal pause/report and overnight ceiling.
+- Restored the exact universal report route, symptom-index marker, corpus-law marker, and seven-pass requirement
+  after Round 4 demonstrated that the first prompt draft was incomplete.
+- Audited the six concurrent FP entries for schema, signature uniqueness, ordering, and project provenance;
+  normalized the two invalid outcome classes according to their recorded FAIL/PASS results, then updated the
+  Verdict baseline only after the integrity checker had no other error.
+
+**Results:**
+- Router compilation PASS; 24/24 unit tests PASS.
+- FP integrity PASS: 446 headings, 442 unique IDs, marker FP-445, 446 Verdict hashes, 93 controlled entries,
+  hash canary PASS, schema canary PASS.
+- Round 4: 59/59 PASS. Round 6: 55/55 PASS.
+- Claude-to-Codex sync: 17 command pairs, 23 memory triples, workflow 49/49.
+- Retired-token self-test: 50 forms in three contexts, zero misses. Post-canary rounds 2-6: 12/12, 25/25,
+  59/59, 11/11, and 55/55 PASS. FP-443 and FP-444 were attested only after matching the unctx intake, sweep,
+  platform report, and experience ledger.
+- No live Shipd operation or token spend occurred; no project-specific submission is bound.
+
+**Q1 broke anything else?** No submission artifact or live platform state changed. The pre-existing `.DS_Store`
+change remains unrelated and excluded.
+
+**Q2 FP re-validated?** Shared corpus integrity and five-source routing are green. The exact submission replay is
+still performed against current artifacts during that project's post-batch triad.
+
+**Q3 still solvable?** Yes. Budget governance changes transport and authorization only; it does not alter any
+project's tests, promises, walls, or genuine-passer requirement.
+
+**Lesson:** Keep the user interface memorable and the enforcement machine strict: normal means 50 then ask,
+overnight means bounded self-work, and OFF means OFF for both.

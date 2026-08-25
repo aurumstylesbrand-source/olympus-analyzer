@@ -18,12 +18,12 @@ import subprocess
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_CEILING
 from pathlib import Path
 from urllib.parse import urlparse
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 PROFILE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 PROFILE_ALIASES = {
     "1": "aurum",
@@ -102,6 +102,19 @@ PROFILES_PATH = CONFIG_ROOT / "profiles.json"
 IDENTITY_KEY_PATH = CONFIG_ROOT / "identity.key"
 CLI_ENTRY = USER_ROOT / ".npm-global" / "lib" / "node_modules" / "@shipd-ai" / "olympus-cli" / "dist" / "index.js"
 PRELOAD = Path(__file__).with_name("olympus_homedir_preload.mjs")
+
+DEFAULT_MISSION_BUDGET = Decimal("50")
+OVERNIGHT_MISSION_BUDGET = Decimal("150")
+DEFAULT_NORMAL_TTL = "2h"
+DEFAULT_OVERNIGHT_TTL = "6h"
+MAX_MISSION_TTL = timedelta(hours=6)
+INITIAL_WORKING_ENVELOPE = Decimal("50")
+RENEWAL_TRANCHE = Decimal("10")
+PROTECTED_CLOSEOUT_RESERVE = Decimal("20")
+MAX_MISSION_BUDGET = Decimal("250")
+MAX_CLOSEOUT_EXTENSION = Decimal("100")
+MIN_CLOSEOUT_CONFIDENCE = Decimal("0.95")
+USER_REPORTED_GOLD_DRIP_RATE = Decimal("30")
 
 
 class RouterError(RuntimeError):
@@ -227,6 +240,27 @@ def automation_log_path(project: Path) -> Path:
     return tools_dir(project) / "OLYMPUS_AUTOMATION_LOG.jsonl"
 
 
+def empty_autopilot() -> dict:
+    return {
+        "enabled": False,
+        "mode": "normal",
+        "expiresAt": None,
+        "budgetTokens": "0",
+        "baseBudgetTokens": "0",
+        "spentTokens": "0",
+        "releasedTokens": "0",
+        "initialWorkingEnvelopeTokens": str(INITIAL_WORKING_ENVELOPE),
+        "renewalTrancheTokens": str(RENEWAL_TRANCHE),
+        "protectedReserveTokens": "0",
+        "planningDripRateTokensPerHour": str(USER_REPORTED_GOLD_DRIP_RATE),
+        "observedDripRateTokensPerHour": None,
+        "closeoutExtensionUsed": False,
+        "closeoutEvidenceArtifact": None,
+        "allowedOperations": ["observe"],
+        "missionId": None,
+    }
+
+
 def empty_binding() -> dict:
     return {
         "schemaVersion": SCHEMA_VERSION,
@@ -234,14 +268,7 @@ def empty_binding() -> dict:
         "submissionUrl": None,
         "challengeId": None,
         "lastVerified": None,
-        "autopilot": {
-            "enabled": False,
-            "expiresAt": None,
-            "budgetTokens": "0",
-            "spentTokens": "0",
-            "allowedOperations": ["observe"],
-            "missionId": None,
-        },
+        "autopilot": empty_autopilot(),
         "workflow": {
             "nextPhaseIndex": 0,
             "state": "not-started",
@@ -369,6 +396,34 @@ def workflow_payload(binding: dict) -> dict:
     return workflow
 
 
+def autopilot_payload(binding: dict) -> dict:
+    """Return a backward-compatible mission view without mutating stored state."""
+    payload = empty_autopilot()
+    payload.update(binding.get("autopilot") or {})
+    budget = parse_decimal(str(payload.get("budgetTokens", "0")))
+    if "baseBudgetTokens" not in (binding.get("autopilot") or {}):
+        payload["baseBudgetTokens"] = str(budget)
+    if "releasedTokens" not in (binding.get("autopilot") or {}):
+        payload["releasedTokens"] = str(min(INITIAL_WORKING_ENVELOPE, budget))
+    if "protectedReserveTokens" not in (binding.get("autopilot") or {}):
+        payload["protectedReserveTokens"] = str(
+            min(PROTECTED_CLOSEOUT_RESERVE, max(Decimal("0"), budget - INITIAL_WORKING_ENVELOPE))
+        )
+    return payload
+
+
+def effective_spend_limit(binding: dict) -> Decimal:
+    autopilot = autopilot_payload(binding)
+    budget = parse_decimal(str(autopilot["budgetTokens"]))
+    released = parse_decimal(str(autopilot["releasedTokens"]))
+    reserve = parse_decimal(str(autopilot["protectedReserveTokens"]))
+    phase_index = int((binding.get("workflow") or {}).get("nextPhaseIndex", 0))
+    closeout_index = WORKFLOW_PHASES.index("post-batch-triad")
+    if phase_index >= closeout_index:
+        return budget
+    return min(released, max(Decimal("0"), budget - reserve))
+
+
 def artifact_within_project(project: Path, value: str) -> Path:
     path = Path(value).expanduser().resolve()
     try:
@@ -380,6 +435,45 @@ def artifact_within_project(project: Path, value: str) -> Path:
     return path
 
 
+def project_json_artifact(project: Path, value: str) -> tuple[Path, dict, str]:
+    path = artifact_within_project(project, value)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RouterError(f"evidence artifact must contain valid JSON: {path}") from exc
+    if not isinstance(payload, dict):
+        raise RouterError("evidence artifact must contain a JSON object")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return path, payload, digest
+
+
+def evidence_digest_used(project: Path, mission_id: str | None, event_name: str, digest: str) -> bool:
+    path = automation_log_path(project)
+    if not path.is_file():
+        return False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if (
+            event.get("event") == event_name
+            and event.get("missionId") == mission_id
+            and event.get("evidenceSha256") == digest
+        ):
+            return True
+    return False
+
+
+def mission_completed_phase(binding: dict, phase: str) -> bool:
+    mission_id = autopilot_payload(binding).get("missionId")
+    return any(
+        item.get("phase") == phase and item.get("missionId") == mission_id
+        for item in (binding.get("workflow") or {}).get("history", [])
+        if isinstance(item, dict)
+    )
+
+
 def status_payload(project: Path) -> dict:
     binding = load_binding(project)
     missing = []
@@ -387,7 +481,7 @@ def status_payload(project: Path) -> dict:
         missing.append("profile")
     if not binding.get("submissionUrl"):
         missing.append("submissionUrl")
-    autopilot = dict(binding.get("autopilot") or {})
+    autopilot = autopilot_payload(binding)
     if autopilot.get("enabled") and autopilot_expired(binding):
         autopilot["effectiveState"] = "expired"
     else:
@@ -459,8 +553,35 @@ def command_profile_check(args: argparse.Namespace) -> None:
 def live_policy_payload() -> dict:
     return {
         "profileChoices": {"1": "AURUM", "2": "OLATHEDEV"},
-        "defaultBudgetTokens": "50",
+        "normalMode": {
+            "slashCommand": "/autopilot-on",
+            "budgetTokens": str(DEFAULT_MISSION_BUDGET),
+            "renewal": "PAUSE_AND_ASK",
+        },
+        "overnightMode": {
+            "slashCommand": "/overnight",
+            "missionBudgetTokens": str(OVERNIGHT_MISSION_BUDGET),
+            "ttlHours": 6,
+            "initialWorkingEnvelopeTokens": str(INITIAL_WORKING_ENVELOPE),
+            "renewalTrancheTokens": str(RENEWAL_TRANCHE),
+            "protectedCloseoutReserveTokens": str(PROTECTED_CLOSEOUT_RESERVE),
+            "conditionalCloseoutExtensionTokens": str(MAX_CLOSEOUT_EXTENSION),
+            "absoluteMissionCeilingTokens": str(MAX_MISSION_BUDGET),
+            "minimumCloseoutConfidence": str(MIN_CLOSEOUT_CONFIDENCE),
+        },
+        "deactivateCommand": "/autopilot-off",
+        "goldDripRateTokensPerHour": {
+            "planningValue": str(USER_REPORTED_GOLD_DRIP_RATE),
+            "source": "user-reported; verify from the live balance surface each mission",
+            "isHourlySpendQuota": False,
+        },
         "literalUnlimitedBudgetAllowed": False,
+        "localEfficiency": {
+            "localFloorBeforePaidRetry": True,
+            "reuseEvidenceOnlyWhenDependencyHashesAreUnchanged": True,
+            "rerunOnlyAffectedChecksBeforeTheRequiredCoupledFinalGate": True,
+            "platformProbesAreForLiveInformationNotBlindIteration": True,
+        },
         "scopeGateRequiredBeforeAutoReview": True,
         "verifierCompletenessAudit": "SKIP",
         "precheckWarningAllowlist": [
@@ -549,23 +670,63 @@ def command_autopilot_on(args: argparse.Namespace) -> None:
     binding = load_binding(project)
     if not binding.get("profile") or not binding.get("submissionUrl"):
         raise RouterError("project must have both profile and submission URL before autopilot can turn on", 12)
-    budget = parse_decimal(args.budget)
-    ttl = parse_ttl(args.ttl)
+    existing = autopilot_payload(binding)
+    if existing.get("enabled") and not autopilot_expired(binding):
+        raise RouterError("an autopilot mission is already active; turn it off before starting another", 25)
+    mode = args.mode
+    maximum_initial_budget = (
+        OVERNIGHT_MISSION_BUDGET if mode == "overnight" else DEFAULT_MISSION_BUDGET
+    )
+    default_budget = maximum_initial_budget
+    budget = parse_decimal(args.budget or str(default_budget))
+    if budget == 0 or budget > maximum_initial_budget:
+        raise RouterError(
+            f"{mode} mission budget must be greater than 0 and at most {maximum_initial_budget}"
+        )
+    ttl = parse_ttl(args.ttl or (DEFAULT_OVERNIGHT_TTL if mode == "overnight" else DEFAULT_NORMAL_TTL))
+    if ttl > MAX_MISSION_TTL:
+        raise RouterError("the self-work mission TTL is capped at 6h")
     operations = parse_operations(args.allow)
+    observed_drip = None
+    if args.observed_drip_rate is not None:
+        observed_drip = str(parse_decimal(args.observed_drip_rate))
     expires = datetime.now(timezone.utc) + ttl
-    mission_id = f"mission-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    mission_id = f"mission-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{secrets.token_hex(3)}"
+    initial_release = min(INITIAL_WORKING_ENVELOPE, budget)
+    reserve = Decimal("0") if mode == "normal" else min(
+        PROTECTED_CLOSEOUT_RESERVE, max(Decimal("0"), budget - initial_release)
+    )
     binding["autopilot"] = {
         "enabled": True,
+        "mode": mode,
         "expiresAt": expires.isoformat().replace("+00:00", "Z"),
         "budgetTokens": str(budget),
+        "baseBudgetTokens": str(budget),
         "spentTokens": "0",
+        "releasedTokens": str(initial_release),
+        "initialWorkingEnvelopeTokens": str(initial_release),
+        "renewalTrancheTokens": str(RENEWAL_TRANCHE),
+        "protectedReserveTokens": str(reserve),
+        "planningDripRateTokensPerHour": str(USER_REPORTED_GOLD_DRIP_RATE),
+        "observedDripRateTokensPerHour": observed_drip,
+        "closeoutExtensionUsed": False,
+        "closeoutEvidenceArtifact": None,
         "allowedOperations": operations,
         "missionId": mission_id,
     }
     binding["workflow"] = empty_binding()["workflow"]
     binding["workflow"]["state"] = "running"
     save_binding(project, binding)
-    append_event(project, {"event": "autopilot-on", "missionId": mission_id, "budgetTokens": str(budget), "allowedOperations": operations})
+    append_event(project, {
+        "event": "autopilot-on",
+        "missionId": mission_id,
+        "mode": mode,
+        "budgetTokens": str(budget),
+        "releasedTokens": str(initial_release),
+        "protectedReserveTokens": str(reserve),
+        "observedDripRateTokensPerHour": observed_drip,
+        "allowedOperations": operations,
+    })
     print(json.dumps(status_payload(project), indent=2))
 
 
@@ -581,6 +742,172 @@ def command_autopilot_off(args: argparse.Namespace) -> None:
     print(json.dumps(status_payload(project), indent=2))
 
 
+def command_autopilot_release(args: argparse.Namespace) -> None:
+    project = resolve_project(args.project)
+    binding = load_binding(project)
+    autopilot = autopilot_payload(binding)
+    if not autopilot.get("enabled") or autopilot_expired(binding):
+        raise RouterError("autopilot is off or expired; tranche release denied", 20)
+    if autopilot.get("mode") != "overnight":
+        raise RouterError("normal autopilot stops at 50 tokens and must ask the user for more")
+    evidence_path, evidence, digest = project_json_artifact(project, args.evidence)
+    mission_id = autopilot.get("missionId")
+    if evidence.get("missionId") != mission_id:
+        raise RouterError("tranche evidence belongs to a different mission")
+    if evidence_digest_used(project, mission_id, "working-envelope-released", digest):
+        raise RouterError("this tranche evidence was already used")
+    evidence_paths = evidence.get("evidencePaths")
+    if not isinstance(evidence_paths, list) or not evidence_paths:
+        raise RouterError("tranche evidence requires a nonempty evidencePaths list")
+    resolved_evidence = [str(artifact_within_project(project, item)) for item in evidence_paths]
+    new_evidence = evidence.get("newEvidence")
+    if not isinstance(new_evidence, list) or not new_evidence or not all(
+        isinstance(item, str) and item.strip() for item in new_evidence
+    ):
+        raise RouterError("tranche evidence requires nonempty newEvidence statements")
+    if evidence.get("noUnknown") is not True or evidence.get("noBlockingFinding") is not True:
+        raise RouterError("tranche release requires noUnknown=true and noBlockingFinding=true")
+    operation = evidence.get("nextOperation")
+    if operation not in ALL_OPERATIONS or operation == "observe":
+        raise RouterError("tranche evidence must name a paid or mutating nextOperation")
+    if operation not in set(autopilot.get("allowedOperations") or []):
+        raise RouterError(f"next operation is not allowed by this mission: {operation}")
+    next_phase = workflow_payload(binding).get("nextPhase")
+    expected_phases = OPERATION_PHASES.get(operation)
+    if expected_phases and next_phase not in expected_phases:
+        raise RouterError(f"next operation {operation} does not match workflow phase {next_phase}")
+    next_cost = parse_decimal(str(evidence.get("nextCostTokens", "")))
+    if next_cost == 0:
+        raise RouterError("tranche evidence nextCostTokens must be greater than zero")
+    current_limit = effective_spend_limit(binding)
+    spent = parse_decimal(str(autopilot.get("spentTokens", "0")))
+    target_limit = spent + next_cost
+    if target_limit <= current_limit:
+        raise RouterError("the current working envelope already covers the evidenced next operation")
+    budget = parse_decimal(str(autopilot.get("budgetTokens", "0")))
+    reserve = parse_decimal(str(autopilot.get("protectedReserveTokens", "0")))
+    maximum_precloseout_release = max(Decimal("0"), budget - reserve)
+    released = parse_decimal(str(autopilot.get("releasedTokens", "0")))
+    tranche = parse_decimal(str(autopilot.get("renewalTrancheTokens", RENEWAL_TRANCHE)))
+    tranche_count = ((target_limit - current_limit) / tranche).to_integral_value(rounding=ROUND_CEILING)
+    new_release = min(maximum_precloseout_release, released + tranche_count * tranche)
+    if new_release < target_limit:
+        raise RouterError(
+            "the evidenced operation would consume the protected closeout reserve or exceed the mission cap"
+        )
+    binding["autopilot"]["releasedTokens"] = str(new_release)
+    save_binding(project, binding)
+    append_event(project, {
+        "event": "working-envelope-released",
+        "missionId": mission_id,
+        "evidenceArtifact": str(evidence_path),
+        "evidenceSha256": digest,
+        "evidencePaths": resolved_evidence,
+        "nextOperation": operation,
+        "nextCostTokens": str(next_cost),
+        "releasedTokens": str(new_release),
+    })
+    print(json.dumps({
+        "released": True,
+        "missionId": mission_id,
+        "releasedTokens": str(new_release),
+        "protectedReserveTokens": str(reserve),
+        "evidenceSha256": digest,
+    }, indent=2))
+
+
+def command_autopilot_closeout_extend(args: argparse.Namespace) -> None:
+    project = resolve_project(args.project)
+    binding = load_binding(project)
+    autopilot = autopilot_payload(binding)
+    if not autopilot.get("enabled") or autopilot_expired(binding):
+        raise RouterError("autopilot is off or expired; closeout extension denied", 20)
+    if autopilot.get("mode") != "overnight":
+        raise RouterError("the conditional closeout extension is available only in /overnight mode")
+    if autopilot.get("closeoutExtensionUsed"):
+        raise RouterError("the one conditional closeout extension was already used")
+    if not mission_completed_phase(binding, "post-batch-triad"):
+        raise RouterError("closeout extension requires a completed current-mission post-batch triad")
+    evidence_path, evidence, digest = project_json_artifact(project, args.evidence)
+    mission_id = autopilot.get("missionId")
+    if evidence.get("missionId") != mission_id:
+        raise RouterError("closeout evidence belongs to a different mission")
+    if evidence_digest_used(project, mission_id, "closeout-budget-extended", digest):
+        raise RouterError("this closeout evidence was already used")
+    if evidence.get("classification") != "minor-closeout":
+        raise RouterError("closeout evidence classification must be minor-closeout")
+    confidence = parse_decimal(str(evidence.get("confidence", "")))
+    if confidence < MIN_CLOSEOUT_CONFIDENCE or confidence > 1:
+        raise RouterError(f"closeout confidence must be between {MIN_CLOSEOUT_CONFIDENCE} and 1")
+    if evidence.get("requiresRedesign") is not False:
+        raise RouterError("closeout extension is forbidden when redesign is required")
+    if evidence.get("platformInstability") is not False:
+        raise RouterError("closeout extension is forbidden during platform instability")
+    if evidence.get("unknowns") != []:
+        raise RouterError("closeout extension requires an empty unknowns list")
+    if evidence.get("approvalState") not in {
+        "NOT_APPROVED", "REVISION_REQUESTED", "PENDING_FINAL_RERUN",
+    }:
+        raise RouterError("closeout evidence must name the unresolved final approval state")
+    genuine_passers = evidence.get("genuinePassers")
+    if not isinstance(genuine_passers, int) or genuine_passers < 1:
+        raise RouterError("closeout extension requires at least one FP-genuine passer")
+    if evidence.get("fpOpen") != 0 or evidence.get("fpBug") != 0:
+        raise RouterError("closeout extension requires 0 FP OPEN and 0 FP BUG")
+    blockers = evidence.get("blockingFindings")
+    if not isinstance(blockers, list) or not 1 <= len(blockers) <= 2:
+        raise RouterError("closeout extension requires one or two blockingFindings")
+    evidence_paths: list[str] = []
+    for blocker in blockers:
+        if not isinstance(blocker, dict) or blocker.get("severity") != "minor":
+            raise RouterError("every closeout blocking finding must be classified minor")
+        if not isinstance(blocker.get("id"), str) or not blocker["id"].strip():
+            raise RouterError("every closeout blocking finding requires an id")
+        evidence_paths.append(str(artifact_within_project(project, blocker.get("evidencePath", ""))))
+    actions = evidence.get("remainingActions")
+    if not isinstance(actions, list) or not actions:
+        raise RouterError("closeout extension requires a nonempty remainingActions list")
+    remaining_cost = Decimal("0")
+    allowed = set(autopilot.get("allowedOperations") or [])
+    for action in actions:
+        if not isinstance(action, dict) or action.get("operation") not in allowed:
+            raise RouterError("every closeout action must name an allowed mission operation")
+        remaining_cost += parse_decimal(str(action.get("costTokens", "")))
+        evidence_paths.append(str(artifact_within_project(project, action.get("evidencePath", ""))))
+    current_budget = parse_decimal(str(autopilot.get("budgetTokens", "0")))
+    new_budget = parse_decimal(args.new_budget)
+    if new_budget < Decimal("200") or new_budget > MAX_MISSION_BUDGET:
+        raise RouterError("closeout budget must be between 200 and 250 tokens")
+    added = new_budget - current_budget
+    if added <= 0 or added > MAX_CLOSEOUT_EXTENSION:
+        raise RouterError("closeout extension must add between 1 and 100 tokens")
+    if remaining_cost > added:
+        raise RouterError(f"remaining action cost exceeds the requested extension: {remaining_cost} > {added}")
+    binding["autopilot"]["budgetTokens"] = str(new_budget)
+    binding["autopilot"]["closeoutExtensionUsed"] = True
+    binding["autopilot"]["closeoutEvidenceArtifact"] = str(evidence_path)
+    save_binding(project, binding)
+    append_event(project, {
+        "event": "closeout-budget-extended",
+        "missionId": mission_id,
+        "evidenceArtifact": str(evidence_path),
+        "evidenceSha256": digest,
+        "evidencePaths": evidence_paths,
+        "confidence": str(confidence),
+        "oldBudgetTokens": str(current_budget),
+        "newBudgetTokens": str(new_budget),
+        "remainingActionCostTokens": str(remaining_cost),
+    })
+    print(json.dumps({
+        "extended": True,
+        "missionId": mission_id,
+        "budgetTokens": str(new_budget),
+        "absoluteCeilingTokens": str(MAX_MISSION_BUDGET),
+        "confidence": str(confidence),
+        "evidenceSha256": digest,
+    }, indent=2))
+
+
 def command_can(args: argparse.Namespace) -> None:
     project = resolve_project(args.project)
     binding = load_binding(project)
@@ -591,7 +918,7 @@ def command_can(args: argparse.Namespace) -> None:
     if operation == "observe" and cost == 0:
         print(json.dumps({"allowed": True, "reason": "read-only observation is allowed while autopilot is off"}))
         return
-    autopilot = binding.get("autopilot") or {}
+    autopilot = autopilot_payload(binding)
     if not autopilot.get("enabled") or autopilot_expired(binding):
         raise RouterError("autopilot is off or expired; mutation denied", 20)
     if operation not in set(autopilot.get("allowedOperations") or []):
@@ -615,7 +942,30 @@ def command_can(args: argparse.Namespace) -> None:
     spent = parse_decimal(str(autopilot.get("spentTokens", "0")))
     if spent + cost > budget:
         raise RouterError(f"operation would exceed budget: {spent} + {cost} > {budget}", 22)
-    print(json.dumps({"allowed": True, "operation": operation, "cost": str(cost), "remainingAfter": str(budget - spent - cost), "missionId": autopilot.get("missionId")}))
+    spend_limit = effective_spend_limit(binding)
+    if spent + cost > spend_limit:
+        raise RouterError(
+            f"operation would exceed the released working envelope: {spent} + {cost} > {spend_limit}; "
+            "release the smallest evidence-backed tranche or reach the closeout phase",
+            26,
+        )
+    live_balance = None
+    if cost > 0:
+        if args.live_balance is None:
+            raise RouterError("a paid operation requires --live-balance from the current platform surface", 27)
+        live_balance = parse_decimal(args.live_balance)
+        if cost > live_balance:
+            raise RouterError(f"live balance is insufficient for this operation: {cost} > {live_balance}", 28)
+    print(json.dumps({
+        "allowed": True,
+        "operation": operation,
+        "cost": str(cost),
+        "liveBalance": str(live_balance) if live_balance is not None else None,
+        "releasedSpendLimit": str(spend_limit),
+        "remainingMissionAfter": str(budget - spent - cost),
+        "remainingEnvelopeAfter": str(spend_limit - spent - cost),
+        "missionId": autopilot.get("missionId"),
+    }))
 
 
 def command_record(args: argparse.Namespace) -> None:
@@ -624,13 +974,24 @@ def command_record(args: argparse.Namespace) -> None:
     cost = parse_decimal(args.cost)
     if cost > 0 and not args.receipt:
         raise RouterError("a paid operation requires a persisted server receipt or job ID")
-    command_can(argparse.Namespace(project=str(project), operation=args.operation, cost=args.cost))
+    command_can(argparse.Namespace(
+        project=str(project), operation=args.operation, cost=args.cost,
+        live_balance=args.live_balance,
+    ))
     autopilot = binding["autopilot"]
     phase = workflow_payload(binding).get("nextPhase")
     spent = parse_decimal(str(autopilot.get("spentTokens", "0"))) + cost
     autopilot["spentTokens"] = str(spent)
     save_binding(project, binding)
-    append_event(project, {"event": "operation-recorded", "operation": args.operation, "phase": phase, "cost": str(cost), "receipt": args.receipt, "missionId": autopilot.get("missionId")})
+    append_event(project, {
+        "event": "operation-recorded",
+        "operation": args.operation,
+        "phase": phase,
+        "cost": str(cost),
+        "liveBalanceBefore": args.live_balance,
+        "receipt": args.receipt,
+        "missionId": autopilot.get("missionId"),
+    })
     print(json.dumps({"recorded": True, "spentTokens": str(spent), "receipt": args.receipt}))
 
 
@@ -752,24 +1113,37 @@ def build_parser() -> argparse.ArgumentParser:
     autopilot_sub = autopilot.add_subparsers(dest="autopilot_command", required=True)
     on = autopilot_sub.add_parser("on")
     on.add_argument("--project")
-    on.add_argument("--budget", required=True)
-    on.add_argument("--ttl", default="2h")
+    on.add_argument("--mode", choices=("normal", "overnight"), default="normal")
+    on.add_argument("--budget")
+    on.add_argument("--ttl")
     on.add_argument("--allow", default="standard")
+    on.add_argument("--observed-drip-rate")
     on.set_defaults(func=command_autopilot_on)
     off = autopilot_sub.add_parser("off")
     off.add_argument("--project")
     off.set_defaults(func=command_autopilot_off)
+    release = autopilot_sub.add_parser("release")
+    release.add_argument("--project")
+    release.add_argument("--evidence", required=True)
+    release.set_defaults(func=command_autopilot_release)
+    extend = autopilot_sub.add_parser("closeout-extend")
+    extend.add_argument("--project")
+    extend.add_argument("--new-budget", required=True)
+    extend.add_argument("--evidence", required=True)
+    extend.set_defaults(func=command_autopilot_closeout_extend)
 
     can = sub.add_parser("can")
     can.add_argument("--project")
     can.add_argument("--operation", required=True)
     can.add_argument("--cost", default="0")
+    can.add_argument("--live-balance")
     can.set_defaults(func=command_can)
 
     record = sub.add_parser("record")
     record.add_argument("--project")
     record.add_argument("--operation", required=True)
     record.add_argument("--cost", default="0")
+    record.add_argument("--live-balance")
     record.add_argument("--receipt")
     record.set_defaults(func=command_record)
 
