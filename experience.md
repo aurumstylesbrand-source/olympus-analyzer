@@ -1746,3 +1746,17 @@ reported complete; the user required AURUM and OLATHEDEV to remain independently
 
 **Lesson:** A globally installed package is not operational until a fresh shell resolves its executable, and a
 multi-account claim is not proven until the canonical routed command returns two distinct authenticated identities.
+
+### HANDOFF REPORT -- 2026-08-25
+
+Created `/Users/mac/Downloads/olympus-analyzer/REPORT.md` for a fresh Claude session. It records the current
+Olympus-only scope, installed components, two-profile authentication/isolation, controller architecture, exact
+11-phase policy, all 16 slash commands, manifest/artifact consumption map, validation chronology, security
+boundaries, known remaining work, exact operating commands, and Claude startup sequence.
+
+Verification: 799 lines / 5,010 words; all 16 commands present; all 11 phases present; all required report
+sections present; no JWT-shaped material; no email-shaped material; `git diff --check` clean. Pre-commit SHA-256:
+`ab19975d239e6bcd78fe13f9a00e1e9a4597cf5b0532958cf79729199f9d14e6`.
+
+The report deliberately says that the shared system and profile authentication are ready while project-specific
+live Shipd execution is NOT STARTED until an exact project/profile/submission binding is supplied.
