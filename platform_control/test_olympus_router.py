@@ -23,10 +23,12 @@ class RouterTests(unittest.TestCase):
         self.config = root / "config" / "profiles.json"
         self.state = root / "profiles"
         self.browser_state = root / "browser"
+        self.identity_key = root / "config" / "identity.key"
         self.patchers = [
             mock.patch.object(router, "PROFILES_PATH", self.config),
             mock.patch.object(router, "PROFILE_STATE_ROOT", self.state),
             mock.patch.object(router, "BROWSER_STATE_ROOT", self.browser_state),
+            mock.patch.object(router, "IDENTITY_KEY_PATH", self.identity_key),
         ]
         for patcher in self.patchers:
             patcher.start()
@@ -80,6 +82,58 @@ class RouterTests(unittest.TestCase):
         payload = router.status_payload(self.project)
         self.assertEqual(payload["missing"], ["profile", "submissionUrl"])
         self.assertFalse(payload["bound"])
+
+    def test_named_profile_aliases_are_canonical(self):
+        self.assertEqual(router.profile_name("1"), "aurum")
+        self.assertEqual(router.profile_name("AURUM"), "aurum")
+        self.assertEqual(router.profile_name("2"), "olathedev")
+        self.assertEqual(router.profile_name("OLATHEDEV"), "olathedev")
+
+    def test_profile_uses_connected_chrome_without_exported_storage_state(self):
+        self.add_profile("aurum")
+        profile = router.require_registered_profile("1")
+        self.assertEqual(profile["browserMode"], "connected-chrome")
+        self.assertNotIn("browserStatePath", profile)
+        self.assertEqual(profile["aliases"], ["1", "aurum"])
+
+    def test_visible_identity_is_fingerprinted_and_mismatch_blocks(self):
+        self.add_profile("aurum")
+        router.command_profile_verify(type("Args", (), {
+            "name": "1", "visible_account": "Aurum Account",
+        })())
+        profile = router.require_registered_profile("aurum")
+        self.assertNotEqual(profile["accountFingerprint"], "Aurum Account")
+        router.command_profile_check(type("Args", (), {
+            "name": "AURUM", "visible_account": "  aurum   account ",
+        })())
+        with self.assertRaises(SystemExit) as caught:
+            router.command_profile_check(type("Args", (), {
+                "name": "1", "visible_account": "Olathedev Account",
+            })())
+        self.assertEqual(caught.exception.code, 14)
+
+    def test_live_policy_encodes_user_budget_and_solver_rules(self):
+        policy = router.live_policy_payload()
+        self.assertEqual(policy["defaultBudgetTokens"], "50")
+        self.assertFalse(policy["literalUnlimitedBudgetAllowed"])
+        self.assertEqual(policy["verifierCompletenessAudit"], "SKIP")
+        self.assertTrue(policy["scopeGateRequiredBeforeAutoReview"])
+        self.assertEqual(policy["preBatchAutoReview"]["maximumAttempts"], 3)
+        self.assertEqual(policy["preBatchAutoReview"]["success"], "APPROVED")
+        self.assertEqual(policy["profileChoices"], {"1": "AURUM", "2": "OLATHEDEV"})
+        self.assertEqual(policy["precheckWarningAllowlist"], [
+            "Problem Description Contains Only Necessary Information",
+            "Dockerfile Guidelines",
+        ])
+        self.assertEqual(policy["testFairnessBulbs"], {"advisoryMaximum": 4, "investigateAt": 5})
+        self.assertEqual(policy["agentRuns"]["solver"], "Nova")
+        self.assertEqual(policy["agentRuns"]["forbiddenSolvers"], ["Orion", "Vega"])
+        self.assertEqual(policy["agentRuns"]["initialCount"], 5)
+        self.assertEqual(policy["agentRuns"]["standardTotal"], 10)
+        self.assertEqual(policy["agentRuns"]["extraNearMissCount"], 3)
+        self.assertEqual(policy["agentRuns"]["majorityNewTestFailureStopAbove"], 6)
+        self.assertEqual(policy["platformInstability"]["pauseAfterConsecutiveCouldNotCompleteAbove"], 5)
+        self.assertEqual(policy["terminalOrder"], ["FP", "solvability", "post-batch Auto Review"])
 
     def test_binding_is_canonical_and_autopilot_stays_off(self):
         self.add_profile()
@@ -162,7 +216,25 @@ class RouterTests(unittest.TestCase):
                 "receipt": "invented-version", "result": None,
             })())
 
-    def test_full_ten_phase_path_is_only_ready_after_consensus(self):
+    def test_pre_batch_auto_review_is_capped_at_three_attempts(self):
+        self.bind_and_enable()
+        for phase in (
+            "setup-context", "local-floor", "upload-readback", "prechecks",
+            "scope-gate", "quality-checks",
+        ):
+            receipt = f"receipt-{phase}" if phase in router.RECEIPT_PHASES else None
+            self.complete_phase(phase, receipt=receipt)
+        for attempt in range(1, 4):
+            router.command_record(type("Args", (), {
+                "project": str(self.project), "operation": "auto-review",
+                "cost": "0", "receipt": f"auto-{attempt}",
+            })())
+        with self.assertRaisesRegex(router.RouterError, "capped at three"):
+            router.command_can(type("Args", (), {
+                "project": str(self.project), "operation": "auto-review", "cost": "0",
+            })())
+
+    def test_full_eleven_phase_path_is_only_ready_after_consensus(self):
         self.bind_and_enable()
         for phase in router.WORKFLOW_PHASES:
             receipt = f"receipt-{phase}" if phase in router.RECEIPT_PHASES else None
@@ -170,7 +242,7 @@ class RouterTests(unittest.TestCase):
             self.complete_phase(phase, receipt=receipt, result=result)
         workflow = router.status_payload(self.project)["workflow"]
         self.assertTrue(workflow["complete"])
-        self.assertEqual(workflow["completedCount"], 10)
+        self.assertEqual(workflow["completedCount"], 11)
         self.assertIsNone(workflow["nextPhase"])
 
     def test_workflow_reset_moves_back_but_never_skips_forward(self):

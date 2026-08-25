@@ -1662,3 +1662,54 @@ tests or walls. Its post-batch phase enforces FP before solvability and Auto Rev
 
 **Lesson:** An automation lease answers "may this agent mutate?"; it does not answer "did the agent execute the
 workflow?" Completion needs an ordered, artifact-backed state machine whose final state is READY or NOT_READY.
+
+### FIX #N+6 -- 2026-08-25 -- connected-Chrome boundary and exact live-run policy
+
+**Trigger:** The user specified the final live operating contract: direct sign-in in two named Chrome profiles,
+Prechecks before Scope Gate, exactly two tolerated Precheck warnings, no Verifier Completeness Audit, Nova-only
+rollouts, advisory Test Fairness bulbs below five, and platform `APPROVED` as the terminal Auto Review result.
+
+**Category:** Platform automation / authentication boundary / slash doctrine / audit integrity
+
+**Diagnosis:**
+- The earlier controller still represented authentication with exported browser state, which violated the desired
+  connected-profile model and could create a second browser identity rather than use the user's visible session.
+- Several slash/doc/memory surfaces still encoded superseded 3/3 and VCA expectations.
+- The integrity gate correctly stopped on concurrent FP-400 through FP-435 because their Verdict hashes had not
+  been audited and attested; FP-423 through FP-425 also arrived outside the controlled schema.
+
+**Fix Applied:**
+- Replaced storage-state browser automation with a fail-closed connected-Chrome boundary. It never launches an
+  alternate browser or reads/exports cookies, local storage, passwords, tokens, OTPs, or recovery data.
+- Registered aliases `AURUM`/`1` and `OLATHEDEV`/`2` without authenticating either account. Identity verification
+  stores only an HMAC fingerprint after a visible connected-browser check.
+- Expanded the controller to eleven ordered phases and encoded the exact Precheck, Scope Gate, Quality, bulb,
+  Auto Review, Nova cohort, retry, and finite-budget rules in executable policy and 17 unit tests.
+- Updated the 16 canonical Claude commands, registries, workflow documents, CLAUDE.md, doctrine ledger, Olympus
+  memory, and generated Codex prompts/skills/memory. Added three retired-token guards plus canaries.
+- Audited FP-400 through FP-435 against their project sources, normalized the controlled fields that violated the
+  schema, migrated FP-423 through FP-425 into the required schema, and only then updated the Verdict baseline.
+  When FP-436 arrived during the final harness, verified its raw receipt hash and matching msw3 project records
+  before separately attesting it.
+
+**Results:**
+- Router tests: 17/17 PASS; Python compilation PASS.
+- FP DUMP integrity: PASS at 438 headings, 434 unique IDs, marker FP-437, 438 Verdict hashes, 85 schema entries;
+  hash and schema canaries both PASS.
+- Claude-to-Codex sync: 16 command pairs, 23 memory triples, workflow 49/49.
+- Final proof: retired-token self-test 50 forms x 3 contexts with zero misses; post-canary suite PASS; rounds 2-6
+  are 12/12, 25/25, 59/59, 11/11, and 51/51.
+- Live authentication remains intentionally NOT COMPLETED: the connected Chrome tool reported unavailable, so no
+  Shipd account, submission, check, rollout, mutation, or paid operation was touched.
+
+**Q1 broke anything else?** No project submission artifacts were edited. The repo's pre-existing `.DS_Store`
+change remains excluded.
+
+**Q2 FP re-validated?** The shared corpus and its integrity controls are green. Per-submission five-source replay
+still runs only against the exact submission during its post-batch triad.
+
+**Q3 still solvable?** Yes. The lane is named `solvability`; the controller changes routing and evidence policy,
+not project tests or difficulty walls.
+
+**Lesson:** Browser identity is an observed boundary, not a file to export. A green local controller proves policy
+enforcement; it does not prove a live platform phase until connected Chrome emits the matching receipt.

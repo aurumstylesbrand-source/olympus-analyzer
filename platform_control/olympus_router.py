@@ -8,9 +8,12 @@ and CLI tokens remain in a profile-private CLI state directory.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -20,8 +23,18 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 PROFILE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+PROFILE_ALIASES = {
+    "1": "aurum",
+    "aurum": "aurum",
+    "2": "olathedev",
+    "olathedev": "olathedev",
+}
+PROFILE_LABELS = {
+    "aurum": "AURUM",
+    "olathedev": "OLATHEDEV",
+}
 CHALLENGE_PATH_RE = re.compile(r"^/quests/olympus/challenges/([A-Za-z0-9_-]+)$")
 ALL_OPERATIONS = {
     "observe",
@@ -51,25 +64,31 @@ WORKFLOW_PHASES = (
     "prechecks",
     "scope-gate",
     "quality-checks",
+    "pre-batch-auto-review",
     "agent-rollouts",
     "post-batch-triad",
     "post-batch-auto-review",
     "consensus",
 )
-OPERATION_PHASE = {
-    "upload": "upload-readback",
-    "prechecks": "prechecks",
-    "scope-gate": "scope-gate",
-    "quality-check": "quality-checks",
-    "rollout": "agent-rollouts",
-    "auto-review": "post-batch-auto-review",
+OPERATION_PHASES = {
+    "upload": {"upload-readback"},
+    "prechecks": {"prechecks"},
+    "scope-gate": {"scope-gate"},
+    "quality-check": {"quality-checks"},
+    "rollout": {"agent-rollouts"},
+    "auto-review": {"pre-batch-auto-review", "post-batch-auto-review"},
 }
-PHASE_OPERATION = {phase: operation for operation, phase in OPERATION_PHASE.items()}
+PHASE_OPERATION = {
+    phase: operation
+    for operation, phases in OPERATION_PHASES.items()
+    for phase in phases
+}
 RECEIPT_PHASES = {
     "upload-readback",
     "prechecks",
     "scope-gate",
     "quality-checks",
+    "pre-batch-auto-review",
     "agent-rollouts",
     "post-batch-auto-review",
 }
@@ -80,6 +99,7 @@ STATE_ROOT = USER_ROOT / ".local" / "state" / "olympus-platform"
 PROFILE_STATE_ROOT = USER_ROOT / ".local" / "share" / "olympus-platform" / "profiles"
 BROWSER_STATE_ROOT = USER_ROOT / ".local" / "share" / "olympus-platform" / "browser"
 PROFILES_PATH = CONFIG_ROOT / "profiles.json"
+IDENTITY_KEY_PATH = CONFIG_ROOT / "identity.key"
 CLI_ENTRY = USER_ROOT / ".npm-global" / "lib" / "node_modules" / "@shipd-ai" / "olympus-cli" / "dist" / "index.js"
 PRELOAD = Path(__file__).with_name("olympus_homedir_preload.mjs")
 
@@ -128,9 +148,38 @@ def read_json(path: Path, default: object) -> object:
 
 
 def profile_name(value: str) -> str:
-    if not PROFILE_RE.fullmatch(value):
+    normalized = value.strip().lower()
+    normalized = PROFILE_ALIASES.get(normalized, normalized)
+    if not PROFILE_RE.fullmatch(normalized):
         raise RouterError("profile must match [A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+    return normalized
+
+
+def identity_key() -> bytes:
+    secure_dir(IDENTITY_KEY_PATH.parent)
+    if not IDENTITY_KEY_PATH.exists():
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        try:
+            fd = os.open(IDENTITY_KEY_PATH, flags, 0o600)
+        except FileExistsError:
+            pass
+        else:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(secrets.token_bytes(32))
+                handle.flush()
+                os.fsync(handle.fileno())
+    os.chmod(IDENTITY_KEY_PATH, 0o600)
+    value = IDENTITY_KEY_PATH.read_bytes()
+    if len(value) != 32:
+        raise RouterError(f"identity key has wrong size: {IDENTITY_KEY_PATH}")
     return value
+
+
+def identity_fingerprint(value: str) -> str:
+    normalized = " ".join(value.strip().casefold().split())
+    if not normalized:
+        raise RouterError("visible account identity must not be empty")
+    return hmac.new(identity_key(), normalized.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def canonical_submission_url(value: str) -> tuple[str, str]:
@@ -245,7 +294,28 @@ def receipt_is_recorded(project: Path, mission_id: str | None, operation: str, r
     return False
 
 
+def operation_count(project: Path, mission_id: str | None, operation: str, phase: str) -> int:
+    path = automation_log_path(project)
+    if not path.is_file():
+        return 0
+    count = 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if (
+            event.get("event") == "operation-recorded"
+            and event.get("missionId") == mission_id
+            and event.get("operation") == operation
+            and event.get("phase") == phase
+        ):
+            count += 1
+    return count
+
+
 def require_registered_profile(name: str) -> dict:
+    name = profile_name(name)
     profiles = profile_registry()["profiles"]
     if name not in profiles:
         raise RouterError(f"profile is not registered: {name}", 10)
@@ -342,16 +412,78 @@ def command_profile_add(args: argparse.Namespace) -> None:
     profiles = registry["profiles"]
     root = PROFILE_STATE_ROOT / name
     secure_dir(root)
-    secure_dir(BROWSER_STATE_ROOT)
+    previous = profiles.get(name, {})
     profiles[name] = {
-        "chromeProfile": args.chrome_profile,
+        "chromeProfile": args.chrome_profile or PROFILE_LABELS.get(name, name.upper()),
+        "aliases": sorted(alias for alias, target in PROFILE_ALIASES.items() if target == name),
+        "browserMode": "connected-chrome",
         "cliStateRoot": str(root),
-        "browserStatePath": str(BROWSER_STATE_ROOT / f"{name}.json"),
-        "createdAt": profiles.get(name, {}).get("createdAt", now_iso()),
+        "accountFingerprint": previous.get("accountFingerprint"),
+        "identityVerifiedAt": previous.get("identityVerifiedAt"),
+        "createdAt": previous.get("createdAt", now_iso()),
         "updatedAt": now_iso(),
     }
     atomic_json_write(PROFILES_PATH, registry)
     print(json.dumps({"registered": name, **profiles[name]}, indent=2))
+
+
+def command_profile_verify(args: argparse.Namespace) -> None:
+    name = profile_name(args.name)
+    registry = profile_registry()
+    profile = require_registered_profile(name)
+    profile["accountFingerprint"] = identity_fingerprint(args.visible_account)
+    profile["identityVerifiedAt"] = now_iso()
+    profile["updatedAt"] = now_iso()
+    registry["profiles"][name] = profile
+    atomic_json_write(PROFILES_PATH, registry)
+    print(json.dumps({
+        "profile": name,
+        "chromeProfile": profile["chromeProfile"],
+        "identityVerified": True,
+        "identityVerifiedAt": profile["identityVerifiedAt"],
+    }, indent=2))
+
+
+def command_profile_check(args: argparse.Namespace) -> None:
+    name = profile_name(args.name)
+    profile = require_registered_profile(name)
+    expected = profile.get("accountFingerprint")
+    if not expected:
+        raise RouterError(f"profile identity has not been verified: {name}", 13)
+    matched = hmac.compare_digest(expected, identity_fingerprint(args.visible_account))
+    print(json.dumps({"profile": name, "identityMatch": matched}, indent=2))
+    if not matched:
+        raise SystemExit(14)
+
+
+def live_policy_payload() -> dict:
+    return {
+        "profileChoices": {"1": "AURUM", "2": "OLATHEDEV"},
+        "defaultBudgetTokens": "50",
+        "literalUnlimitedBudgetAllowed": False,
+        "scopeGateRequiredBeforeAutoReview": True,
+        "verifierCompletenessAudit": "SKIP",
+        "precheckWarningAllowlist": [
+            "Problem Description Contains Only Necessary Information",
+            "Dockerfile Guidelines",
+        ],
+        "testFairnessBulbs": {"advisoryMaximum": 4, "investigateAt": 5},
+        "preBatchAutoReview": {"maximumAttempts": 3, "success": "APPROVED"},
+        "agentRuns": {
+            "solver": "Nova",
+            "forbiddenSolvers": ["Orion", "Vega"],
+            "initialCount": 5,
+            "standardTotal": 10,
+            "extraNearMissCount": 3,
+            "majorityNewTestFailureStopAbove": 6,
+        },
+        "platformInstability": {"pauseAfterConsecutiveCouldNotCompleteAbove": 5},
+        "terminalOrder": ["FP", "solvability", "post-batch Auto Review"],
+    }
+
+
+def command_policy(_: argparse.Namespace) -> None:
+    print(json.dumps(live_policy_payload(), indent=2, sort_keys=True))
 
 
 def command_profile_list(_: argparse.Namespace) -> None:
@@ -464,14 +596,21 @@ def command_can(args: argparse.Namespace) -> None:
         raise RouterError("autopilot is off or expired; mutation denied", 20)
     if operation not in set(autopilot.get("allowedOperations") or []):
         raise RouterError(f"operation is not allowed by this mission: {operation}", 21)
-    expected_phase = OPERATION_PHASE.get(operation)
-    if expected_phase:
+    expected_phases = OPERATION_PHASES.get(operation)
+    if expected_phases:
         workflow = workflow_payload(binding)
-        if workflow.get("nextPhase") != expected_phase:
+        next_phase = workflow.get("nextPhase")
+        if next_phase not in expected_phases:
             raise RouterError(
-                f"operation {operation} is out of order: next phase is {workflow.get('nextPhase')}",
+                f"operation {operation} is out of order: next phase is {next_phase}",
                 23,
             )
+        if (
+            operation == "auto-review"
+            and next_phase == "pre-batch-auto-review"
+            and operation_count(project, autopilot.get("missionId"), operation, next_phase) >= 3
+        ):
+            raise RouterError("pre-batch Auto Review is capped at three attempts", 24)
     budget = parse_decimal(str(autopilot.get("budgetTokens", "0")))
     spent = parse_decimal(str(autopilot.get("spentTokens", "0")))
     if spent + cost > budget:
@@ -487,10 +626,11 @@ def command_record(args: argparse.Namespace) -> None:
         raise RouterError("a paid operation requires a persisted server receipt or job ID")
     command_can(argparse.Namespace(project=str(project), operation=args.operation, cost=args.cost))
     autopilot = binding["autopilot"]
+    phase = workflow_payload(binding).get("nextPhase")
     spent = parse_decimal(str(autopilot.get("spentTokens", "0"))) + cost
     autopilot["spentTokens"] = str(spent)
     save_binding(project, binding)
-    append_event(project, {"event": "operation-recorded", "operation": args.operation, "cost": str(cost), "receipt": args.receipt, "missionId": autopilot.get("missionId")})
+    append_event(project, {"event": "operation-recorded", "operation": args.operation, "phase": phase, "cost": str(cost), "receipt": args.receipt, "missionId": autopilot.get("missionId")})
     print(json.dumps({"recorded": True, "spentTokens": str(spent), "receipt": args.receipt}))
 
 
@@ -580,10 +720,21 @@ def build_parser() -> argparse.ArgumentParser:
     add.set_defaults(func=command_profile_add)
     listing = profile_sub.add_parser("list")
     listing.set_defaults(func=command_profile_list)
+    verify = profile_sub.add_parser("verify")
+    verify.add_argument("--name", required=True)
+    verify.add_argument("--visible-account", required=True)
+    verify.set_defaults(func=command_profile_verify)
+    check = profile_sub.add_parser("check")
+    check.add_argument("--name", required=True)
+    check.add_argument("--visible-account", required=True)
+    check.set_defaults(func=command_profile_check)
     cli = profile_sub.add_parser("cli")
     cli.add_argument("--name", required=True)
     cli.add_argument("cli_args", nargs=argparse.REMAINDER)
     cli.set_defaults(func=command_profile_cli)
+
+    policy = sub.add_parser("policy")
+    policy.set_defaults(func=command_policy)
 
     bind = sub.add_parser("bind")
     bind.add_argument("--project")
