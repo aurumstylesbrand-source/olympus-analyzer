@@ -44,6 +44,7 @@ html[data-theme="light"] .pa{--c:#1C8AB0;}
 .rail .glyph::after{content:"";width:12px;height:12px;border-radius:3px;background:var(--bg);transform:rotate(45deg)}
 .rail-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
 .rail-foot{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;margin-top:auto}
+.sn-standards{margin-top:20px!important}
 .navbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;padding:12px 0;border:0;background:transparent;border-radius:14px;color:var(--muted);cursor:pointer;transition:.16s;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
 .navbadge{position:absolute;top:6px;right:12px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--green);color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono);box-shadow:0 2px 8px -2px rgba(59,118,240,.6)}
 .navbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -532,6 +533,130 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
   .iconbtn{flex:none;width:36px}
   .main{margin-left:0!important;padding-top:16px;padding-bottom:24px}
 }
+
+/* ============ BOARD v2 : dense table ============ */
+.bwrap{padding-bottom:80px}
+.bhead{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:2px 0 18px}
+.bhead h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.035em;color:var(--text)}
+.bhead h2 em{font-style:normal;color:var(--green)}
+.bsub{margin:5px 0 0;font-size:13px;color:var(--muted);max-width:62ch;line-height:1.5}
+.bstats{display:flex;gap:26px;align-items:flex-end}
+.bstat{text-align:right;line-height:1.15}
+.bstat b{display:block;font-family:var(--mono);font-size:21px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.bstat span{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);font-weight:600}
+.bstat.on b{color:var(--green)}
+
+.btools{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.bsearch{position:relative;flex:1;min-width:210px}
+.bsearch input{width:100%;height:36px;padding:0 34px 0 34px;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface);color:var(--text);font-family:var(--sans);font-size:13.5px;outline:none;transition:.15s}
+.bsearch input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-tint)}
+.bsearch input::placeholder{color:var(--muted-2)}
+.bsearch .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted-2);fill:none;stroke-width:2;pointer-events:none}
+.bsearch kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;
+  color:var(--muted-2);border:1px solid var(--line-2);border-radius:5px;padding:2px 5px;line-height:1;pointer-events:none}
+.fbtn{height:36px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.fbtn:hover{color:var(--text);border-color:var(--line-2)}
+.fbtn.on{color:var(--green);border-color:var(--green-deep);background:var(--green-tint)}
+.fbtn i{font-style:normal;font-size:10px;opacity:.65}
+
+/* table */
+.btable{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.brow{display:grid;grid-template-columns:34px minmax(190px,330px) 88px 56px 78px 1fr 104px 94px 26px;align-items:center;gap:12px;
+  padding:0 14px;height:46px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;position:relative}
+.brow:last-of-type{border-bottom:0}
+.brow:hover{background:var(--surface-2)}
+.brow.open{background:var(--surface-2)}
+.brow.open::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--green)}
+.brow.closed{opacity:.44}
+.brow.closed .bname{text-decoration:line-through;text-decoration-color:var(--muted-2)}
+.brank{font-family:var(--mono);font-size:11.5px;color:var(--muted-2);font-weight:600;text-align:right}
+.brow.top .brank{color:var(--green)}
+.bnamecell{display:flex;align-items:center;gap:9px;min-width:0}
+.bname{font-size:13.5px;font-weight:600;color:var(--text);letter-spacing:-.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bname b{font-weight:700}
+.bname .org{color:var(--muted);font-weight:400}
+.btier{width:6px;height:6px;border-radius:50%;flex:none}
+.btier.gold{background:var(--green);box-shadow:0 0 7px var(--green)}
+.btier.silver{background:var(--muted)}
+.btier.bronze{background:var(--muted-2)}
+.licwarn{font-family:var(--mono);font-size:8.5px;font-weight:800;letter-spacing:.08em;color:var(--bad);background:var(--bad-bg);border:1px solid var(--bad);border-radius:4px;padding:1px 4px;flex:none;cursor:help}
+.pname{display:flex;align-items:center;gap:8px}
+.bcell{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcell.num{text-align:right}
+.bdots{display:flex;gap:4px;align-items:center}
+.bdot{width:17px;height:5px;border-radius:2px;background:var(--surface-3);transition:.15s}
+.bdot.idea{background:var(--line-2)}
+.bdot.building{background:var(--warn)}
+.bdot.submitted{background:var(--violet)}
+.bdot.accepted{background:var(--ok)}
+.bpill{font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;
+  padding:3px 7px;border-radius:5px;white-space:nowrap;text-align:center}
+.bpill.new{color:var(--muted-2);background:var(--surface-3)}
+.bpill.live{color:var(--warn);background:var(--warn-bg)}
+.bpill.sub{color:var(--violet);background:var(--violet-tint)}
+.bpill.done{color:var(--ok);background:var(--ok-bg)}
+.bchev{stroke:var(--muted-2);fill:none;stroke-width:2;width:13px;height:13px;transition:transform .18s;justify-self:center}
+.brow.open .bchev{transform:rotate(90deg);stroke:var(--green)}
+
+/* detail */
+.bdet{border-bottom:1px solid var(--line);background:var(--bg-2);padding:18px 20px 20px 52px}
+.bdet:last-child{border-bottom:0}
+.bwhy{margin:0 0 16px;font-size:13px;line-height:1.62;color:var(--text-2);max-width:78ch}
+.bwhy strong{color:var(--text);font-weight:600}
+.bgap{display:flex;gap:9px;align-items:baseline;margin:0 0 16px;font-size:12.5px;color:var(--muted);max-width:78ch;line-height:1.5}
+.bgap span{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:700;flex:none;padding-top:1px}
+.bdlab{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted-2);font-weight:600;margin:0 0 9px}
+.bslot{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.bslot .n{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);width:12px;flex:none}
+.bslot input{flex:1;height:32px;padding:0 11px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:.15s;min-width:0}
+.bslot input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-tint)}
+.bslot input::placeholder{color:var(--muted-2)}
+.bslot select{height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  font-family:var(--mono);font-size:10.5px;padding:0 6px;outline:none;cursor:pointer;flex:none}
+.bslot .lc{height:32px;min-width:88px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;cursor:pointer;
+  transition:.15s;flex:none;color:var(--muted)}
+.bslot .lc:hover{border-color:var(--line-2);color:var(--text)}
+.bslot .lc[data-s=building]{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+.bslot .lc[data-s=submitted]{color:var(--violet);border-color:var(--violet);background:var(--violet-tint)}
+.bslot .lc[data-s=accepted]{color:var(--ok);border-color:var(--ok);background:var(--ok-bg)}
+.bacts{display:flex;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.bact{height:31px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text-2);
+  font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;cursor:pointer;
+  transition:.15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.bact:hover{border-color:var(--line-2);color:var(--text);background:var(--surface-2)}
+.bact.go{border-color:var(--green-deep);background:var(--green-tint);color:var(--green)}
+.bact.warn{color:var(--warn);border-color:rgba(245,177,61,.32)}
+.bact.rt{margin-left:auto}
+.bdet .intelta{width:100%;min-height:64px;max-height:180px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.55;outline:none;resize:vertical}
+.bdet .intelta:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-tint)}
+.bnote{font-size:11.5px;color:var(--muted-2);font-family:var(--mono)}
+.bempty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+
+/* candidate pool */
+.pool2{margin-top:28px}
+.poolhead{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.poolhead h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--text)}
+.poolhead span{font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
+.prow{display:grid;grid-template-columns:minmax(190px,330px) 88px 56px 78px 1fr 172px;align-items:center;gap:12px;padding:0 14px;height:42px;
+  border-bottom:1px solid var(--line);transition:background .12s}
+.prow:last-child{border-bottom:0}
+.prow:hover{background:var(--surface-2)}
+.pname{font-size:13px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pacts{display:flex;gap:6px;justify-content:flex-end}
+.pwhy{grid-column:1/-1;font-size:12px;color:var(--muted);padding:0 0 11px;line-height:1.5;margin-top:-4px}
+@media(max-width:1000px){
+  .brow{grid-template-columns:30px 1fr 0 0 0 0 96px 86px 26px;gap:9px}
+  .brow .bcell.lang,.brow .bcell.lic,.brow .bcell.num{display:none}
+  .prow{grid-template-columns:1fr 0 0 0 0 150px}
+  .prow .bcell.lang,.prow .bcell.num{display:none}
+  .bdet{padding-left:20px}
+}
+
 </style>
 
 <div id="app">
@@ -540,9 +665,9 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
     <nav class="mainnav" id="nav">
         <button class="navbtn" data-m="acquire"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-7M20 16v-3"/></svg><span class="nlabel">Analyze</span></button>
         <button class="navbtn active" data-m="olympus"><svg viewBox="0 0 24 24"><path d="M3 20h18L14 6l-3.5 6.5L8 9l-5 11Z"/></svg><span class="nlabel">Board</span></button>
-        <button class="navbtn" data-m="launch"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 2 5.5 6 5.5 10l-2 3h-7l-2-3C4.5 9 8.5 5 12 3Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 19l-1.5 2.5M15 19l1.5 2.5"/></svg><span class="nlabel">Launch</span></button>
+        
       </nav>
-    <div class="sn-standards"><span class="tchip">pass <b>20-30%</b></span><span class="tchip">LOC <b>260-800</b></span><span class="tchip">files <b>as routed</b></span><span class="tchip">flaky <b>0</b></span></div>
+    <div class="sn-standards"><span class="tchip">pass <b>30-40%</b></span><span class="tchip">LOC <b>250-300</b></span><span class="tchip">files <b>as routed</b></span><span class="tchip">flaky <b>0</b></span></div>
     <div class="utilnav">
         <button class="iconbtn" id="themeBtn" title="Toggle light / dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg></button>
         <button class="iconbtn" id="acceptedBtn" title="Accepted-project experience files (new-file watcher)"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span class="navbadge" id="expBadge" style="display:none">0</span></button>
@@ -553,7 +678,7 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
   <main class="main">
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">Olympus pass 20-30% GENUINE design target of 10 (ship 10-40%; 41-50% a spent margin only when every passer is FP-genuine; above 50% BROKEN) · Verify Flakiness MANDATORY (zero flaky tests) · LOC 260-800 effective (DEFAULT) (no LOC floor) · the files the feature routes require · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs: WITHDRAWN as an instrument (broken metric -- trajectory total_steps was a constant 6 in 112/116 parsed runs; accepted batches ran a ~69-msg median; the gate is the pass-rate corridor + FP-Genuine) — last-known guidance; the Final verdict on each repo is authoritative.</p>
+      <p class="foot">Olympus pass 30-40% GENUINE of 10 (10 agents -> 3-4 solve; 5 agents -> at least 2; 0 broken, above 50% broken) · Verify Flakiness MANDATORY (zero flaky tests) · LOC 250-300 effective · the files the feature routes require · desc 479-500 · plagiarism ALL &lt;0.5 · solving-agent MSGs: WITHDRAWN as an instrument (broken metric -- trajectory total_steps was a constant 6 in 112/116 parsed runs; accepted batches ran a ~69-msg median; the gate is the pass-rate corridor + FP-Genuine) — last-known guidance; the Final verdict on each repo is authoritative.</p>
     </div>
   </main>
 </div>
@@ -562,14 +687,14 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 70;
+const SEED_VERSION = 72;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 // Best-first working order (evidence-based: headroom strength x engine quality x caveat weight, audits 2026-07-13).
 // Sorted at load; #1 = start your next project here. Non-seed (promoted) repos keep insertion order after these.
-const BOARD_RANK={'taskforcesh/bullmq':1,'pubkey/rxdb':2,'unjs/unstorage':3,'mswjs/msw':4,'sequelize/umzug':5,'kysely-org/kysely':6,'shikijs/shiki':7,'unjs/unctx':8,'nanostores/nanostores':9,'streamich/memfs':10,'sindresorhus/p-queue':11,'pmndrs/valtio':12,'thomasaribart/json-schema-to-ts':13,'automerge/automerge-repo':14,'supabase/postgres-meta':15};
-const boardRankOf=r=>BOARD_RANK[String((r&&r.fullName)||r||'').toLowerCase()]||99;
+const BOARD_RANK={'unjs/c12':1,'unjs/hookable':2,'apidevtools/json-schema-ref-parser':3,'unjs/magicast':4,'rich-harris/magic-string':5,'unjs/jiti':6,'h3js/rou3':7,'effector/effector':8,'unadlib/mutative':9,'unjs/mlly':10,'benjamn/recast':11,'unjs/ohash':12,'sverweij/dependency-cruiser':13,'fb55/htmlparser2':14,'hyperjump-io/json-schema':15,'unjs/ufo':16,'jsonata-js/jsonata':17,'dagrejs/dagre':18,'nodeca/js-yaml':19,'changesets/changesets':20};
+const boardRankOf=r=>BOARD_RANK[String((r&&r.fullName)||r||'').toLowerCase()]||90;
 
 /* ---------- 100 feature angles ---------- */
 const ANGLE_FAMILIES=[
@@ -590,7 +715,7 @@ ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=
 function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
 // General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
 const TIPS=[
- {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is the 20-30% GENUINE design target NOW (ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is the 30-40% GENUINE now (3-4 of 10; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
  {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
  {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
  {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
@@ -608,11 +733,11 @@ const TIPS=[
 /* ---------- Accepted-project intelligence (calibration anchors) ----------
    Distilled from the 14 ACCEPTED projects (authoritative distillation: /Users/mac/Desktop/olympus-experience/ALL_TIME_PRINCIPLES.md; full debriefs in archive/)
    (experience-intelligence-extraction.md + cross-project-calibration.md, Jun 2026, adversarially
-   audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED 2026-08-24 -- design for 20-30% GENUINE; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is broken. TWO WALLS, ONE CORRIDOR: over-solving is EXACTLY as broken as a 0-solve, and MEASURED (77 runs / 11 batches, Aug-16) it is ~8x more likely -- 8 of 10 valid batches OVER-solved, 1 under-solved. When uncertain, BIAS TOWARD HARDER,
+   audited: 2 clean / 4 minor, zero fabrications). RECALIBRATED 2026-08-24 -- design for 30-40% GENUINE; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is broken. TWO WALLS, ONE CORRIDOR: over-solving is EXACTLY as broken as a 0-solve, and MEASURED (77 runs / 11 batches, Aug-16) it is ~8x more likely -- 8 of 10 valid batches OVER-solved, 1 under-solved. When uncertain, BIAS TOWARD HARDER,
    with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive the FP panel). This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
-  bar:'Olympus design target 20-30% of 10; ship 10-40%; 41-50% only as spent margin when every passer is FP-genuine; above 50% broken - Flakiness MANDATORY - always aim for >=2 GENUINE FP-clean solvers; 1 is acceptable, 0 is broken.',
-  envelope:'accepted LOC has ranged 261-1380; there is NO design target and NO floor (platform floor is 200) -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (20-30% design target; ship 10-40%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances; the old 150+ DESIGN target is WITHDRAWN -- the metric behind it is broken and passing vs failing runs are statistically indistinguishable on effort) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and sits at the top of our 20-30% design target (ship 10-40%); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
+  bar:'Olympus design target 30-40% of 10; ship 10-40%; 41-50% only as spent margin when every passer is FP-genuine; above 50% broken - Flakiness MANDATORY - always aim for >=2 GENUINE FP-clean solvers; 1 is acceptable, 0 is broken.',
+  envelope:'accepted LOC has ranged 261-1380; there is NO design target and NO floor (platform floor is 200) -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (30-40% target; ship 10-40%) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances; the old 150+ DESIGN target is WITHDRAWN -- the metric behind it is broken and passing vs failing runs are statistically indistinguishable on effort) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and sits at the top of our 30-40% target; MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 479-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
     {key:'discovery-gap',name:'Discovery gap',what:'an unfamiliar code path or a non-guessable invariant agents get WRONG BY DEFAULT',proven:'trpc, drizzle (keyset/chunked/relation-agg), mangum, syft result-cache (observer-completeness, 10%), pgx QueryFetchSize (portal suspension + batch-Close lifecycle, 30%)',rule:'pick something agents must DISCOVER, not just implement.'},
@@ -627,7 +752,7 @@ const ACCEPTED_INTEL = {
      act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the (msgs are not an instrument); the invariants are the gap.',
      anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
     {key:'census',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'Discovery-layer census (if the algorithm is known)',
-     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely lands the 20-30% design target; budget 2 batches.',
+     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely lands the 30-40% target; budget 2 batches.',
      anchor:'drizzle-chunked: offset->seek only moved 75->60%; a 2nd layer (non-unique column forcing PK auto-discovery) was needed for 20%.'},
     {key:'composes',when:()=>true,name:'"Composes with X" is a full-lifecycle contract',
      act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
@@ -783,33 +908,26 @@ function comboFor(r){
 // All ENGINE-shaped (a stateful interdependent core, obvious approach wrong), permissive, Go/TS.
 // Promote pushes onto the board (guarded by isBlacklisted). NONE here is blacklisted.
 const POOL=[
- {fullName:'apache/calcite',url:'https://github.com/apache/calcite',lang:'Java',license:'Apache-2.0',stars:'5.2k',why:'BENCHED 2026-07-21 (user has WORKED it). Board-grade engine (32 authors, JIRA venue) -- can return.',gap:'dialect unparse; planner rules; RexSimplify'},
- {fullName:'go-git/go-git',url:'https://github.com/go-git/go-git',lang:'Go',license:'Apache-2.0',stars:'5.5k',why:'BENCHED 2026-07-21 (WORKED). Byte-exact codec engine; pjbgf owns marquee lanes -- viable: gitattributes/reflog/index-ext. Can return.',gap:'gitattributes; reflog; index extensions'},
- {fullName:'dolthub/dolt',url:'https://github.com/dolthub/dolt',lang:'Go',license:'Apache-2.0',stars:'18k',why:'BENCHED 2026-07-21 (WORKED + user-familiar). Prolly engine; per-type merge semantics viable. Never run with go-mysql-server. Can return.',gap:'per-type merge semantics'},
- {fullName:'gristlabs/grist-core',url:'https://github.com/gristlabs/grist-core',lang:'TypeScript',license:'Apache-2.0',stars:'11.3k',why:'BENCHED 2026-07-21 (WORKED). Document engine; viable: webhooks/triggers/attachments (ACL absorbs). Can return.',gap:'webhook/trigger semantics'},
- {fullName:'openfga/openfga',url:'https://github.com/openfga/openfga',lang:'Go',license:'Apache-2.0',stars:'5.4k',why:'PARKED 2026-07-21 (templ-lens audit + REAL-BUILD CONFIRMED: a feature built here scored Nova 5/5 -- 1043 LOC catalog CRUD, only hard seam walled off, every eval note "the prompt clearly specifies..."): the check-resolution lane is a LIVE staff v1->v2 weighted-graph migration (shadow_resolver diffs v1-vs-v2 in prod; #3143/#3210 open; #3195 v2 inconsistency bug); typesystem lane FROZEN (1 commit/6mo); decorator-chain + strategy-registry helpers ABSORB new check features to ~350 LOC. Community engine PRs stall (#2979 since March). RE-VET after the v2 migration lands -- could return.',gap:'(post-v2) listobjects; conditions -- all compromised until migration completes'},
- {fullName:'vitest-dev/vitest',url:'https://github.com/vitest-dev/vitest',lang:'TypeScript',license:'MIT',stars:'16.9k',why:'PARKED 2026-07-21 (templ-lens audit: TEMPL-RISK -- all three signatures co-occur): 2-person core on node/ (sheremet-va 25 + hi-ogawa 8 of 50; 18/28 recent merges = sheremet-va); reporters/sequencers/snapshot ABSORB into base.ts subclassing (concrete reporters 1-5KB); the one absorption-proof lane (pool/worker) is the MOST maintainer-occupied (in-flight #10749/#10744/#10710 + Q3 milestone 22 items ON the seams incl. #2229). Could return if the core team broadens.',gap:'pool/worker orchestration (maintainer-carpeted)'},
- {fullName:'opentypejs/opentype.js',url:'https://github.com/opentypejs/opentype.js',lang:'JavaScript',license:'MIT',stars:'5.0k',why:'JS-lane RESERVE (verified, two ADVERSE probes): byte-exact font codec engine (28 table codecs + TrueType instruction VM + shaping) -- the diskfs/ach genre. DROPPED from candidacy: 4 open milestones (~29 items) pre-claim exactly the codec core (GPOS/rlig/cmap/CFF PRs open = mongoose-style idea backlog) + ZERO merged PRs in 63 days (near-stalled). Could return if the backlog clears and merging resumes.',gap:'table round-trips; shaping lookups; variable-font math (ALL currently pre-claimed)'},
- {fullName:'moov-io/ach',url:'https://github.com/moov-io/ach',lang:'Go',license:'Apache-2.0',stars:'555',why:'QUEUE-KILLED 2026-07-21 (templ-lens): the 18-authors read was HISTORICAL -- adamdecaf is a solo core and the validator layer ABSORBS features (templ economy). Reserve only if the core broadens.',gap:'(absorbed) merge resequencing; validation interlock'},
- {fullName:'apache/opennlp',url:'https://github.com/apache/opennlp',lang:'Java',license:'Apache-2.0',stars:'1.6k',why:'Verified (2 active mergers in window). Deterministic NLP pipeline. JIRA venue (OPENNLP-*). USER platform-check before use.',gap:'trainer numerics; beam-search invariants; BaseModel serialization'},
- {fullName:'wundergraph/graphql-go-tools',url:'https://github.com/wundergraph/graphql-go-tools',lang:'Go',license:'MIT',stars:'827',why:'Verified (5 mergers, 137 merges, ~300k LOC). Federation/planning engine. Defer epic in flight. USER platform-check before use.',gap:'astnormalization ordering; planner datasource selection; null-bubbling'},
- {fullName:'99designs/gqlgen',url:'https://github.com/99designs/gqlgen',lang:'Go',license:'MIT',stars:'10.7k',why:'LEGACY BENCH (SEED 47): unworked; superseded by 5-feature-bar hunt picks. Can return.',gap:'executor field collection; codegen binding'},
- {fullName:'fyne-io/fyne',url:'https://github.com/fyne-io/fyne',lang:'Go',license:'BSD-3',stars:'28.5k',why:'LEGACY BENCH (SEED 47): unworked; layout engine still valid. Can return.',gap:'layout engine'},
- {fullName:'xyflow/xyflow',url:'https://github.com/xyflow/xyflow',lang:'TypeScript',license:'MIT',stars:'37.7k',why:'LEGACY BENCH (SEED 47): unworked; cathedral-governance caveat stands. Can return.',gap:'system store reconciler'},
- {fullName:'excalidraw/excalidraw',url:'https://github.com/excalidraw/excalidraw',lang:'TypeScript',license:'MIT',stars:'128k',why:'LEGACY BENCH (SEED 47): weakest community-feature precedent of the old board; fame risk. Fresh vet to return.',gap:'element/scene geometry'},
- {fullName:'angular/angular',url:'https://github.com/angular/angular',lang:'TypeScript',license:'MIT',stars:'100k',why:'LEGACY BENCH (SEED 47): hot core + famous + opt-in constraint. Fresh vet to return.',gap:'ngtsc TCB'},
- {fullName:'wazero/wazero',url:'https://github.com/wazero/wazero',lang:'Go',license:'Apache-2.0',stars:'6.3k',why:'BENCHED 2026-07-20 after USER PLATFORM CHECK: 43 submissions by 17 contributors = heavily-reused warning. Combined with a NARROW single core (the wasm compiler IS the repo -- SSA/regalloc/interpreter angles likely mined by prior submissions we cannot see) + low review velocity, collision risk is too high for a board slot. Engine quality itself is gold (SSA dominance invariants, bit-for-bit interpreter differential, offline spectests) -- could return ONLY for a deeply obscure lane that survives an extra-aggressive kill-switch.',gap:'SSA passes / regalloc (collision-risky; verify hard)'},
- {fullName:'VictoriaMetrics/VictoriaMetrics',url:'https://github.com/VictoriaMetrics/VictoriaMetrics',lang:'Go',license:'Apache-2.0',stars:'17.4k',why:'BENCHED 2026-07-20 (user-requested validation CONFIRMED the doubt): repo is healthy and community-active, BUT the last 30 merged PRs show community features land ONLY in vmagent/vmui/vmauth (networked/UI = flaky territory we cannot use) while the deterministic cores (lib/mergeset, lib/storage encoding) get staff FIXES only -- zero community-feature precedent in usable lanes. Fails the 3-features-per-repo board bar for OUR deterministic subset. Could return only with a verified deterministic-lane feature precedent.',gap:'mergeset/encoding (quiet, unproven for features)'},
- {fullName:'maplibre/maplibre-gl-js',url:'https://github.com/maplibre/maplibre-gl-js',lang:'TypeScript',license:'BSD-3',stars:'11.1k',why:'FRESH TS HUNT (2026-07-20): map engine with pure-CPU cores -- src/symbol label placement/collision (CrossTileSymbolIndex dedup + fade state machine), src/data bucket tessellation (CPU vertex layout must agree with the shader attribute contract), src/geo mercator/globe projection duality (same invariants under two projections), src/source tile retain/cache. Genuinely multi-org community governance. DETERMINISM: vitest unit config in node, fully separated from render tests. CAVEATS: expressions live in a SEPARATE package (site features in-repo only); modest cadence (8 human merges/2.5mo); big features go through a design-proposal process -- keep the feature mid-size in-lane; never touch render/webgl dirs.',gap:'placement stability across zoom; line join/cap tessellation; covering-tiles at poles/antimeridian'},
- {fullName:'TanStack/db',url:'https://github.com/TanStack/db',lang:'TypeScript',license:'MIT',stars:'3.8k',why:'FRESH TS HUNT (2026-07-20): differential-dataflow IVM engine (db-ivm) + live-query compiler -- output-delta must equal full recompute under arbitrary insert/delete multisets (recompute-and-diff is the WRONG obvious approach; multiplicity bookkeeping is the invariant); query IR predicate pushdown under PARTIAL indexes; optimistic mutation lifecycle (apply/rollback/rebase interleaving). Pure in-memory synchronous TS. CAVEATS: 2-person core (closest to the solo line); young + churning (live-query adapter RFC #1623 in flight -- re-verify the seam vs open PRs at build time); TanStack fame = collision-check before committing.',gap:'incremental ordered topK/windowed aggregates; join reordering under partial indexes; optimistic rebase invariants'},
- {fullName:'dolthub/go-mysql-server',url:'https://github.com/dolthub/go-mysql-server',lang:'Go',license:'Apache-2.0',stars:'2.6k',why:'FRESH HUNT (2026-07-20): a REAL SQL optimizer engine -- sql/analyzer rule-driven plan rewriter + sql/memo cost-based join search + rowexec operators + types/collation lattice; rules are INTERDEPENDENT (staff merged pushFilters+moveJoinConditions combined because they interact). Pure in-memory via memory/ backend. 6+ staff merge weekly, no committee. CAVEATS: 2.6k stars (lowest of hunt); staff-driven headroom; NEVER run alongside dolt (same org = collision).',gap:'memo costing transforms; window/rowexec operators; type-coercion lattice'},
- {fullName:'dolthub/dolt',url:'https://github.com/dolthub/dolt',lang:'Go',license:'Apache-2.0',stars:'23.9k',why:'FRESH HUNT (2026-07-20): prolly-tree storage engine -- chunk-boundary DETERMINISM is the invariant (a correct-looking tree with different splits breaks structural sharing + diff); three-way data+schema merge spans prolly iteration + tuple descriptors + conflict encoding. 6+ staff, 56 PRs/mo, no milestones. CAVEATS: same org as go-mysql-server (pick ONE); avoid sqle/cluster + remotesrv + replication (network/race); scope to go/store/prolly + doltcore/merge.',gap:'prolly range mutations; schema-aware merge cases; nbs journal lifecycle'},
- {fullName:'facebook/ent',url:'https://github.com/ent/ent',lang:'Go',license:'Apache-2.0',stars:'~17k',why:'ENGINE: dialect/sql/sqlgraph graph->SQL query compiler -- an edge traversal must emit the correct join/step ordering per relation direction (inverse M2O of an O2M, join-table steps for M2M); a per-field string-concat is wrong. The accepted-winner ORM archetype.',gap:'sqlgraph step-ordering + entql predicate compilation'},
- {fullName:'parquet-go/parquet-go',url:'https://github.com/parquet-go/parquet-go',lang:'Go',license:'Apache-2.0',stars:'~743',why:'ENGINE + HEADROOM PASS (2026-07-13: community features merged days ago, review-light governance) but 743 stars / 14 open PRs = below the traffic bar -- bench. Core: encoding/ (RLE/dictionary/byte-stream-split) + repetition/definition-level reconstruction across nested optional/repeated schemas; flat value copy is provably wrong (#536 dictionary-fallback drops values).',gap:'level reconstruction + encoding-fallback round-trip'},
- {fullName:'go-jet/jet',url:'https://github.com/go-jet/jet',lang:'Go',license:'Apache-2.0',stars:'~3.7k',why:'ENGINE: qrm row-to-object-graph mapper -- one-to-many joins must dedup the parent via a derived groupKey; naive per-row append emits duplicate parents. Benched, recoverable.',gap:'qrm cross-row object-identity invariant'},
- {fullName:'babel/babel',url:'https://github.com/babel/babel',lang:'TypeScript',license:'MIT',stars:'~44k',why:'ENGINE only in babel-traverse scope/binding (NOT the 108-plugin catalog): bindings must re-register / invalidate in the right order after an AST mutation; mutate-then-read-scope is wrong. Site strictly in babel-traverse / babel-parser.',gap:'traverse scope/binding re-crawl contract (avoid plugins)'},
- {fullName:'graphql/graphql-js',url:'https://github.com/graphql/graphql-js',lang:'TypeScript',license:'MIT',stars:'~20.4k',why:'RE-VET 2026-07-13: spec-proposal-GATED (features must go through the GraphQL spec WG) = weak headroom; keep benched. ENGINE: execution + validation engine -- field collection across fragments / @skip / @include + coercion; a naive top-down walk breaks on overlapping fragments across abstract types. Benched, recoverable.',gap:'execution field-collection + coercion invariant'},
- {fullName:'gonum/gonum',url:'https://github.com/gonum/gonum',lang:'Go',license:'BSD-3-Clause',stars:'~8.4k',why:'RE-VET 2026-07-13: STALE (last push May 2026) -- re-check activity before use. ENGINE: optimize reverse-communication engine -- deferred MajorIteration (nextMajor) + accumulating eval validity bitmask; a naive same-call impl converges but violates the op-sequence protocol. Benched, recoverable.',gap:'optimize reverse-comm op-sequence protocol'}
+ {fullName:'TanStack/store',url:'https://github.com/TanStack/store',lang:'TypeScript',license:'MIT',stars:'894',why:'Tiny nanostores-shaped store: batching, derived values, subscription identity. vitest, single package.',gap:''},
+ {fullName:'sagold/json-schema-library',url:'https://github.com/sagold/json-schema-library',lang:'TypeScript',license:'MIT',stars:'253',why:'Draft-version behavioral divergence as a multi-feature axis. Lowest fame on the list. mocha.',gap:''},
+ {fullName:'unjs/citty',url:'https://github.com/unjs/citty',lang:'TypeScript',license:'MIT',stars:'1.3k',why:'CLI argument parsing: subcommands, typed args, defaults, negation. Pure and deterministic. vitest.',gap:''},
+ {fullName:'unjs/unplugin',url:'https://github.com/unjs/unplugin',lang:'TypeScript',license:'MIT',stars:'3.6k',why:'Unified plugin adapter across bundlers: hook translation, ordering, transform filters. vitest + tsd.',gap:''},
+ {fullName:'unjs/unbuild',url:'https://github.com/unjs/unbuild',lang:'TypeScript',license:'MIT',stars:'2.7k',why:'Build pipeline: entry inference, rollup/mkdist stubs, passthrough config. vitest.',gap:''},
+ {fullName:'unjs/changelogen',url:'https://github.com/unjs/changelogen',lang:'TypeScript',license:'MIT',stars:'1.3k',why:'Conventional-commit parsing, semver bump inference, changelog rendering. Deterministic on fixtures.',gap:''},
+ {fullName:'unjs/nypm',url:'https://github.com/unjs/nypm',lang:'TypeScript',license:'MIT',stars:'708',why:'Package-manager detection and command translation across npm/yarn/pnpm/bun. vitest.',gap:''},
+ {fullName:'unjs/db0',url:'https://github.com/unjs/db0',lang:'TypeScript',license:'MIT',stars:'357',why:'SQL connector abstraction: dialect divergence, prepared statements, transactions. vitest.',gap:''},
+ {fullName:'unjs/unenv',url:'https://github.com/unjs/unenv',lang:'TypeScript',license:'MIT',stars:'769',why:'Environment polyfill graph: module aliasing, injection, per-preset overrides. vitest.',gap:''},
+ {fullName:'unjs/knitwork',url:'https://github.com/unjs/knitwork',lang:'TypeScript',license:'MIT',stars:'319',why:'Code generation primitives: safe identifier/serialize/import-statement emission. Small but exact.',gap:''},
+ {fullName:'unjs/automd',url:'https://github.com/unjs/automd',lang:'TypeScript',license:'MIT',stars:'336',why:'Markdown block generators with round-trip update semantics. vitest.',gap:''},
+ {fullName:'harttle/liquidjs',url:'https://github.com/harttle/liquidjs',lang:'TypeScript',license:'MIT',stars:'1.9k',why:'Template engine: tag/filter registry, scope chain, sync vs async render, strict modes. jest.',gap:''},
+ {fullName:'benjamine/jsondiffpatch',url:'https://github.com/benjamine/jsondiffpatch',lang:'TypeScript',license:'MIT',stars:'5.3k',why:'Structural diff/patch/unpatch with array move detection and custom object hashing. Strong invariant surface. CAVEAT: workspaces, no root test script.',gap:''},
+ {fullName:'Evercoder/culori',url:'https://github.com/Evercoder/culori',lang:'JavaScript',license:'MIT',stars:'1.2k',why:'Color space conversion, gamut mapping, interpolation, difference formulas. Deterministic numeric output. node --test.',gap:''},
+ {fullName:'micromatch/picomatch',url:'https://github.com/micromatch/picomatch',lang:'JavaScript',license:'MIT',stars:'1.3k',why:'Glob matching: extglobs, braces, negation, posix classes, windows paths. mocha, pure.',gap:''},
+ {fullName:'fb55/css-select',url:'https://github.com/fb55/css-select',lang:'TypeScript',license:'BSD-2-Clause',stars:'634',why:'CSS selector engine: compilation, pseudo-classes, specificity, adapter abstraction. vitest.',gap:''},
+ {fullName:'taoqf/node-html-parser',url:'https://github.com/taoqf/node-html-parser',lang:'TypeScript',license:'MIT',stars:'1.2k',why:'Fast HTML parse to a mutable DOM with querySelector. mocha + tsd.',gap:''},
+ {fullName:'dagrejs/graphlib',url:'https://github.com/dagrejs/graphlib',lang:'TypeScript',license:'MIT',stars:'1.7k',why:'Directed/compound graph with algorithms. Deterministic. jest. Pairs with dagre.',gap:''},
+ {fullName:'graphology/graphology',url:'https://github.com/graphology/graphology',lang:'JavaScript',license:'MIT',stars:'1.7k',why:'Graph with typed edges, attributes and events. CAVEAT: lerna monorepo, extra harness cost.',gap:''},
+ {fullName:'mobxjs/mobx-state-tree',url:'https://github.com/mobxjs/mobx-state-tree',lang:'TypeScript',license:'MIT',stars:'7.1k',why:'Identity, snapshots, patches, lifecycle hooks, references. Superb semantics. CAVEAT: tests run on bun.',gap:''},
 ];
 function poolPanel(){
   const used=new Set(state.used.map(s=>s.toLowerCase()));
@@ -826,9 +944,9 @@ const DOCTRINE = [
  {c:'gold',h:'THE GOAL — capacity + value + acceptance (read this first)',body:`<p>The job is to find repos that can host <b>MANY</b> features that are <b>hard AND valuable AND maintainer-acceptable</b> — not one hard trick. Judge every repo on three things, in order:</p><ol>
    <li><b>VALUE / feature richness</b> — is there a WIDE space of genuinely-missing, valuable capabilities a maintainer would want? (Panel <i>featureRichness</i>: rich / some / thin.)</li>
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
-   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → 20-30% design-target pass)?</li></ol>
+   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → 30-40% target pass)?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
- {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 20-30% design target)',body:
+ {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated to the 30-40% target)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
    '<p><b>Two proven difficulty archetypes</b> (edge-case volume on a known surface NEVER moved a pass rate):</p><ul>'+
    ACCEPTED_INTEL.archetypes.map(a=>'<li><b>'+a.name+'</b> &mdash; '+a.what+'. '+a.rule+' <span class="hint">(proven: '+a.proven+')</span></li>').join('')+'</ul>'+
@@ -844,16 +962,16 @@ const DOCTRINE = [
      <li><b>Scattered context across 5-10 files</b> where components must AGREE on data formats (cross-file format agreement).</li>
      <li>An <b>intermediate-state invariant</b> the naive impl violates while still passing every value check.</li></ol>
    <p>This keeps the description behavioural (WHAT not HOW), gives agents maximum implementation freedom (so it is FAIR), and avoids the iteration cascade. <b>A large API inventory is NOT difficulty.</b> Proof from 14 accepted projects: difficulty always came from a discovery gap or genuine breadth -- never edge-case volume on a known surface, never a big API.</p>`},
- {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> 30% is the top of the current 20-30% design target -- this exact shape is the target today (a 2nd discovery layer).</p>
+ {c:'gold',h:'Proven difficulty mechanism (TypeORM: 100% vs 30%)',body:`<p><b>Divergence is NOT difficulty.</b> Same repo, same divergence (TypeORM 28): the feature scored 100% pass on TreeRepository (which already exposed free per-strategy helpers) and 30% on DataSource/EntityManager (no free helpers). The lever is whether Nova can transcribe the spec without reading deep. <b>Note:</b> 30% is the top of the current 30-40% target -- this exact shape is the target today (a 2nd discovery layer).</p>
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li><b>Pass rate 20-30% GENUINE design target of 10 runs; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN.</b></li>
+   <li><b>Pass rate 30-40% GENUINE of 10 runs; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN.</b></li>
    <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
-   <li>Solution LOC 260-800 effective (DEFAULT) (no LOC floor). Files: as the routes require (5 ok).</li>
+   <li>Solution LOC 250-300 effective. Files: as the routes require (5 ok).</li>
    <li>Description up to 500 words; accepted cluster 479-500. Plagiarism ALL below 0.5.</li>
    <li>Solving-agent MSGs: NOT A GATE (WITHDRAWN -- broken metric; accepted batches ran a ~69-msg median). Gate on the pass-rate corridor + FP-Genuine instead.</li></ul>
-   <p><b>Authenticity law — never pad.</b> The feature must be genuine, actually work, and genuinely deserve its 260-800 effective LOC (DEFAULT, not a gate). Comments, whitespace, duplication, reformatting and speculative defensive code are caught as padding. Raise the AGENT floor honestly (a feature above the helper layer so agents write per-variant code); never inflate the reference.</p>`},
+   <p><b>Authenticity law — never pad.</b> The feature must be genuine, actually work, and genuinely deserve its 250-300 effective LOC. Comments, whitespace, duplication, reformatting and speculative defensive code are caught as padding. Raise the AGENT floor honestly (a feature above the helper layer so agents write per-variant code); never inflate the reference.</p>`},
  {c:'gold',h:'Verify Flakiness (MANDATORY check)',body:`<p>The platform now <b>runs every suite 3x clean + 3x patched and fails the submission on ANY nondeterministic result.</b> A test that passes only sometimes sinks the whole problem regardless of difficulty.</p>
    <p><b>Two places it bites:</b> (1) the <b>repo you pick</b> — avoid suites with known flakiness (WASM-heap pressure, real network/clock, port binding, parallel DB races, order-dependent global state); (2) the <b>tests you write</b> — no wall-clock/sleep assertions, no real network, no reliance on map/set iteration order, no shared mutable fixtures across tests, seed any randomness, and isolate each test's state. If a hard behavioural test can only be made to pass intermittently, redesign it to assert the invariant deterministically or drop it.</p>
    <p><b>Prove it before submitting:</b> run F2P/P2P locally at least 3x each; if any run flips, it is flaky — fix it, do not submit and hope.</p>`},
@@ -907,24 +1025,29 @@ function repo(fullName,url,lang,license,stars,verified,kind,why,path,areas){
 }
 const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
 
-const SEED67=[
-repo('taskforcesh/bullmq','https://github.com/taskforcesh/bullmq','TypeScript','MIT','9.3k',false,'gold','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) JOB-QUEUE ENGINE: job states, priorities, delayed/repeatable jobs, retries with backoff, rate limits, parent-child flows, atomic Lua state transitions. Order-of-resolution and path-dependent outputs are NATIVE here -- the strongest engine shape on the board.','',[]),
-repo('pubkey/rxdb','https://github.com/pubkey/rxdb','TypeScript','Apache-2.0','23.4k',false,'gold','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) REACTIVE DATABASE ENGINE: schema/migration, replication + conflict resolution, query planner, change-stream ordering, storage adapters. Deep interdependent core; only 13 open issues despite 23k stars.','',[]),
-repo('unjs/unstorage','https://github.com/unjs/unstorage','TypeScript','MIT','2.6k',false,'gold','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) KV-STORAGE ENGINE: driver abstraction, mount trees, key namespacing, watch/unwatch semantics, batch ops. Small surface, deep composition -- ideal for composition-corner walls.','',[]),
-repo('mswjs/msw','https://github.com/mswjs/msw','TypeScript','MIT','18.1k',false,'gold','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) REQUEST-INTERCEPTION ENGINE: handler matching/priority, lifecycle events, passthrough vs mock resolution, streaming. Only 41 open issues = low maintainer collision.','',[]),
-repo('kysely-org/kysely','https://github.com/kysely-org/kysely','TypeScript','MIT','14.1k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) SQL QUERY-BUILDER ENGINE: AST-based query compilation, dialect divergence, transaction/savepoint semantics, plugin pipeline.','',[]),
-repo('shikijs/shiki','https://github.com/shikijs/shiki','TypeScript','MIT','13.7k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) SYNTAX-HIGHLIGHT ENGINE: TextMate grammar resolution, theme/scope precedence, tokenizer state across lines. Path-dependent by construction (line state carries).','',[]),
-repo('sequelize/umzug','https://github.com/sequelize/umzug','TypeScript','MIT','2.2k',false,'gold','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) MIGRATION ENGINE: ordering, up/down symmetry, storage backends, partial-failure recovery, pending/executed reconciliation.','',[]),
-repo('unjs/unctx','https://github.com/unjs/unctx','TypeScript','MIT','595',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) ASYNC-CONTEXT ENGINE: context preservation across async boundaries, nesting, restore semantics. Tiny, deterministic, path-dependent by nature.','',[]),
-repo('nanostores/nanostores','https://github.com/nanostores/nanostores','TypeScript','MIT','7.6k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) ATOMIC STORE ENGINE: lifecycle, computed graphs, mount/unmount, subscription ordering. Small surface, deep behavior.','',[]),
-repo('ThomasAribart/json-schema-to-ts','https://github.com/ThomasAribart/json-schema-to-ts','TypeScript','MIT','1.8k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) SCHEMA-TO-TYPE INFERENCE ENGINE: deep generic resolution, composition keywords, recursion. Type-surface walls available.','',[]),
-repo('streamich/memfs','https://github.com/streamich/memfs','TypeScript','Apache-2.0','2.1k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) IN-MEMORY FILESYSTEM ENGINE: inode/link model, permissions, streams, snapshot + volume semantics.','',[]),
-repo('sindresorhus/p-queue','https://github.com/sindresorhus/p-queue','TypeScript','MIT','4.3k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) PROMISE-QUEUE ENGINE: concurrency, priority, pause/resume, timeouts, throttling. Path-dependent outputs by construction.','',[]),
-repo('pmndrs/valtio','https://github.com/pmndrs/valtio','TypeScript','MIT','10.2k',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) PROXY-STATE ENGINE: mutation tracking, snapshot identity, subscription batching. Identity/aliasing walls natural here.','',[]),
-repo('automerge/automerge-repo','https://github.com/automerge/automerge-repo','TypeScript','MIT','701',false,'silver','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) CRDT SYNC ENGINE: document handles, network/storage adapters, sync-state negotiation, ephemeral messages. Created 2022 -- low saturation odds.','',[]),
-repo('supabase/postgres-meta','https://github.com/supabase/postgres-meta','TypeScript','Apache-2.0','1.2k',false,'bronze','SEED 67 (2026-08-17; ALL-TYPESCRIPT, ALREADY-WORKED REPOS REMOVED. Every repo is TypeScript, MIT/Apache-2.0, actively maintained, and ENGINE-shaped -- a stateful interdependent core with enough surface for 5-10 hard invented features, not a catalog of modules. THE REPO IS NEVER THE PROBLEM: you invent the feature and you own its difficulty. GATE P STILL RULES: paste the platform repo-check BEFORE /new-sub -- saturation is unpredictable from stars, the checker decides.) POSTGRES METADATA ENGINE: schema introspection, DDL generation, type mapping. Lower fame; verify feature depth before committing.','',[]),
+const SEED72=[
+repo('unjs/c12','https://github.com/unjs/c12','TypeScript','MIT','897',false,'gold','LAYERED CONFIG ENGINE. extends chains, env-specific overrides, .config directory discovery, merge precedence, defaults vs overrides, watch. A precedence lattice is a wall factory: order-of-resolution is the native difficulty here. unjs family, so the Dockerfile and vitest harness carry over from unctx.','',[]),
+repo('unjs/hookable','https://github.com/unjs/hookable','TypeScript','MIT','960',false,'gold','HOOK LIFECYCLE ENGINE. Registration order, before/after wrapping, deprecation aliasing, nested and re-entrant calls, removal during dispatch. Direct sibling of unctx (5 approvals) -- same maintainers, same idioms, same harness. Tiny surface, deep ordering semantics.','',[]),
+repo('APIDevTools/json-schema-ref-parser','https://github.com/APIDevTools/json-schema-ref-parser','TypeScript','MIT','1.1k',false,'gold','$REF RESOLUTION ENGINE. Circular refs, external file graphs, identity and aliasing of resolved nodes, bundling vs dereferencing, $id scoping. Aliasing corners are exactly the class Solution Quality probes for, and they are native here rather than invented.','',[]),
+repo('unjs/magicast','https://github.com/unjs/magicast','TypeScript','MIT','2.5k',false,'gold','AST-PRESERVING EDIT ENGINE. Mutate a config/module through a proxy and write it back with formatting, comments and ordering intact. Preservation-through-mutation is the hardest invariant class to fake. Cleanest test script on the board: a bare vitest.','',[]),
+repo('Rich-Harris/magic-string','https://github.com/Rich-Harris/magic-string','TypeScript','MIT','2.8k',false,'gold','STRING MUTATION + SOURCEMAP ENGINE. Overlapping edits, intro/outro ordering, move/remove interaction, indent, and sourcemap correctness for every one of them. Small, deterministic, invariant-dense; the sourcemap is an independent oracle on every edit.','',[]),
+repo('unjs/jiti','https://github.com/unjs/jiti','TypeScript','MIT','2.9k',false,'gold','RUNTIME MODULE LOADER. Cache identity, CJS/ESM interop, transform hooks, alias resolution, native-module passthrough. Identity plus caching is a rich wall source: \'the same specifier yields the same instance\' has many edges.','',[]),
+repo('h3js/rou3','https://github.com/h3js/rou3','TypeScript','MIT','745',false,'gold','ROUTE MATCHING ENGINE. Static > param > wildcard precedence, conflict resolution, param extraction, method trees. A pure function with zero I/O, so flakiness risk is structurally nil and every wall is an ordering wall.','',[]),
+repo('effector/effector','https://github.com/effector/effector','TypeScript','MIT','4.9k',false,'silver','REACTIVE UNIT ENGINE. Events, stores, effects, scopes, forks, guaranteed ordering and glitch-free updates. Closest structural analogue to valtio (5 approvals) and nanostores (2). Jest harness, single package.','',[]),
+repo('unadlib/mutative','https://github.com/unadlib/mutative','TypeScript','MIT','2.0k',false,'silver','IMMUTABLE DRAFT ENGINE. Draft creation, structural sharing, patch and inverse-patch generation, finalize, mark/strict modes. \'The draft is not leaked after finalize\' is a gateable promise agents routinely miss.','',[]),
+repo('unjs/mlly','https://github.com/unjs/mlly','TypeScript','MIT','529',false,'silver','ESM RESOLUTION + ANALYSIS ENGINE. Conditions, export maps, static import/export parsing, specifier resolution, CJS interop detection. Resolution order is the difficulty, and it is entirely deterministic.','',[]),
+repo('benjamn/recast','https://github.com/benjamn/recast','TypeScript','MIT','5.3k',false,'silver','REPRINT ENGINE. Parse to AST, mutate, and reprint only what changed -- untouched nodes keep their original formatting byte for byte. One of the strongest preservation invariants available anywhere.','',[]),
+repo('unjs/ohash','https://github.com/unjs/ohash','TypeScript','MIT','732',false,'silver','STABLE HASH + DIFF ENGINE. Order-independent object hashing, circular handling, type discrimination, structured diff. Determinism is literally the product, so the Verify Flakiness check is free.','',[]),
+repo('sverweij/dependency-cruiser','https://github.com/sverweij/dependency-cruiser','JavaScript','MIT','7.2k',false,'silver','MODULE-GRAPH RULE ENGINE. Rule matching over a dependency graph, resolution options, reporters, known-violations baselines, cycle detection. Fully deterministic with fixture trees; rule semantics give many independent features.','',[]),
+repo('fb55/htmlparser2','https://github.com/fb55/htmlparser2','TypeScript','MIT','4.8k',false,'silver','STREAMING HTML/XML PARSER. Tokenizer states, implicit tag closing, foreign content, entity decoding, chunked input boundaries. Chunk-boundary correctness is a natural, non-guessable wall.','',[]),
+repo('hyperjump-io/json-schema','https://github.com/hyperjump-io/json-schema','JavaScript','MIT','315',false,'silver','SCHEMA DIALECT ENGINE. Multiple drafts, vocabulary registration, annotation collection, $id/$anchor scoping, custom keywords. Very low fame, so saturation odds are the best on the board.','',[]),
+repo('unjs/ufo','https://github.com/unjs/ufo','TypeScript','MIT','1.3k',false,'silver','URL SEMANTICS ENGINE. Parse, join, normalize, resolve, query encode/decode, trailing-slash and protocol-relative handling. Small surface, unusually dense edge cases, all pure.','',[]),
+repo('jsonata-js/jsonata','https://github.com/jsonata-js/jsonata','JavaScript','MIT','2.7k',false,'silver','QUERY LANGUAGE ENGINE. Path evaluation, sequence flattening, predicates, higher-order functions, sort/group semantics. Evaluation-order and sequence-vs-value distinctions are native walls.','',[]),
+repo('dagrejs/dagre','https://github.com/dagrejs/dagre','TypeScript','MIT','5.8k',false,'bronze','LAYERED GRAPH LAYOUT ENGINE. Rank assignment, cycle breaking, node ordering, coordinate assignment. Deterministic numeric output makes assertions crisp and FP-resistant. Verify feature depth before committing.','',[]),
+repo('nodeca/js-yaml','https://github.com/nodeca/js-yaml','TypeScript','MIT','6.6k',false,'bronze','YAML LOADER/DUMPER. Schema layers (failsafe/json/core/default), custom tag types, multi-document streams, anchor and alias resolution, dumper styles and line folding. Replaces eemeli/yaml, which is ISC and fails the platform license gate. Higher fame -- run the saturation check first.','',[]),
+repo('changesets/changesets','https://github.com/changesets/changesets','TypeScript','MIT','12.4k',false,'bronze','VERSION GRAPH ENGINE. Linked and fixed package groups, dependent bumping, prerelease mode, ignore rules, changelog assembly. Dense ordering semantics. Higher fame -- run the platform saturation check first.','',[]),
 ];
-const SEED_OLYMPUS={batch:1,repos:[...SEED67,
+const SEED_OLYMPUS={batch:1,repos:[...SEED72,
 ]};
 // SEED 40 (2026-07-13): 9 HEADROOM-VERIFIED engines (angular, excalidraw, gqlgen, fyne, VictoriaMetrics,
 // syft + pgx, univer re-boarded, xyflow) after the NOVELTY-HEADROOM audit replaced 5: golang/go (proposal-gated: 1221 open proposals + Gerrit
@@ -942,7 +1065,8 @@ const BLACKLIST=new Set(['parquet-go/parquet-go',/*WORKED/GRADUATED 2026-07-28: 
   'open-policy-agent/opa','vitessio/vitess','caddyserver/caddy','google/cel-go','grpc/grpc-go',
   'casbin/casbin','google/gopacket','gopacket/gopacket','etcd-io/bbolt','sqlc-dev/sqlc','colinhacks/zod',
   'tanstack/router','remix-run/react-router','tanstack/query','nestjs/nest','dapr/dapr','rclone/rclone',
-  'golang/go','microsoft/typescript','evanw/esbuild','vuejs/core','blevesearch/bleve']);
+  'golang/go','microsoft/typescript','evanw/esbuild','vuejs/core','blevesearch/bleve',
+  'taskforcesh/bullmq','pubkey/rxdb','unjs/unstorage','mswjs/msw','kysely-org/kysely','shikijs/shiki','sequelize/umzug','unjs/unctx','nanostores/nanostores','thomasaribart/json-schema-to-ts','streamich/memfs','sindresorhus/p-queue','pmndrs/valtio','automerge/automerge-repo','supabase/postgres-meta','apache/calcite','go-git/go-git','dolthub/dolt','gristlabs/grist-core','openfga/openfga','vitest-dev/vitest','opentypejs/opentype.js','moov-io/ach','apache/opennlp','wundergraph/graphql-go-tools','99designs/gqlgen','fyne-io/fyne','xyflow/xyflow','excalidraw/excalidraw','angular/angular','wazero/wazero','victoriametrics/victoriametrics','maplibre/maplibre-gl-js','tanstack/db','dolthub/go-mysql-server','facebook/ent','go-jet/jet','babel/babel','gonum/gonum','vega/ts-json-schema-generator']);
 function isBlacklisted(n){return BLACKLIST.has(String(n||'').toLowerCase());}
 
 /* ---------- state + storage ---------- */
@@ -1040,61 +1164,202 @@ function render(){
 document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('.navbtn');if(!b)return;activeModule=b.dataset.m;render();});
 
 /* ---------- BOARD (capacity repos) ---------- */
+/* ---------- BOARD v2 : dense, scannable, expand-on-click ---------- */
+let boardQ='', boardFilter='all', boardOpen=null;
+const ST_ORDER={idea:0,building:1,submitted:2,accepted:3};
+function repoPhase(r){
+  if(r.archived) return 'closed';
+  const s=r.slotState||[];
+  if(s.some(x=>x==='accepted')) return 'done';
+  if(s.some(x=>x==='submitted')) return 'sub';
+  if(s.some(x=>x==='building')) return 'live';
+  return 'new';
+}
+const PHASE_LABEL={new:'untouched',live:'building',sub:'submitted',done:'accepted',closed:'closed'};
+function matchRepo(r,q){
+  if(!q) return true; q=q.toLowerCase();
+  return (r.fullName||'').toLowerCase().includes(q) || (r.why||'').toLowerCase().includes(q)
+      || (r.lang||'').toLowerCase().includes(q) || (r.slots||[]).some(s=>(s||'').toLowerCase().includes(q));
+}
 function renderBoard(){
-  const data=state[activeTier];const accent='gold';
-  const total=data.repos.length, done=data.repos.filter(r=>r.archived).length;
-  let segs='';for(let i=0;i<total;i++)segs+=`<span class="seg ${i<done?'lit':''}"></span>`;
-  let html=`<h2 class="mh">Capacity <em>board</em></h2>
-    <p class="lede">Ranked BEST-FIRST (#1 = start your next project there; headroom \u00d7 engine \u00d7 caveats). Vetted repos that can host MANY hard <b>and valuable</b> features a maintainer would realistically accept. The subsystem breadth is the CAPACITY signal (and the reason cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Three features tracked per repo.</p>
-    <div class="readout"><span class="batchtag">Batch ${String(data.batch).padStart(2,'0')}</span><div class="gauge ${accent}">${segs}</div><span class="stat"><b>${done}</b> of <b>${total}</b> repos closed</span></div>`;
-  if(activeTier==='olympus'){
-    html+=`<div class="panel" style="border-color:var(--green-deep);background:linear-gradient(180deg,var(--green-tint),transparent)">
-      <div class="seclbl" style="color:var(--green)">★ drizzle-team/drizzle-orm — retired, success story</div>
-      <p style="margin:6px 0 0;font-size:13.5px;color:var(--text-2)">The repo that proved the system: <b>3 accepted submissions</b> (keyset/cursor pagination, chunked async-iterable iteration, relation aggregations). Retired from the active board so we stop overlapping our own accepted work — kept here as the baseline that earned the trust. New work runs on the repos below.</p></div>`;
+  const data=state[activeTier];
+  const all=data.repos;
+  const total=all.length;
+  const closed=all.filter(r=>r.archived).length;
+  const accepted=all.reduce((n,r)=>n+(r.slotState||[]).filter(s=>s==='accepted').length,0);
+  const live=all.filter(r=>!r.archived&&repoPhase(r)!=='new').length;
+
+  const counts={all:total,new:0,live:0,done:0,closed:closed};
+  all.forEach(r=>{const p=repoPhase(r);if(p==='new')counts.new++;else if(p==='live'||p==='sub')counts.live++;else if(p==='done')counts.done++;});
+
+  const visible=all.map((r,i)=>({r,i})).filter(({r})=>{
+    if(!matchRepo(r,boardQ)) return false;
+    const p=repoPhase(r);
+    if(boardFilter==='all') return true;
+    if(boardFilter==='closed') return p==='closed';
+    if(boardFilter==='new') return p==='new';
+    if(boardFilter==='live') return p==='live'||p==='sub';
+    if(boardFilter==='done') return p==='done';
+    return true;
+  });
+
+  const fb=(k,label,n)=>`<button class="fbtn ${boardFilter===k?'on':''}" data-bf="${k}">${label}<i>${n}</i></button>`;
+
+  let html=`<div class="bwrap">
+    <div class="bhead">
+      <div>
+        <h2>Capacity <em>board</em></h2>
+        <p class="bsub">Ranked best-first. #1 is where the next project starts. The difficulty is the feature you invent, never the repo &mdash; these are picked for how many distinct hard features they can host.</p>
+      </div>
+      <div class="bstats">
+        <div class="bstat"><b>${total}</b><span>repos</span></div>
+        <div class="bstat ${live?'on':''}"><b>${live}</b><span>in flight</span></div>
+        <div class="bstat ${accepted?'on':''}"><b>${accepted}</b><span>accepted</span></div>
+      </div>
+    </div>
+    <div class="btools">
+      <div class="bsearch">
+        <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="bq" type="text" placeholder="Search repos, features, languages…" value="${esc(boardQ)}" autocomplete="off" spellcheck="false">
+        ${boardQ?'':'<kbd>/</kbd>'}
+      </div>
+      ${fb('all','All',counts.all)}${fb('new','Untouched',counts.new)}${fb('live','In flight',counts.live)}${fb('done','Accepted',counts.done)}${fb('closed','Closed',counts.closed)}
+    </div>
+    <div class="btable">`;
+
+  if(!visible.length){
+    html+=`<div class="bempty">Nothing matches <b>${esc(boardQ)||boardFilter}</b>.</div>`;
+  } else {
+    visible.forEach(({r,i})=>{
+      const phase=repoPhase(r);
+      const rank=boardRankOf(r);
+      const filled=(r.slots||[]).filter(Boolean).length;
+      const dots=(r.slotState||[]).map((s,j)=>`<span class="bdot ${(r.slots||[])[j]?s:''}"></span>`).join('');
+      const nm=esc(r.displayName||r.fullName);
+      const parts=nm.split('/');
+      const nameHtml=parts.length>1?`<span class="org">${parts[0]}/</span><b>${parts.slice(1).join('/')}</b>`:`<b>${nm}</b>`;
+      const isOpen=boardOpen===r.fullName;
+      html+=`<div class="brow ${isOpen?'open':''} ${r.archived?'closed':''} ${rank===1?'top':''}" data-row="${esc(r.fullName)}">
+        <span class="brank">${rank<99?rank:'—'}</span>
+        <span class="bnamecell"><span class="btier ${r.kind}"></span><span class="bname">${nameHtml}</span>${permissive(r.license)?'':'<span class="licwarn" title="Not on the platform license allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*) -- likely disqualified">LIC</span>'}</span>
+        <span class="bcell lang">${esc(r.lang)}</span>
+        <span class="bcell num">${esc(r.stars)}</span>
+        <span class="bcell lic">${esc(r.license)}</span>
+        <span></span>
+        <span class="bdots" title="${filled}/${MAX_FEATURES} feature slots used">${dots}</span>
+        <span class="bpill ${phase}">${PHASE_LABEL[phase]}</span>
+        <svg class="bchev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+      </div>`;
+      if(isOpen){
+        const slots=(r.slots||[]).map((s,j)=>{
+          const st=(r.slotState||[])[j]||'idea';
+          const nx={idea:'building',building:'submitted',submitted:'accepted',accepted:'idea'}[st];
+          const cat=(r.slotCat&&r.slotCat[j])||'feature';
+          return `<div class="bslot"><span class="n">${j+1}</span>
+            <input type="text" placeholder="feature you're working on…" value="${esc(s)}" data-r="${i}" data-j="${j}" ${r.archived?'disabled':''}>
+            <select class="catsel" data-rc="${i}" data-jc="${j}">${CATEGORIES.map(c=>opt(c,c,cat)).join('')}</select>
+            <button class="lc" data-s="${st}" data-r="${i}" data-j="${j}" data-nx="${nx}" title="click to advance">${st}</button></div>`;
+        }).join('');
+        const intel=`<div style="margin-top:16px"><p class="bdlab">Repo intelligence</p>
+          <textarea class="intelta" placeholder="Paste what you learned after an acceptance — seams, maintainer stance, what the checks probed…" data-intel="${i}">${esc(r.intelligence||'')}</textarea></div>`;
+        html+=`<div class="bdet">
+          <p class="bwhy">${esc(r.why)}</p>
+          ${r.gapHint?`<p class="bgap"><span>Wall</span>${esc(r.gapHint)}</p>`:''}
+          <p class="bdlab">Features &mdash; ${filled}/${MAX_FEATURES} used &middot; click a status to advance it</p>
+          ${slots}
+          ${intel}
+          <div class="bacts">
+            <a class="bact" href="${esc(r.url)}" target="_blank" rel="noopener">Repo ↗</a>
+            <a class="bact" href="${esc(r.commitsUrl)}" target="_blank" rel="noopener">Pin a commit ↗</a>
+            <button class="bact go" data-an="${esc(r.fullName)}">Analyze</button>
+            <button class="bact" data-brief="${esc(r.fullName)}">Copy briefing</button>
+            <button class="bact ${r.archived?'':'warn'} rt" data-arch="${i}">${r.archived?'Re-open':'Mark exhausted'}</button>
+          </div>
+        </div>`;
+      }
+    });
   }
-  html+=data.repos.map((r,i)=>repoCard(r,i)).join('');
-  if(total>0&&done===total){
-    html+=`<div class="panel" style="text-align:center"><h2 class="mh" style="margin-top:0">All ${activeTier} repos closed</h2>
-      <p class="lede" style="margin:0 auto 14px">Pull a fresh batch (${TIER_PLAN[activeTier].gold} gold + ${TIER_PLAN[activeTier].test} test), informed by what you closed, with zero repeats.</p>
-      <button class="btn ${accent==='gold'?'gold':'primary'}" id="genBtn">Generate next batch</button><div class="err" id="genErr" style="display:none"></div></div>`;
+  html+=`</div>`;
+
+  /* candidate pool */
+  const used=new Set(state.used.map(s=>s.toLowerCase()));
+  const cand=POOL.filter(pp=>!used.has(pp.fullName.toLowerCase()));
+  if(cand.length){
+    html+=`<div class="pool2"><div class="poolhead"><h3>Candidate pool</h3><span>${cand.length} vetted &middot; promote one when a board repo is exhausted</span></div>
+      <div class="btable">`+cand.map(pp=>`<div class="prow">
+        <span class="pname">${esc(pp.fullName)}</span>${permissive(pp.license)?'':'<span class="licwarn" title="Not on the platform license allowlist -- likely disqualified">LIC</span>'}
+        <span class="bcell lang">${esc(pp.lang)}</span>
+        <span class="bcell num">${esc(pp.stars)}</span>
+        <span class="bcell lic">${esc(pp.license)}</span>
+        <span></span>
+        <span class="pacts"><button class="bact" data-an="${esc(pp.fullName)}">Analyze</button><button class="bact go" data-poolprom="${esc(pp.fullName)}">Promote</button></span>
+      </div>`).join('')+`</div></div>`;
   }
+  html+=`</div>`;
   viewEl.innerHTML=html;
-  const gb=document.getElementById('genBtn');if(gb)gb.addEventListener('click',generateBatch);
+  wireBoard();
 }
-function repoCard(r,idx){
-  const _br=boardRankOf(r);
-  const rankChip=_br<99?`<span class="chip" style="background:var(--green-tint);border-color:var(--green-deep);color:var(--green);font-weight:800">#${_br}${_br===1?' \u00b7 START HERE':''}</span> `:'';
-  const verChip=rankChip+(r.verified?`<span class="chip ver">✓</span>`:`<span class="chip unver">verify</span>`);
-  const pathChip='';
-  const accepted=r.slotState.some(s=>s==='accepted');
-  const hasIntel=accepted||(r.intelligence&&r.intelligence.trim());
-  const slots=r.slots.map((s,j)=>{
-    const st=r.slotState[j]||'idea';const nx={idea:'building',building:'submitted',submitted:'accepted',accepted:'idea'}[st];
-    const cat=(r.slotCat&&r.slotCat[j])||'feature';
-    return `<div class="slot"><span class="slotno">${j+1}</span>
-      <input type="text" placeholder="feature you're working on…" value="${esc(s)}" data-r="${idx}" data-j="${j}" ${r.archived?'disabled':''}>
-      <select class="catsel" data-rc="${idx}" data-jc="${j}">${CATEGORIES.map(c=>opt(c,c,cat)).join('')}</select>
-      <button class="lc" data-s="${st}" data-r="${idx}" data-j="${j}" data-nx="${nx}" title="click to advance">${st}</button></div>`;
-  }).join('');
-  const openA=(r.areas||[]).filter(a=>!a.avoid);
-  const doneA=(r.areas||[]).filter(a=>a.avoid);
-  const areasHtml=openA.map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('')
-    +(doneA.length?`<div class="hint" style="margin:8px 0 4px">Closed on this repo:</div>`+doneA.map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join(''):'');
-  const areasBlock=(openA.length||doneA.length)?`<details class="disc"${accepted?'':' open'}><summary>Strong areas — ${openA.length} open${doneA.length?', '+doneA.length+' closed':''}</summary>${areasHtml}<p class="hint" style="margin-top:8px">As you close features, completed concepts drop to "closed" and the open list is what to work next.</p></details>`:'';
-  const intelBlock=hasIntel?`<details class="disc"><summary>Repo intelligence</summary><textarea class="intelta" placeholder="Paste the Repo Intelligence doc Claude Code generated after acceptance…" data-intel="${idx}">${esc(r.intelligence)}</textarea></details>`:'';
-  return `<div class="card ${r.kind} ${r.archived?'archived':''}">
-    ${r.archived?'<span class="stamp">CLOSED</span>':''}
-    <div class="chead"><div class="titlecol"><h3 class="reponame">${esc(r.displayName)}</h3>
-      <div class="meta"><span class="chip"><b>${esc(r.lang)}</b></span><span class="chip">${esc(r.license)}</span><span class="chip">★ <b>${esc(r.stars)}</b></span>${pathChip}${verChip}</div></div>
-      <span class="kind ${r.kind}">${r.kind==='gold'?'Confirmed':'Candidate'}</span></div>
-    <div class="links"><a href="${esc(r.url)}" target="_blank" rel="noopener">Repo ↗</a><a href="${esc(r.commitsUrl)}" target="_blank" rel="noopener">Commits ↗</a></div>
-    <p class="why">${esc(r.why)}</p>
-    <div class="sec"><div class="seclbl">Features <span class="hint">${r.slots.filter(Boolean).length}/${MAX_FEATURES} · set a category + advance the status per feature</span></div>${slots}</div>
-    ${areasBlock}
-    ${intelBlock}
-    <div class="cfoot"><span class="hint">${accepted?'★ has an accepted feature':'no accepted feature yet'}</span>
-      <button class="btn ${r.archived?'':'warn'}" data-arch="${idx}">${r.archived?'Re-open':'Close repo'}</button></div></div>`;
+function wireBoard(){
+  const q=document.getElementById('bq');
+  if(q){
+    q.addEventListener('input',()=>{boardQ=q.value;const pos=q.selectionStart;renderBoard();
+      const n=document.getElementById('bq');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}});
+  }
+  viewEl.querySelectorAll('[data-bf]').forEach(b=>b.addEventListener('click',()=>{boardFilter=b.dataset.bf;renderBoard();}));
+  viewEl.querySelectorAll('.brow').forEach(row=>row.addEventListener('click',e=>{
+    if(e.target.closest('a,button,input,select,textarea'))return;
+    const n=row.dataset.row;boardOpen=(boardOpen===n)?null:n;renderBoard();
+  }));
+  viewEl.querySelectorAll('[data-an]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();activeModule='acquire';render();setTimeout(()=>selectRepo(b.dataset.an),40);}));
+  viewEl.querySelectorAll('[data-poolprom]').forEach(b=>b.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const pp=POOL.find(x=>x.fullName===b.dataset.poolprom);if(!pp)return;
+    const nr=repo(pp.fullName,pp.url,pp.lang,pp.license,pp.stars,false,'silver',pp.why,'',[]);
+    nr.source='pool';state.olympus.repos.push(nr);state.used=dedupe([...state.used,pp.fullName]);
+    await persistTier('olympus');await persistUsed();boardOpen=pp.fullName;renderBoard();
+  }));
+  viewEl.querySelectorAll('[data-brief]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();copyBriefing(b.dataset.brief,b);}));
 }
+function copyBriefing(name,btn){
+  let r=state.olympus.repos.find(x=>x.fullName===name);
+  if(!r){const pp=POOL.find(x=>x.fullName===name);if(pp)r={fullName:pp.fullName,url:pp.url,commitsUrl:pp.url+'/commits',lang:pp.lang,license:pp.license,why:pp.why};}
+  if(!r)r={fullName:name,url:'https://github.com/'+name,commitsUrl:'https://github.com/'+name+'/commits',lang:'?',license:'?',why:'(not yet analysed)'};
+  const std=standardsFor('olympus');
+  const txt=[
+    'OLYMPUS — new feature briefing',
+    '',
+    'Repo: '+r.fullName+'  ('+r.url+')',
+    'Language: '+r.lang+'   License: '+r.license,
+    'Pin an immutable commit from '+r.commitsUrl,
+    '',
+    'WHY THIS REPO',
+    r.why,
+    r.gapHint?('\nNATIVE WALL: '+r.gapHint):'',
+    '',
+    'Read ~/Desktop/OLYMPUS/OLYMPUS.md first, then the most recent',
+    '_artifacts/Approved/*/tools/experience.md on this repo if one exists.',
+    '',
+    'TARGETS',
+    '  genuine solve rate  '+std.pass,
+    '  effective LOC       '+std.loc,
+    '  description         '+std.desc,
+    '  flaky tests         zero (Verify Flakiness is mandatory)',
+    '',
+    'Propose ~3 distinct candidates, run GATE ZERO yourself on the top one',
+    '(same-repo plagiarism + the public-mechanism prior-art search, authenticated),',
+    'write _artifacts/Current/candidate.md, then STOP for the plagiarism check.'
+  ].join('\n');
+  try{navigator.clipboard.writeText(txt);}catch(e){}
+  if(btn){const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>{btn.textContent=o;},1400);}
+}
+document.addEventListener('keydown',e=>{
+  if(activeModule!=='olympus')return;
+  const t=e.target,tag=(t.tagName||'').toLowerCase();
+  if(e.key==='/'&&tag!=='input'&&tag!=='textarea'){e.preventDefault();const q=document.getElementById('bq');if(q)q.focus();}
+  if(e.key==='Escape'){if(boardQ){boardQ='';renderBoard();}else if(boardOpen){boardOpen=null;renderBoard();}}
+});
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
 viewEl.addEventListener('click',async e=>{
@@ -1203,7 +1468,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'260-800 effective -- a DEFAULT, never a gate (no floor; approved work shipped 390/261/451). Size follows SPAN.', files:'as the feature routes require (DEFAULT -- approved work ranged 4 to 42)', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'20-30% GENUINE design target of 10; ship 10-40%; 41-50% a spent margin only when every passer is FP-genuine; above 50% BROKEN; 0 BROKEN'};}
+function standardsFor(tier){return {loc:'>250-300 effective. Measured across 25 approvals: 263 266 269 271 278 290 294 296 297 310. Never pad.', files:'as the feature routes require (DEFAULT -- approved work ranged 4 to 42)', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'30-40% GENUINE of 10 (3-4 of 10; at least 2 of 5). 0 is broken and above 50% is broken.'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -1311,15 +1576,15 @@ function estPass(r){
   if(s.helpers==null||s.approach==null||s.invariant==null) return {lo:null,hi:null,label:'Answer the three questions to estimate',cls:'screen',tier:t.tier};
   if(s.helpers==='free') return {lo:70,hi:95,label:'Free helpers — agents solve it cheaply (too easy for either tier)',cls:'bad',tier:t.tier};
   const hard=(s.approach==='wrong'?1:0)+(s.invariant==='fails'?1:0);
-  // Band: Olympus design target 20-30% genuine; ship 10-40%; 41-50% spent margin; >50% broken. A Mars-tier repo can't sustain the Olympus band.
+  // Band: Olympus design target 30-40% genuine; ship 10-40%; 41-50% spent margin; >50% broken. A Mars-tier repo can't sustain the Olympus band.
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
-      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current design target 20-30%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
-      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current design target 20-30%))',cls:'ok',tier:'mars'};
+      ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — within the OLD <=30% ceiling (current design target 30-40%) but the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
+      : {lo:18,hi:30,label:'Solid Mars structure (within the OLD <=30% ceiling (current design target 30-40%))',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — projected IN the 10-40% ship range, at or just above the 20-30% design target (3-4/10). Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — projected ABOVE the 10-40% ship range and into the >50% BROKEN zone: add a second independent execution-hard layer to land in the 20-30% design target',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — projected IN the 10-40% ship range, at or just above the 30-40% target (3-4/10). Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — projected ABOVE the 10-40% ship range and into the >50% BROKEN zone: add a second independent execution-hard layer to land in the 30-40% target',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
@@ -1330,7 +1595,7 @@ function chartGauge(r){
   // zones (tier-aware): green up to the tier ceiling, amber just above, grey beyond
   body+=`<rect x="${x(zlo)}" y="${y}" width="${((ceil-zlo)/100)*innerW}" height="${bh}" rx="8" fill="${CHC.green}" opacity="0.20"/>`;
   body+=`<rect x="${x(ceil)}" y="${y}" width="${(10/100)*innerW}" height="${bh}" fill="${CHC.warn}" opacity="0.18"/>`;
-  // markers at the sweet spot and the tier ceiling (Olympus design target 20-30%)
+  // markers at the sweet spot and the tier ceiling (Olympus design target 30-40%)
   [[sweet,'sweet '+sweet+'%',CHC.green],[ceil,(e.tier==='mars'?'Mars':'Olympus')+' '+ceil+'%',CHC.warn]].forEach(([v,lbl,col])=>{
     body+=`<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+bh+4}" stroke="${col}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
     body+=`<text x="${x(v)}" y="${y+bh+16}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="${col}">${lbl}</text>`;});
@@ -1364,8 +1629,8 @@ function olympusFit(r){
   if(paths==null&&!t.curated) return {v:'screen',t:'Count the code paths first (read live, or set divergence).'};
   if(s.helpers==null||s.approach==null||s.invariant==null) return {v:'screen',t:(paths!=null?paths+' code paths. ':'')+'Capacity read — '+t.why+' Run the panel (VALUE + ACCEPTANCE + difficulty) to confirm a hard, valuable, maintainer-acceptable feature.'};
   if(s.helpers==='free') return {v:'weak',t:'EASY — the target layer already exposes free helpers, so agents call them for free (TypeORM TreeRepository = 100% pass). Move the feature ONE LAYER ABOVE the helpers, or pick a wider-surface repo.'};
-  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'Olympus-shaped — '+(paths!=null?paths+' subsystems, ':'')+'NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. Confirm the feature is also VALUABLE + maintainer-acceptable (the panel), then build (small surface, hard behaviour, 20-30% design target).'};
-  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'Olympus-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the 20-30% design target.'};
+  if(s.approach==='wrong'&&s.invariant==='fails') return {v:'strong',t:'Olympus-shaped — '+(paths!=null?paths+' subsystems, ':'')+'NO free helpers, the obvious approach is WRONG, and the naive impl fails an intermediate-state invariant. Confirm the feature is also VALUABLE + maintainer-acceptable (the panel), then build (small surface, hard behaviour, 30-40% target).'};
+  if(s.approach==='wrong'||s.invariant==='fails') return {v:'strong',t:'Olympus-viable — no free helpers + '+(s.approach==='wrong'?'the obvious approach is wrong':'a naive-failing invariant')+'. Add the other factor to harden toward the 30-40% target.'};
   return {v:'possible',t:'Capacity is there but this ANGLE looks easy — the obvious approach works and nothing violates an invariant. Pick a harder feature (the difficulty is the feature you choose, not the repo), or make the obvious approach wrong + add an intermediate-state invariant.'};
 }
 function tierBanner(r){
@@ -1682,7 +1947,7 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
 // go / refine / no-go from the structural levers, plus the checks the console can't auto-measure.
 /* ===== REPO CAPACITY (the user's actual goal) =====
    The goal is NOT "is this ONE angle proven hard" (a free-LLM opinion, skeptical by design). It is
-   "can this SOLID repo host MANY hard 260-800 effective LOC (DEFAULT, not a gate) features FAST." The 14 accepted projects prove exactly
+   "can this SOLID repo host MANY hard 250-300 effective LOC features FAST." The 14 accepted projects prove exactly
    two difficulty mechanisms, and BOTH generalize to any repo with 5+ parallel code paths + a deep
    offline core: (1) DISCOVERY GAP -- an unfamiliar code path / non-guessable invariant agents get
    wrong by default (trpc, drizzle keyset/chunked/relation-agg); (2) BREADTH -- correct composition
@@ -1690,7 +1955,7 @@ function vColor(v){return v==='strong'?'var(--ok)':v==='possible'?'var(--warn)':
    pass rate. Capacity is computed from STRUCTURE (parallel-path count + offline core + accepted
    precedent) -- deterministic and more honest than a single-angle LLM verdict. It is the HEADLINE for
    board repos; the panel olympusViable is demoted to a per-ANGLE read. The ONLY true pass is a real
-   10-agent batch in the 20-30% design target -- capacity says "this repo can carry that", not "this feature will". */
+   10-agent batch in the 30-40% target -- capacity says "this repo can carry that", not "this feature will". */
 const ACCEPTED_PRECEDENT={
   'trpc/trpc':'PROVEN -- an accepted Olympus project shipped on this repo (20% pass: contextFactory wired across 7 adapters + cross-cutting invariants)',
   'drizzle-team/drizzle-orm':'PROVEN -- THREE accepted Olympus projects shipped on this repo (keyset / chunked / relation-aggregations, all on the RQB)'
@@ -1702,7 +1967,7 @@ function repoCapacity(r){
   if(!t.curated) return null;                 // capacity is a BOARD judgment (we deep-vetted these; not pasted unknowns)
   const div=repoDiv(r), paths=(div!=null?div:0), prec=ACCEPTED_PRECEDENT[key];
   if(THIN_SURFACE.has(key)) return {cap:'thin',paths,prec,line:'Thinner surface: a shared base carries the contract, so it hosts FEWER independent hard features. Real, but scope each feature tightly (one hard invariant + hard hidden tests) -- do not expect to mine many from it.'};
-  if(paths>=5 || prec) return {cap:'pass',paths,prec,line:'Solid repo: '+(paths>=5?paths+' parallel code paths / subsystems':'deep multi-subsystem core')+' + a deterministic offline core. It can host MANY hard 260-800 effective LOC (DEFAULT, not a gate) features via the two proven mechanisms -- a DISCOVERY GAP (an unfamiliar path / non-guessable invariant agents get wrong by default) or BREADTH (correct composition across the parallel paths).'+(prec?' '+prec+'.':'')};
+  if(paths>=5 || prec) return {cap:'pass',paths,prec,line:'Solid repo: '+(paths>=5?paths+' parallel code paths / subsystems':'deep multi-subsystem core')+' + a deterministic offline core. It can host MANY hard 250-300 effective LOC features via the two proven mechanisms -- a DISCOVERY GAP (an unfamiliar path / non-guessable invariant agents get wrong by default) or BREADTH (correct composition across the parallel paths).'+(prec?' '+prec+'.':'')};
   return {cap:'weak',paths,prec,line:'Limited surface ('+paths+' paths) -- can host a hard feature but not many; verify depth before committing.'};
 }
 function finalVerdict(r){
@@ -1770,7 +2035,7 @@ function finalVerdict(r){
       : ovv==='no' ? 'the panel flags your CURRENT angle as weak -- pick another (the novelty gate + briefing steer you to a clean one)'
       : ovv==='risky' ? 'the panel says your CURRENT angle needs scoping -- confirm it is hard + unclaimed before building'
       : ovv==='yes' ? 'the panel also likes your current angle' : 'run the panel for a per-angle read';
-    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch in the 20-30% design target -- capacity says the repo can carry that, not that this one feature will.';
+    line = cap.line+' YOUR SPECIFIC ANGLE is a separate question: '+angleRead+'. The ONLY true pass is a 10-agent batch in the 30-40% target -- capacity says the repo can carry that, not that this one feature will.';
   }
   else if(t.curated){
     // CURATED BOARD REPO: deep-vetted (our 6-check standard) + user-platform-cleared. That verdict is
@@ -1796,7 +2061,7 @@ function finalVerdict(r){
   else if(!gapOk && !invOk && altitudeFree){ verdict='NO-GO'; vclass='nogo'; line='No discoverable difficulty on this layer: the model found neither a wrong obvious approach nor a naive-failing invariant, and the layer hands agents free helpers — a feature here is a thin transcribe. Judge a DEEPER layer, or drop and replace.'; }
   else if(gapOk && invOk && fhState==='present'){ verdict='RISKY'; vclass='risky'; line='Looks two-layer on the model read — the obvious approach is wrong AND a naive impl fails an invariant — BUT the model also flags FREE per-variant helpers at the "'+layerName+'" layer. A shared base may already implement the contract, which would make that gap and invariant transcribe-once (this is exactly how a repo looks PASS but builds EASY). Risky for Olympus: before building, open the base / abstract / default class and confirm each variant hand-rolls the contract itself. If a base does the work it is a NO-GO; otherwise aim the feature ABOVE the helpers.'; }
   else if(gapOk && invOk){ verdict='PASS'; vclass='go'; line='Olympus-shaped: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with TWO discovery layers — the obvious approach is wrong AND a naive impl violates an intermediate-state invariant. This is the profile of the recently-accepted projects. Build the feature above the helper layer; only a real agent batch measures the true pass rate.'+((fhState==='contested'||legSplit)?' NOTE: the models were NOT unanimous ('+(fhState==='contested'?'split on whether a shared base hands out free helpers':'split on a discovery leg')+') — treat this as provisional and verify before committing (see Verify below).':''); }
-  else if(layers===1){ verdict='REFINE'; vclass='refine'; line='Workable: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with ONE discovery layer ('+(gapOk?'the obvious approach is wrong':'a naive-failing invariant')+') — one short of the proven in-band (20-30% design target) shape. Engineer the missing '+(gapOk?'intermediate-state invariant':'wrong-obvious-approach')+' (a 2nd layer) and it clears.'+(fhState==='present'?' Also: the layer hands out free helpers, so verify a shared base is not doing the work (else NO-GO).':''); }
+  else if(layers===1){ verdict='REFINE'; vclass='refine'; line='Workable: '+(paths!=null?paths+' divergent paths':'curated multi-path')+' with ONE discovery layer ('+(gapOk?'the obvious approach is wrong':'a naive-failing invariant')+') — one short of the proven in-band (30-40% target) shape. Engineer the missing '+(gapOk?'intermediate-state invariant':'wrong-obvious-approach')+' (a 2nd layer) and it clears.'+(fhState==='present'?' Also: the layer hands out free helpers, so verify a shared base is not doing the work (else NO-GO).':''); }
   else { verdict='REFINE'; vclass='refine'; line='Workable structure ('+(paths!=null?paths+' divergent paths':'curated multi-path')+') but the judged layer showed no discovery gap. Judge a deeper / different layer, or design a feature that makes the obvious approach wrong AND violates an invariant.'; }
   let risk = !jd ? '' :
     fhState==='present' ? 'A shared base may implement the contract (free per-variant helpers), so the model\'s gap + invariant could be transcribe-once. VERIFY before building: open the base / abstract / default class + 2 variants and confirm each variant hand-rolls the contract ITSELF (no base doing the work). If a base does the work, drop the repo or judge a deeper layer.' :
@@ -1807,7 +2072,7 @@ function finalVerdict(r){
   if(acceptDeclines) risk='CORE-FIT ALERT (the nestjs lesson): the panel judged this a DECLINED / userland class -- maintainers likely will NOT accept a substantial feature here even if it is hard. '+String((jd.acceptanceFit||{}).reason||'').slice(0,160)+' Confirm an in-core seam + acceptance stance BEFORE building, or pick another area/repo. '+risk;
   if(richThin) risk='VALUE ALERT: the panel found the feature space THIN -- little of real value is missing, so "hard but pointless" is the risk. Confirm a genuinely valuable missing capability exists before investing. '+risk;
   const manual=[
-    'Coherence / system-level: one feature spanning 3+ subsystems reaching 260-800 effective LOC (DEFAULT, not a gate) and the files the feature routes require without padding (the newest accepted shape: a feature that REQUIRES a cross-subsystem fix as prerequisite).',
+    'Coherence / system-level: one feature spanning 3+ subsystems reaching 250-300 effective LOC and the files the feature routes require without padding (the newest accepted shape: a feature that REQUIRES a cross-subsystem fix as prerequisite).',
     'Plagiarism: grep your API symbols in the repo; below 0.5, or similar_idea only with a REAL discriminant. Do this check FIRST.',
     'Test fairness: pair every guard / negative test with a positive canary (no bare .toThrow()); never delete a success-path test; do not pin author or ordering choices.',
     'Spec: 479-500 words, ASCII, behavioural, name every callable signature once, state silent directional choices — but leave the mechanism as the discovery gap.',
@@ -1827,7 +2092,7 @@ function verdictCard(r){
   const confChip=v.confidence?`<span class="confpill ${v.confidence}">confidence: ${v.confidence}</span>`:'';
   const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
   const meaning=(v.cap?{
-    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard 260-800 effective LOC (DEFAULT, not a gate) features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the 20-30% design target — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
+    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard 250-300 effective LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the 30-40% target — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
     risky:'RISKY (thin repo) = a shared base carries the contract here, so it hosts FEWER independent hard features. Usable, but scope each feature tightly and do not expect to mine many.',
     refine:'',nogo:'',pending:''
   }:{
@@ -1894,7 +2159,7 @@ function analysisResults(r,div){
   const openA=areas.filter(a=>!a.avoid).map(a=>`<div class="area"><span class="ang">${a.angle||'—'}</span><div><b>${esc(a.area)}</b> — ${esc(a.why)}</div></div>`).join('');
   const doneA=areas.filter(a=>a.avoid).map(a=>`<div class="area done"><span class="ang">DONE</span><div><b>${esc(a.area)}</b></div></div>`).join('');
   const doctrineHtml=relevantDoctrine(r).map(d=>`<div class="dlaw ${d.c==='gold'?'lime':''}"><h5>${d.h}</h5>${d.body}</div>`).join('');
-  const stdCard=`<div class="dlaw lime"><h5>Standards for THIS submission — OLYMPUS</h5><p>LOC <b>${std.loc}</b> &middot; files ${std.files} &middot; description ${std.desc} &middot; ${std.msg} &middot; pass ${std.pass}. The feature must be VALUABLE + maintainer-acceptable AND sit above the helper layer with only 1-2 new public symbols, an obvious approach that is WRONG, and an intermediate-state invariant the naive impl fails — hard behaviour, not surface size, earns the 260-800 effective LOC (DEFAULT, not a gate).</p></div>`;
+  const stdCard=`<div class="dlaw lime"><h5>Standards for THIS submission — OLYMPUS</h5><p>LOC <b>${std.loc}</b> &middot; files ${std.files} &middot; description ${std.desc} &middot; ${std.msg} &middot; pass ${std.pass}. The feature must be VALUABLE + maintainer-acceptable AND sit above the helper layer with only 1-2 new public symbols, an obvious approach that is WRONG, and an intermediate-state invariant the naive impl fails — hard behaviour, not surface size, earns the 250-300 effective LOC.</p></div>`;
   const repoIntelTxt=(r.intelligence&&r.intelligence.trim())?r.intelligence.trim():'';
   const repoProfile=`${div!=null?div+' '+repoUnit(r):'paths ?'}  &middot;  tier: ${t.tier}  &middot;  gap: ${gapTypeFor(r)}`;
   const repoIntelHtml=repoIntelTxt
@@ -1966,7 +2231,7 @@ function genLaunch(){
 
 ## REPO BRIEFING -- ${r.fullName}
 
-**TRUSTED REPO.** Deep-vetted + platform-cleared -- it CAN host many 260-800 effective LOC (DEFAULT, not a gate) Olympus features; your job is to FIND the best one, never to re-judge the repo. You are the FEATURE OWNER: clone it, read the core across every major subsystem yourself, then INVENT a substantial feature a senior maintainer would build + merge. GAP-HUNTING IS CANCELLED -- invention is the only mode (THE GREP TEST: if you could FIND it by grepping TODO/FIXME/stub/an open issue, it is a gap -- DROP it). A dead-end IDEA is not a dead repo; excavate a different subsystem before any repo-pivot.
+**TRUSTED REPO.** Deep-vetted + platform-cleared -- it CAN host many 250-300 effective LOC Olympus features; your job is to FIND the best one, never to re-judge the repo. You are the FEATURE OWNER: clone it, read the core across every major subsystem yourself, then INVENT a substantial feature a senior maintainer would build + merge. GAP-HUNTING IS CANCELLED -- invention is the only mode (THE GREP TEST: if you could FIND it by grepping TODO/FIXME/stub/an open issue, it is a gap -- DROP it). A dead-end IDEA is not a dead repo; excavate a different subsystem before any repo-pivot.
 
 **START HERE -- RUN /new-sub IN YOUR PROJECT CHAT (normal standard) or /new-sub (speed mode). THE REPEAT-OR-FRESH FORK: worked this repo before -> the repeat_repo.md system governs (95%-CLONE EXTRACTION: lift the accepted harness verbatim, the description voice, the pre-adjudicated FP defenses, and pre-close the NEVER-AGAIN ledger). Fresh repo -> the centralized system governs (per-check FP-first PRINCIPLE SHEET from ~/Desktop/olympus-experience/). Either way you start PRE-LOADED with every accepted project's lessons -- see TWO ROUTES below.** The full current workflow + every law live in ~/Desktop/olympus-workflow/ and load FRESH when you run the command -- this briefing does NOT repeat them (the command injects the current system; duplicating it here would only go stale). /new-sub reads FIELD_CARD.md (the whole system on one page: LAW 0 fallible-workflow, the numbers, the pipeline, the 14-command registry) then routes 01_analyze -> 02_verify -> 03_creation_prep -> 04_create -> prompt_validation -> pre_submit_gate with NO PAUSING. The / commands inject the right doctrine at each step: /catch-up (re-sync to the LATEST workflow + apply its updates to this project), /validate (full local pipeline sim -> GO/NO-GO), /fix-prechecks /fix-quality /fix-agent-runs /fix-fp /fix-auto-review (one per checkpoint), /end + /new-chat (hand a long chat off cleanly). Follow what a command loads over any stale memory.
 
@@ -1975,7 +2240,7 @@ function genLaunch(){
 **THE NUMBERS (design to OURS, never the platform floor):** pass ${std.pass} + >=1 GENUINE FP-clean solve - LOC ${std.loc} - files ${std.files} - description ${std.desc} - Flakiness 6x clean + 6x patched identical - plagiarism all <0.5 - zero comments in patches - Task + Solution Quality 3/3 every time - Auto Review 3/3 on all three scored lanes (Description/Tests/Solution & Code) with agent-runs green. SOLVER MSGS: ${std.msg}. The binding gate is pass-rate + FP-Genuine; the earliest too-hard alarm is a batch MEDIAN of >=20k completion tokens (~94% chance of 0-solve, NOVA_ATLAS deep-parse).
 
 **THE DIFFICULTY LAWS -- MEASURED AUG-16, AND THE #1 REASON PROJECTS GET REBUILT (nothing else in this briefing matters if you get this wrong):**
-- **TWO WALLS, ONE CORRIDOR -- BOTH FAILURES ARE EQUALLY BROKEN.** Design for 20-30% GENUINE; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% and ZERO are broken. MEASURED across 77 runs / 11 batches: **8 of 10 valid batches OVER-solved, only 1 under-solved** -- over-solving is ~8x more likely, and it costs a REBUILD while a 0-solve is usually one surgical wave. **WHEN UNCERTAIN, BUILD IT HARDER.** Never treat 4/5 or 5/5 as a good batch; it is a difficulty failure.
+- **TWO WALLS, ONE CORRIDOR -- BOTH FAILURES ARE EQUALLY BROKEN.** Design for 30-40% GENUINE; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% and ZERO are broken. MEASURED across 77 runs / 11 batches: **8 of 10 valid batches OVER-solved, only 1 under-solved** -- over-solving is ~8x more likely, and it costs a REBUILD while a 0-solve is usually one surgical wave. **WHEN UNCERTAIN, BUILD IT HARDER.** Never treat 4/5 or 5/5 as a good batch; it is a difficulty failure.
 - **THE AUTHORSHIP LAW: DIFFICULTY IS INVENTED, NEVER FOUND.** No repo is a bad repo -- difficulty belongs to THE FEATURE YOU DESIGN. "This repo isn't hard enough" is BANNED; a 100% batch means YOU DID NOT BUILD A WALL. Inject it with 2-3 CONSTRUCTION MOVES (order-of-resolution, shape-sensitivity, composition corner, identity-aliasing, preservation-through-mutation, semantic accounting, atomicity-from-non-default, multi-target reach), MEASURE each against a plausible-wrong variant, then DISCLOSE it so it stays solvable.
 - **NEVER PIVOT THE REPO -- THE FEATURE IS THE PROBLEM.** If agents solve it easily, study WHY and strengthen with legitimate complexity, or pivot the FEATURE inside the SAME repo. NO ITERATION LIMIT: failure is INPUT, not a stopping condition. WE DO NOT SETTLE.
 - **THE DIVERGENCE-SELECTION LAW:** invent the candidate walls, then MANUFACTURE 2-3 real implementations and gate ONLY where they actually DIFFER. **Where they agree there is no wall to build.**
@@ -1991,7 +2256,7 @@ function genLaunch(){
 
 **THE HARD LAWS YOU MUST HOLD BEFORE READING A LINE (full method: the workflow files; LAW 0 -- adapt the METHOD to reality, NEVER lower the BAR, escalate a gate that looks wrong instead of skipping it):**
 - GATE-0 NOVELTY FIRST (the #1 kill-switch, UNFIXABLE): search the EXACT MECHANISM + the user-facing CAPABILITY verb (never the feature name) across issues (check author + milestone), open/merged/closed-unmerged PRs, and the repo's REAL venue (Go stdlib = Gerrit; ASF = JIRA). AUTHENTICATE every query with the token at /Users/mac/Downloads/olympus-analyzer/API KEY (/rate_limit must be 200; failure = TELL THE USER, never continue unauthenticated). SHOW your queries + hits. Exists / in-flight / maintainer-claimed / declined = pick a different idea. Pivots re-run the whole gate.
-- ADDITIVE-SOLVE / MODIFY-EXISTING: thread behavior through EXISTING code (measure changed-vs-added); a feature solvable by adding one file beside an example WILL be. 260-800 effective LOC (DEFAULT, not a gate) from real cross-subsystem behavior, never padded; state the EARLY LOC VERDICT at recommendation.
+- ADDITIVE-SOLVE / MODIFY-EXISTING: thread behavior through EXISTING code (measure changed-vs-added); a feature solvable by adding one file beside an example WILL be. 250-300 effective LOC from real cross-subsystem behavior, never padded; state the EARLY LOC VERDICT at recommendation.
 - FP = an agent passes your tests WITHOUT doing the task (full intuition: fp_kill_protocol.md "FP EXPLAINED"). Kill it with the TWO-WAY MAP (every requirement -> a killing test; every test -> a stated requirement) + the LAZIEST-CHEAT test per requirement. The 💡 COVERAGE SUGGESTIONS under Test Fairness are MANDATORY ("advisory" is not permission to skip -- open + FIX every one before agent runs). Run fp_kill_protocol IN FULL 3x at creation; the post-rollout FP PANEL is REQUIRED.
 - SATISFY-ALL: every verdict ever received (any check/panel/lane/human round) is a STANDING CONSTRAINT that never expires -- sweep the CONSTRAINT LEDGER in writing before shipping any fix; contradictions get the THIRD STATE, never a pick-one.
 - The feature must make the primary solver fail GENUINELY (never env-blocked) while a stronger solver succeeds. Tests 100% behavioral. Docker is a DELIVERABLE -- never build the image locally; the platform builds it.
@@ -2264,7 +2529,7 @@ function paintDash(){
   const hasReport=!!(c&&c.judge&&c.judge.data), srcRead=!!(c&&c.source&&!c.source.error&&!c.source.loading), analysisRun=!!(c&&c.analysisRun);
   const judgedLayer=(c&&c.judge&&c.judge.layer)||'';
   // STRIPPED (user decision 2026-07-22): NO console verdict/analysis. Read live -> open in Launch.
-  const gated=`<div class="genbar" style="text-align:center;padding:14px"><b>Read live. No console verdict here &mdash; by design.</b><div class="hint" style="margin-top:6px">You are the FEATURE OWNER: clone the repo, read every subsystem yourself, and INVENT a substantial feature / enhancement / optimization that fits the philosophy (never gap-hunt, never pad). <b>Open in Launch</b> for the lean briefing.</div><button class="btn primary" id="gatedToLaunch" style="margin-top:10px">Open in Launch →</button></div>`;
+  const gated=`<div class="genbar" style="text-align:center;padding:14px"><b>Read live. No console verdict here &mdash; by design.</b><div class="hint" style="margin-top:6px">You are the FEATURE OWNER: clone the repo, read every subsystem yourself, and INVENT a substantial feature / enhancement / optimization that fits the philosophy (never gap-hunt, never pad). Use <b>Copy briefing</b> on the board row for the lean briefing.</div><button class="btn primary" id="gatedToLaunch" style="margin-top:10px">Copy briefing</button></div>`;
   const _t2=repoTier(r),_std2=standardsFor(_t2.tier);
   // verdict chip + difficulty-lever count intentionally NOT rendered here (user decision 2026-07-22: no console verdict).
   const _aside=`<aside class="aside">
@@ -2276,7 +2541,7 @@ function paintDash(){
       <div class="asidestat"><span>Surface</span><b>${srcObj?srcObj.surface:'—'}</b></div>
       <div class="asidestat"><span>Target</span><b>${esc((_std2.pass||'').split(' ')[0])}</b></div>
     </div>
-    <button class="btn primary" id="anToLaunch" style="width:100%;margin-top:16px">Open in Launch →</button>
+    <button class="btn primary" id="anToLaunch" style="width:100%;margin-top:16px">Copy briefing</button>
     <div class="asidelinks"><a href="${r.url}" target="_blank" rel="noopener">Repo ↗</a><a id="anLiveAgain">↻ read live</a></div>
   </aside>`;
   document.getElementById('anDash').innerHTML=`<div class="alayout">${_aside}<div class="amain"><div class="panel">
@@ -2303,8 +2568,8 @@ function paintDash(){
   startActivityPolling(r.fullName);
   const arf=document.getElementById('actRefresh');if(arf)arf.addEventListener('click',ev=>{ev.preventDefault();fetchRepoActivity(r.fullName);});
   const arr=document.getElementById('actRerun');if(arr)arr.addEventListener('click',ev=>{ev.preventDefault();const nm=r.fullName;Promise.resolve(fetchRepoLive(nm,{board:!isExternal(r)})).then(()=>{ if(state.analyzer) analyzeSource(nm); });});
-  const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
-  const gtl=document.getElementById('gatedToLaunch');if(gtl)gtl.addEventListener('click',()=>{launchSel.repo=r.fullName;lastLaunchRepo=null;activeModule='launch';render();});
+  const tl=document.getElementById('anToLaunch');if(tl)tl.addEventListener('click',()=>copyBriefing(r.fullName,tl));
+  const gtl=document.getElementById('gatedToLaunch');if(gtl)gtl.addEventListener('click',()=>copyBriefing(r.fullName,gtl));
   // interactive divergence points: floating tooltip on hover
   const tip=document.getElementById('chartTip');
   if(tip)document.querySelectorAll('.divdot').forEach(d=>{
@@ -2486,7 +2751,7 @@ async function openAccepted(){
   const rows=expFiles.map(f=>{const isNew=!expSeen[f.name]||f.mtime>expSeen[f.name];const dt=new Date(f.mtime).toISOString().slice(0,10);
     return `<div class="checkrow"><span class="lamp ${isNew?'pass':'idle'}"></span><div class="checkbody"><div class="checkname">${esc(f.name)} ${isNew?'<span class="chip ver">NEW</span>':''} <span class="tag">${dt} &middot; ${(f.size/1024).toFixed(1)}kb</span></div><div style="margin-top:7px;display:flex;gap:8px"><button class="btn" data-expview="${esc(f.name)}">View</button><button class="btn" data-expcopy="${esc(f.name)}">Copy for extraction</button></div></div></div>`;}).join('');
   const body = expAvailable
-    ? `<p class="lede" style="margin-bottom:10px">Files in your <span class="mono">olympus-experience</span> folder (where you migrate an accepted project's log). <b>NEW</b> = added or changed since you last opened this. Copy a new log, paste it into your Claude Code chat, and say <i>"extract intelligence from this accepted project"</i> -- it updates the console's precedents (the Olympus design target is 20-30% now; ship 10-40%).</p>${rows||'<div class="honest">No .md / .txt files found in the folder.</div>'}<div id="expView" style="margin-top:12px"></div>`
+    ? `<p class="lede" style="margin-bottom:10px">Files in your <span class="mono">olympus-experience</span> folder (where you migrate an accepted project's log). <b>NEW</b> = added or changed since you last opened this. Copy a new log, paste it into your Claude Code chat, and say <i>"extract intelligence from this accepted project"</i> -- it updates the console's precedents (the Olympus design target is 30-40% now; ship 10-40%).</p>${rows||'<div class="honest">No .md / .txt files found in the folder.</div>'}<div id="expView" style="margin-top:12px"></div>`
     : `<div class="honest">The backend cannot reach the experience folder -- you are pointed at a remote host (Render) or the folder does not exist. To auto-watch it, run the backend LOCALLY: <span class="mono">node server.js</span> and set the Analyzer URL to <span class="mono">http://localhost:8787</span> (override the path with <span class="mono">EXPERIENCE_DIR</span>). Otherwise just paste an accepted-project log into your Claude Code chat for extraction.</div>`;
   document.getElementById('drawerInner').innerHTML=`<h3>Accepted projects <span class="hint">experience-folder watcher</span></h3>${body}`;
   drawer.classList.add('open');
@@ -2501,7 +2766,7 @@ document.getElementById('drawerInner').addEventListener('click',async e=>{
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());if(ev)ev.innerHTML='<div class="outbox" style="max-height:340px;overflow:auto;white-space:pre-wrap">'+esc(d.content||d.error||'(empty)')+(d.truncated?'\n\n[...truncated]':'')+'</div>';}catch(err){if(ev)ev.innerHTML='<div class="honest">load failed</div>';}}
   if(cb){const n=cb.dataset.expcopy;
     try{const d=await fetch(state.analyzer.replace(/\/$/,'')+'/experience?file='+encodeURIComponent(n)).then(r=>r.json());
-      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass design target is 20-30% GENUINE now; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN.\n\n--- '+n+' ---\n'+(d.content||'');
+      const txt='Extract reusable Olympus intelligence from this ACCEPTED project log -- the difficulty archetype (discovery gap vs breadth), the exact lever that created the gap, the lesson, and any recurring check failures -- and fold it into the console precedents (ACCEPTED_INTEL). The Olympus pass design target is 30-40% GENUINE now; ship 10-40%; 41-50% is a spent margin only when every passer is FP-genuine; above 50% is BROKEN.\n\n--- '+n+' ---\n'+(d.content||'');
       await navigator.clipboard.writeText(txt);cb.textContent='Copied for Claude ✓';setTimeout(()=>cb.textContent='Copy for extraction',1600);
     }catch(err){cb.textContent='copy failed';}}
 });
