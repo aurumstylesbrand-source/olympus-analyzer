@@ -1352,7 +1352,23 @@ function copyBriefing(name,btn){
     '',
     'Propose ~3 distinct candidates, run GATE ZERO yourself on the top one',
     '(same-repo plagiarism + the public-mechanism prior-art search, authenticated),',
-    'write _artifacts/Current/candidate.md, then STOP for the plagiarism check.'
+    'then write _artifacts/Current/candidate.md and STOP for the plagiarism check.',
+    '',
+    'candidate.md CONTAINS ONLY THIS \u2014 nothing else:',
+    '',
+    '  # Candidate -- Feature <N> (<repo>)',
+    '',
+    '  ## Title',
+    '  <one line>',
+    '',
+    '  ## Problem Description',
+    '  <the description exactly as it will be submitted: 479-500 words, plain',
+    '   prose, no headings, no bullets, no code blocks>',
+    '',
+    'No rationale, no walls, no span or LOC analysis, no GATE ZERO notes, no',
+    'alternatives, no commentary. All of that goes in tools/experience.md.',
+    'This file is pasted straight into the platform duplicate check \u2014 anything',
+    'else in it corrupts the check.'
   ].join('\n');
   try{navigator.clipboard.writeText(txt);}catch(e){}
   if(btn){const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>{btn.textContent=o;},1400);}
