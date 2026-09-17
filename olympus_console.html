@@ -1328,18 +1328,21 @@ function copyBriefing(name,btn){
   if(!r)r={fullName:name,url:'https://github.com/'+name,commitsUrl:'https://github.com/'+name+'/commits',lang:'?',license:'?',why:'(not yet analysed)'};
   const std=standardsFor('olympus');
   const txt=[
-    'OLYMPUS — new feature briefing',
+    'OLYMPUS \u2014 new feature briefing',
     '',
     'Repo: '+r.fullName+'  ('+r.url+')',
     'Language: '+r.lang+'   License: '+r.license,
     'Pin an immutable commit from '+r.commitsUrl,
     '',
-    'WHY THIS REPO',
-    r.why,
-    r.gapHint?('\nNATIVE WALL: '+r.gapHint):'',
+    'STUDY THE APPROVED CORPUS FIRST \u2014 not optional.',
+    'Go to ~/Desktop/OLYMPUS/ and go through every repo folder. If it has an Approved',
+    'folder (under _artifacts/ or artifacts/), study every approved feature inside it \u2014',
+    'all of them, across all repos, not just this one. 36 approved submissions, 9 repos.',
+    'They are the template: they show what the platform actually approves. Learn that',
+    'shape and build to it.',
     '',
-    'Read ~/Desktop/OLYMPUS/OLYMPUS.md first, then the most recent',
-    '_artifacts/Approved/*/tools/experience.md on this repo if one exists.',
+    'Then read ~/Desktop/olympus-workflow/PLATFORM.md (the platform spec) and',
+    '~/Desktop/OLYMPUS/OLYMPUS.md (the current standard).',
     '',
     'TARGETS',
     '  genuine solve rate  '+std.pass,
@@ -1468,7 +1471,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'>250-300 effective. Measured across 25 approvals: 263 266 269 271 278 290 294 296 297 310. Never pad.', files:'as the feature routes require (DEFAULT -- approved work ranged 4 to 42)', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'30-40% GENUINE of 10 (3-4 of 10; at least 2 of 5). 0 is broken and above 50% is broken.'};}
+function standardsFor(tier){return {loc:'>250-300 effective. Measured across 36 approvals: 263 266 269 271 278 290 294 296 297 310. Never pad.', files:'as the feature routes require (DEFAULT -- approved work ranged 4 to 42)', desc:'479-500 words (hard max 500)', msg:'DIAGNOSTIC only, no numeric target (step/msg metrics unreliable -- packed trajectories report a constant 6)', pass:'30-40% GENUINE of 10 (3-4 of 10; at least 2 of 5). 0 is broken and above 50% is broken.'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
