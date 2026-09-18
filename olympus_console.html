@@ -638,6 +638,12 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 .bempty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
 
 /* candidate pool */
+.catsec{margin-top:26px}
+.cathead{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.cathead h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--text)}
+.cathead h3::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-right:8px;vertical-align:middle;box-shadow:0 0 7px var(--warn)}
+.cathead span{font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
+.brow.bugfix .btier{background:var(--warn);box-shadow:0 0 7px var(--warn)}
 .pool2{margin-top:28px}
 .poolhead{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
 .poolhead h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--text)}
@@ -687,14 +693,17 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 72;
+const SEED_VERSION = 73;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 // Best-first working order (evidence-based: headroom strength x engine quality x caveat weight, audits 2026-07-13).
 // Sorted at load; #1 = start your next project here. Non-seed (promoted) repos keep insertion order after these.
 const BOARD_RANK={'unjs/c12':1,'unjs/hookable':2,'apidevtools/json-schema-ref-parser':3,'unjs/magicast':4,'rich-harris/magic-string':5,'unjs/jiti':6,'h3js/rou3':7,'effector/effector':8,'unadlib/mutative':9,'unjs/mlly':10,'benjamn/recast':11,'unjs/ohash':12,'sverweij/dependency-cruiser':13,'fb55/htmlparser2':14,'hyperjump-io/json-schema':15,'unjs/ufo':16,'jsonata-js/jsonata':17,'dagrejs/dagre':18,'nodeca/js-yaml':19,'changesets/changesets':20};
-const boardRankOf=r=>BOARD_RANK[String((r&&r.fullName)||r||'').toLowerCase()]||90;
+const BUGFIX_RANK={'turfjs/turf':1,'josdejong/mathjs':2,'ajv-validator/ajv':3,'sequelize/sequelize':4,'moment/luxon':5};
+const boardRankOf=r=>{const n=String((r&&r.fullName)||r||'').toLowerCase();
+  if(r&&r.cat==='bugfix') return BUGFIX_RANK[n]||90;
+  return BOARD_RANK[n]||90;};
 
 /* ---------- 100 feature angles ---------- */
 const ANGLE_FAMILIES=[
@@ -1019,8 +1028,8 @@ const DOCTRINE = [
 ];
 
 /* ---------- seed repos ---------- */
-function repo(fullName,url,lang,license,stars,verified,kind,why,path,areas){
-  return {fullName,displayName:fullName,url,commitsUrl:url+'/commits',lang,license,stars,verified:!!verified,kind,why,path:path||'',
+function repo(fullName,url,lang,license,stars,verified,kind,why,path,areas,cat){
+  return {fullName,displayName:fullName,url,commitsUrl:url+'/commits',lang,license,stars,verified:!!verified,kind,why,cat:cat||'feature',path:path||'',
     areas:areas||[],slots:['','',''],slotState:['idea','idea','idea'],slotCat:['feature','feature','feature'],intelligence:'',archived:false,source:'seed'};
 }
 const A=(area,angle,why,avoid)=>({area,angle,why,avoid:!!avoid});
@@ -1047,7 +1056,14 @@ repo('dagrejs/dagre','https://github.com/dagrejs/dagre','TypeScript','MIT','5.8k
 repo('nodeca/js-yaml','https://github.com/nodeca/js-yaml','TypeScript','MIT','6.6k',false,'bronze','YAML LOADER/DUMPER. Schema layers (failsafe/json/core/default), custom tag types, multi-document streams, anchor and alias resolution, dumper styles and line folding. Replaces eemeli/yaml, which is ISC and fails the platform license gate. Higher fame -- run the saturation check first.','',[]),
 repo('changesets/changesets','https://github.com/changesets/changesets','TypeScript','MIT','12.4k',false,'bronze','VERSION GRAPH ENGINE. Linked and fixed package groups, dependent bumping, prerelease mode, ignore rules, changelog assembly. Dense ordering semantics. Higher fame -- run the platform saturation check first.','',[]),
 ];
-const SEED_OLYMPUS={batch:1,repos:[...SEED72,
+const SEED_BUGFIX=[
+repo('Turfjs/turf','https://github.com/Turfjs/turf','TypeScript','MIT','10.5k',false,'gold','115 packages built on a handful of shared geometry primitives. A defect in the shared maths -- winding order, antimeridian crossing, collinear or degenerate geometry, coordinate precision -- is present in every package that consumes it, and several have compensated locally with their own workaround. The correct fix is the helper plus every consumer that now double-corrects. 288 open issues, 23 bug-labelled. Fixture-driven GeoJSON tests, so determinism is free. THE BIGGEST MULTIPLIER ON THE BOARD.','',[],'bugfix'),
+repo('josdejong/mathjs','https://github.com/josdejong/mathjs','JavaScript','Apache-2.0','15.1k',false,'gold','20 function families x 11 types. Every function is meant to work for number, BigNumber, Fraction, Complex, Unit and Matrix, so a type-coercion or precision bug gets reported against one function and is quietly wrong in all of them. The matrix is visible in the source, so you can enumerate exactly which cells are wrong. 46 bug-labelled issues -- the deepest backlog here. CAVEAT: karma is present; gate the test:src mocha lane only.','',[],'bugfix'),
+repo('ajv-validator/ajv','https://github.com/ajv-validator/ajv','TypeScript','MIT','14.8k',false,'gold','14 vocabularies x 7 draft references. Keyword-interaction bugs ($ref with allOf, unevaluatedProperties with if/then, $dynamicRef scoping) have to be correct in every draft that defines them. Its edge: it runs the official JSON-Schema-Test-Suite, so the spec supplies an independent oracle for what correct means -- the strongest possible answer to \'is this really a bug\'. 378 open issues. CAVEAT: karma present, isolate the node lane.','',[],'bugfix'),
+repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30.4k',false,'silver','13 packages, six-plus SQL dialects. One bug in SQL generation, identifier quoting or type mapping must be fixed in the shared layer then verified per dialect. 1,090 open issues -- the largest pool of unfixed reports here. Use the sqlite dialect for the graded suite: in-memory, offline, deterministic. CAVEAT: ORMs are a well-mined genre, so the duplicate check and Scope Gate matter more than usual.','',[],'bugfix'),
+repo('moment/luxon','https://github.com/moment/luxon','JavaScript','MIT','16.5k',false,'silver','11 source modules + 12 implementation modules all applying the same zone, DST and calendar rules, so one wrong rule is wrong in plus, minus, startOf, diff, toFormat and parsing at once. DST edges -- spring-forward gaps, fall-back ambiguity, sub-hour offsets, historical transitions -- are genuinely hard and the naive fix is nearly always wrong for one of them. CAVEAT: luxon reads IANA data through Intl, which varies with the Node/ICU version. Pin the Node version and pin explicit zones in every test or Verify Flakiness will bite.','',[],'bugfix'),
+];
+const SEED_OLYMPUS={batch:1,repos:[...SEED72,...SEED_BUGFIX,
 ]};
 // SEED 40 (2026-07-13): 9 HEADROOM-VERIFIED engines (angular, excalidraw, gqlgen, fyne, VictoriaMetrics,
 // syft + pgx, univer re-boarded, xyflow) after the NOVELTY-HEADROOM audit replaced 5: golang/go (proposal-gated: 1221 open proposals + Gerrit
@@ -1086,7 +1102,7 @@ async function sset(k,v){try{await STORE.set(k,JSON.stringify(v));}catch(e){cons
 async function sgetRaw(k){try{const r=await STORE.get(k);return r?r.value:'';}catch(e){return '';}}
 function clone(x){return JSON.parse(JSON.stringify(x));}
 // Backfill any missing fields so older/partial persisted repos never crash the renderers.
-function normalizeRepo(r){if(!r||typeof r!=='object')return r;r.slots=Array.isArray(r.slots)?r.slots:[];while(r.slots.length<MAX_FEATURES)r.slots.push('');r.slotState=Array.isArray(r.slotState)?r.slotState:[];while(r.slotState.length<MAX_FEATURES)r.slotState.push('idea');r.slotCat=Array.isArray(r.slotCat)?r.slotCat:[];while(r.slotCat.length<MAX_FEATURES)r.slotCat.push('feature');r.displayName=r.displayName||r.fullName||'(unknown)';r.areas=Array.isArray(r.areas)?r.areas:[];return r;}
+function normalizeRepo(r){if(!r||typeof r!=='object')return r;r.cat=r.cat||'feature';r.slots=Array.isArray(r.slots)?r.slots:[];while(r.slots.length<MAX_FEATURES)r.slots.push('');r.slotState=Array.isArray(r.slotState)?r.slotState:[];while(r.slotState.length<MAX_FEATURES)r.slotState.push('idea');r.slotCat=Array.isArray(r.slotCat)?r.slotCat:[];while(r.slotCat.length<MAX_FEATURES)r.slotCat.push('feature');r.displayName=r.displayName||r.fullName||'(unknown)';r.areas=Array.isArray(r.areas)?r.areas:[];return r;}
 function dedupe(a){const s=new Set(),o=[];a.forEach(n=>{const k=String(n).toLowerCase();if(!s.has(k)){s.add(k);o.push(n);}});return o;}
 
 function harvest(...batches){const m={};batches.forEach(b=>{if(!b||!b.repos)return;if(b.batch&&b.batch>1)return;b.repos.forEach(r=>m[String(r.fullName).toLowerCase()]=r);});return m;}
@@ -1227,10 +1243,8 @@ function renderBoard(){
     </div>
     <div class="btable">`;
 
-  if(!visible.length){
-    html+=`<div class="bempty">Nothing matches <b>${esc(boardQ)||boardFilter}</b>.</div>`;
-  } else {
-    visible.forEach(({r,i})=>{
+  const rowHtml=({r,i})=>{
+    let html='';
       const phase=repoPhase(r);
       const rank=boardRankOf(r);
       const filled=(r.slots||[]).filter(Boolean).length;
@@ -1239,7 +1253,7 @@ function renderBoard(){
       const parts=nm.split('/');
       const nameHtml=parts.length>1?`<span class="org">${parts[0]}/</span><b>${parts.slice(1).join('/')}</b>`:`<b>${nm}</b>`;
       const isOpen=boardOpen===r.fullName;
-      html+=`<div class="brow ${isOpen?'open':''} ${r.archived?'closed':''} ${rank===1?'top':''}" data-row="${esc(r.fullName)}">
+      html+=`<div class="brow ${isOpen?'open':''} ${r.archived?'closed':''} ${rank===1?'top':''} ${r.cat==='bugfix'?'bugfix':''}" data-row="${esc(r.fullName)}">
         <span class="brank">${rank<99?rank:'—'}</span>
         <span class="bnamecell"><span class="btier ${r.kind}"></span><span class="bname">${nameHtml}</span>${permissive(r.license)?'':'<span class="licwarn" title="Not on the platform license allowlist (MIT / BSD* / Apache* / BSL-1.0 / CC-BY*) -- likely disqualified">LIC</span>'}</span>
         <span class="bcell lang">${esc(r.lang)}</span>
@@ -1272,14 +1286,27 @@ function renderBoard(){
             <a class="bact" href="${esc(r.url)}" target="_blank" rel="noopener">Repo ↗</a>
             <a class="bact" href="${esc(r.commitsUrl)}" target="_blank" rel="noopener">Pin a commit ↗</a>
             <button class="bact go" data-an="${esc(r.fullName)}">Analyze</button>
-            <button class="bact" data-brief="${esc(r.fullName)}">Copy briefing</button>
+            <button class="bact" data-brief="${esc(r.fullName)}">${r.cat==='bugfix'?'Bug-fix briefing':'Briefing'}</button>
             <button class="bact ${r.archived?'':'warn'} rt" data-arch="${i}">${r.archived?'Re-open':'Mark exhausted'}</button>
           </div>
         </div>`;
       }
-    });
+    return html;
+  };
+  const feat = visible.filter(x=>x.r.cat!=='bugfix');
+  const bugs = visible.filter(x=>x.r.cat==='bugfix');
+
+  if(!visible.length){
+    html+=`<div class="bempty">Nothing matches <b>${esc(boardQ)||boardFilter}</b>.</div>`;
+  } else {
+    html+=feat.map(rowHtml).join('');
   }
   html+=`</div>`;
+  if(bugs.length){
+    html+=`<div class="catsec">
+      <div class="cathead"><h3>Bug-fix repos</h3><span>${bugs.length} \u00b7 the fix must span many paths to reach the LOC bar \u00b7 these copy the BUG-FIX briefing</span></div>
+      <div class="btable">${bugs.map(rowHtml).join('')}</div></div>`;
+  }
 
   /* candidate pool */
   const used=new Set(state.used.map(s=>s.toLowerCase()));
@@ -1370,7 +1397,80 @@ function copyBriefing(name,btn){
     'This file is pasted straight into the platform duplicate check \u2014 anything',
     'else in it corrupts the check.'
   ].join('\n');
-  try{navigator.clipboard.writeText(txt);}catch(e){}
+
+  const bugTxt=[
+    'OLYMPUS \u2014 bug-fix briefing',
+    '',
+    'Repo: '+r.fullName+'  ('+r.url+')',
+    'Language: '+r.lang+'   License: '+r.license,
+    'Pin an immutable commit from '+r.commitsUrl,
+    '',
+    'CATEGORY: BUG FIX. You invent nothing. The bug must already exist at the pinned',
+    'commit and you must reproduce it before you touch anything.',
+    '',
+    'CHECK THE BAR FIRST. Open the submission form and read the Submission criteria',
+    'panel. It is the only authority on the LOC bar and it changes by category. The',
+    'numbers below were measured on feature-class approvals \u2014 confirm what bug-fix',
+    'actually requires before designing anything.',
+    '',
+    'STUDY THE APPROVED CORPUS \u2014 not optional.',
+    'Go to ~/Desktop/OLYMPUS/ and go through every repo folder. If it has an Approved',
+    'folder (under _artifacts/ or artifacts/), study every approved feature inside it \u2014',
+    'all of them, across all repos, not just this one. 36 approved submissions, 9 repos.',
+    'All 36 are feature_request, so they are NOT a bug-fix template. Take from them the',
+    'description voice, the test shape, and what each platform check actually flagged.',
+    '',
+    'Then read, in this order:',
+    '  ~/Desktop/olympus-workflow/BUGFIX.md     how this category works and how LOC is reached',
+    '  ~/Desktop/olympus-workflow/PLATFORM.md   the platform spec',
+    '  ~/Desktop/OLYMPUS/OLYMPUS.md             the current standard',
+    '',
+    'HOW THE LOC IS REACHED \u2014 FIX THE CLASS, NOT THE INSTANCE.',
+    'A reported bug is one symptom. Find the one whose real cause is a violated invariant',
+    'showing up across many paths, fix it at the source, and repair every path that',
+    'inherited it. The LOC comes from the number of paths, never from padding. Enumerate',
+    'those paths from the source BEFORE you commit to a bug \u2014 that is your LOC estimate.',
+    '',
+    'TARGETS',
+    '  genuine solve rate  '+std.pass,
+    '  effective LOC       '+std.loc,
+    '                      (feature-class measurement \u2014 confirm against the panel)',
+    '  description         479-500 words describing WRONG BEHAVIOUR, not a missing capability',
+    '  flaky tests         zero (Verify Flakiness is mandatory)',
+    '',
+    'FIND 3 CANDIDATE BUGS. Read open issues oldest-first \u2014 a bug open for years is',
+    'usually open because the correct fix is systemic, which is exactly what you want.',
+    'For each candidate: reproduce it at the pinned commit twice (your own minimal case',
+    'AND clean upstream), name the invariant it violates, and enumerate the paths a',
+    'correct fix must touch. Drop any candidate whose enumeration comes out small.',
+    '',
+    'GATE ZERO \u2014 harder here, because real bugs attract fixers.',
+    'Search open, merged AND closed-unmerged PRs for the bug and its mechanism; a',
+    'closed-unmerged PR of your fix rules it out. Search issues and Discussions for a',
+    'maintainer calling it intended behaviour \u2014 that is a design decision, not a bug.',
+    'Check whether the issue is assigned or milestoned. Authenticate every query and',
+    'include is:issue or is:pull-request, or the API errors and that reads like no hits.',
+    '',
+    'Then write _artifacts/Current/candidate.md and STOP for the plagiarism check.',
+    '',
+    'candidate.md CONTAINS ONLY THIS \u2014 nothing else:',
+    '',
+    '  # Candidate -- Bug fix (<repo>)',
+    '',
+    '  ## Title',
+    '  <one line>',
+    '',
+    '  ## Problem Description',
+    '  <the description exactly as it will be submitted: 479-500 words, plain',
+    '   prose, no headings, no bullets, no code blocks>',
+    '',
+    'No rationale, no reproduction notes, no path enumeration, no GATE ZERO results,',
+    'no alternatives. All of that goes in tools/experience.md. This file is pasted',
+    'straight into the platform duplicate check \u2014 anything else in it corrupts the check.'
+  ].join('\n');
+
+  const out = (r.cat==='bugfix') ? bugTxt : txt;
+  try{navigator.clipboard.writeText(out);}catch(e){}
   if(btn){const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>{btn.textContent=o;},1400);}
 }
 document.addEventListener('keydown',e=>{
