@@ -693,14 +693,14 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 73;
+const SEED_VERSION = 74;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 // Best-first working order (evidence-based: headroom strength x engine quality x caveat weight, audits 2026-07-13).
 // Sorted at load; #1 = start your next project here. Non-seed (promoted) repos keep insertion order after these.
 const BOARD_RANK={'unjs/c12':1,'unjs/hookable':2,'apidevtools/json-schema-ref-parser':3,'unjs/magicast':4,'rich-harris/magic-string':5,'unjs/jiti':6,'h3js/rou3':7,'effector/effector':8,'unadlib/mutative':9,'unjs/mlly':10,'benjamn/recast':11,'unjs/ohash':12,'sverweij/dependency-cruiser':13,'fb55/htmlparser2':14,'hyperjump-io/json-schema':15,'unjs/ufo':16,'jsonata-js/jsonata':17,'dagrejs/dagre':18,'nodeca/js-yaml':19,'changesets/changesets':20};
-const BUGFIX_RANK={'turfjs/turf':1,'josdejong/mathjs':2,'ajv-validator/ajv':3,'sequelize/sequelize':4,'moment/luxon':5};
+const BUGFIX_RANK={'pydantic/pydantic':1,'fasterxml/jackson-databind':2,'mermaid-js/mermaid':3,'pygments/pygments':4,'less/less.js':5,'sqlalchemy/sqlalchemy':6};
 const boardRankOf=r=>{const n=String((r&&r.fullName)||r||'').toLowerCase();
   if(r&&r.cat==='bugfix') return BUGFIX_RANK[n]||90;
   return BOARD_RANK[n]||90;};
@@ -1057,11 +1057,12 @@ repo('nodeca/js-yaml','https://github.com/nodeca/js-yaml','TypeScript','MIT','6.
 repo('changesets/changesets','https://github.com/changesets/changesets','TypeScript','MIT','12.4k',false,'bronze','VERSION GRAPH ENGINE. Linked and fixed package groups, dependent bumping, prerelease mode, ignore rules, changelog assembly. Dense ordering semantics. Higher fame -- run the platform saturation check first.','',[]),
 ];
 const SEED_BUGFIX=[
-repo('Turfjs/turf','https://github.com/Turfjs/turf','TypeScript','MIT','10.5k',false,'gold','115 packages built on a handful of shared geometry primitives. A defect in the shared maths -- winding order, antimeridian crossing, collinear or degenerate geometry, coordinate precision -- is present in every package that consumes it, and several have compensated locally with their own workaround. The correct fix is the helper plus every consumer that now double-corrects. 288 open issues, 23 bug-labelled. Fixture-driven GeoJSON tests, so determinism is free. THE BIGGEST MULTIPLIER ON THE BOARD.','',[],'bugfix'),
-repo('josdejong/mathjs','https://github.com/josdejong/mathjs','JavaScript','Apache-2.0','15.1k',false,'gold','20 function families x 11 types. Every function is meant to work for number, BigNumber, Fraction, Complex, Unit and Matrix, so a type-coercion or precision bug gets reported against one function and is quietly wrong in all of them. The matrix is visible in the source, so you can enumerate exactly which cells are wrong. 46 bug-labelled issues -- the deepest backlog here. CAVEAT: karma is present; gate the test:src mocha lane only.','',[],'bugfix'),
-repo('ajv-validator/ajv','https://github.com/ajv-validator/ajv','TypeScript','MIT','14.8k',false,'gold','14 vocabularies x 7 draft references. Keyword-interaction bugs ($ref with allOf, unevaluatedProperties with if/then, $dynamicRef scoping) have to be correct in every draft that defines them. Its edge: it runs the official JSON-Schema-Test-Suite, so the spec supplies an independent oracle for what correct means -- the strongest possible answer to \'is this really a bug\'. 378 open issues. CAVEAT: karma present, isolate the node lane.','',[],'bugfix'),
-repo('sequelize/sequelize','https://github.com/sequelize/sequelize','TypeScript','MIT','30.4k',false,'silver','13 packages, six-plus SQL dialects. One bug in SQL generation, identifier quoting or type mapping must be fixed in the shared layer then verified per dialect. 1,090 open issues -- the largest pool of unfixed reports here. Use the sqlite dialect for the graded suite: in-memory, offline, deterministic. CAVEAT: ORMs are a well-mined genre, so the duplicate check and Scope Gate matter more than usual.','',[],'bugfix'),
-repo('moment/luxon','https://github.com/moment/luxon','JavaScript','MIT','16.5k',false,'silver','11 source modules + 12 implementation modules all applying the same zone, DST and calendar rules, so one wrong rule is wrong in plus, minus, startOf, diff, toFormat and parsing at once. DST edges -- spring-forward gaps, fall-back ambiguity, sub-hour offsets, historical transitions -- are genuinely hard and the naive fix is nearly always wrong for one of them. CAVEAT: luxon reads IANA data through Intl, which varies with the Node/ICU version. Pin the Node version and pin explicit zones in every test or Verify Flakiness will bite.','',[],'bugfix'),
+repo('pydantic/pydantic','https://github.com/pydantic/pydantic','Python','MIT','28.8k',false,'gold','BEST LOC ODDS ON THE BOARD. 136 files re-fixed 5+ times and 12% of real fixes reach 200+ source lines -- the highest rate measured anywhere. 35 core modules x validators x serializers x JSON-schema x dataclasses/TypedDict/generics. A defect in one validation or coercion rule is almost always wrong across several type paths at once. 583 open issues, 2,825 test functions, pytest, pure-Python determinism.','',[],'bugfix'),
+repo('FasterXML/jackson-databind','https://github.com/FasterXML/jackson-databind','Java','Apache-2.0','3.7k',false,'gold','MOST LARGE FIXES IN HISTORY: 123 real bug fixes over 150 source lines, and 99 re-fixed hotspot files. Behaviour is features x types x annotations -- 139 deserializer files, 108 serializer, 42 introspection. Recent open issues are all interaction classes (builder+ObjectId, JsonFilter+AnyGetter, JsonAlias+JsonValue) and mostly UNLABELLED, so hunters cannot filter for them. Only 3.7k stars despite being on every JVM classpath = low saturation. Surefire writes JUnit XML natively. CAVEAT: Java is a new lane; pin branch 3.x.','',[],'bugfix'),
+repo('mermaid-js/mermaid','https://github.com/mermaid-js/mermaid','TypeScript','MIT','90.3k',false,'gold','BIGGEST BACKLOG AND BIGGEST TYPICAL FIX: 1,793 open issues, median real fix 34 source lines (3x the usual), 91 fixes over 150 lines, 86 hotspots. 37 diagram types x parser x layout x renderer x theming x config -- a defect in shared layout or config resolution spans many diagram types. 244 vitest specs. CAVEAT: 90k stars, so run the platform saturation check first.','',[],'bugfix'),
+repo('pygments/pygments','https://github.com/pygments/pygments','Python','BSD-2-Clause','2.2k',false,'silver','LOWEST FAME, BIGGEST BACKLOG PER STAR: only 2.2k stars with 666 open issues and 91 hotspot files -- the best saturation odds of any candidate. 263 lexers x 14 formatters x the shared RegexLexer/token machinery. A defect in the shared lexer state machine, token merging, or a formatter escape rule spans many languages at once. pytest, golden-output fixtures, fully deterministic.','',[],'bugfix'),
+repo('less/less.js','https://github.com/less/less.js','JavaScript','Apache-2.0','17k',false,'silver','THE TS/JS-LANE PICK. 60 hotspot files: parser.js fixed 140 times, ruleset 54, mixin 35, functions 32, import 19. 45 tree node types x 16 function modules x 8 visitors, plus import-manager, plugin-manager and source maps. 48 of the 60 oldest open issues are bug-labelled and sitting with no PR. Golden-file tests: 315 .less fixtures to 159 expected .css, deterministic. Actively maintained again, 18 committers this year.','',[],'bugfix'),
+repo('sqlalchemy/sqlalchemy','https://github.com/sqlalchemy/sqlalchemy','Python','MIT','12.2k',false,'silver','THE CLASSIC MULTI-DIALECT MATRIX: 5 dialects (postgresql, mysql, oracle, mssql, sqlite) x Core x ORM x the type system, 258 source modules, 225 test files. One bug in type coercion, SQL compilation or identifier quoting must be fixed in the shared layer then verified per dialect. 62 hotspots, 211 open issues. Use sqlite in-memory for the graded suite: offline and deterministic.','',[],'bugfix'),
 ];
 const SEED_OLYMPUS={batch:1,repos:[...SEED72,...SEED_BUGFIX,
 ]};
@@ -1304,7 +1305,7 @@ function renderBoard(){
   html+=`</div>`;
   if(bugs.length){
     html+=`<div class="catsec">
-      <div class="cathead"><h3>Bug-fix repos</h3><span>${bugs.length} \u00b7 the fix must span many paths to reach the LOC bar \u00b7 these copy the BUG-FIX briefing</span></div>
+      <div class="cathead"><h3>Bug-fix repos</h3><span>${bugs.length} \u00b7 picked by measured hotspot count + large-fix tail \u00b7 these copy the BUG-FIX briefing</span></div>
       <div class="btable">${bugs.map(rowHtml).join('')}</div></div>`;
   }
 
@@ -1413,17 +1414,20 @@ function copyBriefing(name,btn){
     'numbers below were measured on feature-class approvals \u2014 confirm what bug-fix',
     'actually requires before designing anything.',
     '',
-    'STUDY THE APPROVED CORPUS \u2014 not optional.',
+    'STUDY THE APPROVED CORPUS FIRST \u2014 not optional.',
     'Go to ~/Desktop/OLYMPUS/ and go through every repo folder. If it has an Approved',
-    'folder (under _artifacts/ or artifacts/), study every approved feature inside it \u2014',
-    'all of them, across all repos, not just this one. 36 approved submissions, 9 repos.',
-    'All 36 are feature_request, so they are NOT a bug-fix template. Take from them the',
-    'description voice, the test shape, and what each platform check actually flagged.',
+    'folder (under _artifacts/ or artifacts/), study every approved submission inside it.',
     '',
-    'Then read, in this order:',
-    '  ~/Desktop/olympus-workflow/BUGFIX.md     how this category works and how LOC is reached',
-    '  ~/Desktop/olympus-workflow/PLATFORM.md   the platform spec',
-    '  ~/Desktop/OLYMPUS/OLYMPUS.md             the current standard',
+    '**Find the APPROVED BUG FIXES first and study them hardest** \u2014 they are the only',
+    'direct template for this category. There are two: turf/_artifacts/Approved/"Bug Fix 1"',
+    'and ajv/_artifacts/Approved/"Bug Fix 1 - evaluated annotations". Read their',
+    'problem_description.md, test.patch, solution.patch, tools/experience.md and',
+    'tools/PLATFORM_CHECK_REPORT.md end to end. They show how a real bug is worded as a',
+    'contract, how it was sized, and what every check said.',
+    '',
+    'Then study the feature-request approvals too \u2014 all the others. They are not the',
+    'category template, but they carry the description voice, the test shape and the',
+    'behaviour of every platform check, and all of that transfers. Learn from both.',
     '',
     'HOW THE LOC IS REACHED \u2014 FIX THE CLASS, NOT THE INSTANCE.',
     'A reported bug is one symptom. Find the one whose real cause is a violated invariant',
@@ -1437,6 +1441,20 @@ function copyBriefing(name,btn){
     '                      (feature-class measurement \u2014 confirm against the panel)',
     '  description         479-500 words describing WRONG BEHAVIOUR, not a missing capability',
     '  flaky tests         zero (Verify Flakiness is mandatory)',
+    '',
+    'EXECUTION MINDSET \u2014 NO EXCUSES.',
+    'You are the execution agent. Keep investigating, iterating and adapting until you',
+    'have the strongest viable bug fix in this repo. Weak candidate -> reject it and',
+    'inspect another. Not enough LOC -> find a better bug or a more complete legitimate',
+    'fix. Validation exposes a weakness -> fix it. First assumption wrong -> update it.',
+    'Do not stop because the easy approach failed, and do not spend turns explaining why',
+    'bugs are hard to find or the repo is inconvenient. That does not complete the task.',
+    '',
+    'The bug does NOT need to be perfect, textbook, huge or spectacular. Do not impose',
+    'standards the platform does not ask for. You need a genuine, defensible bug with',
+    'enough real implementation depth to meet the bar. Never fabricate a bug, pad code,',
+    'or damage the repo to manufacture work \u2014 but never reject a legitimate bug just',
+    'because it is not elegant. The platform checks are the final judge.',
     '',
     'FIND 3 CANDIDATE BUGS. Read open issues oldest-first \u2014 a bug open for years is',
     'usually open because the correct fix is systemic, which is exactly what you want.',
