@@ -693,14 +693,14 @@ input[type=file]::file-selector-button{font-family:var(--mono);font-size:10.5px;
 <div id="chartTip" class="charttip"></div>
 
 <script>
-const SEED_VERSION = 75;
+const SEED_VERSION = 76;
 const KEYS = {olympus:'tracker:olympus',mars:'tracker:mars',used:'tracker:used',version:'tracker:ver',gh:'oc:ghtoken',analyzer:'oc:analyzer',theme:'oc:theme',expSeen:'oc:expseen'};
 const TIER_PLAN = {olympus:{gold:3,test:2}};
 const MAX_FEATURES = 3;
 // Best-first working order (evidence-based: headroom strength x engine quality x caveat weight, audits 2026-07-13).
 // Sorted at load; #1 = start your next project here. Non-seed (promoted) repos keep insertion order after these.
 const BOARD_RANK={'unjs/c12':1,'unjs/hookable':2,'apidevtools/json-schema-ref-parser':3,'unjs/magicast':4,'rich-harris/magic-string':5,'unjs/jiti':6,'h3js/rou3':7,'effector/effector':8,'unadlib/mutative':9,'unjs/mlly':10,'benjamn/recast':11,'unjs/ohash':12,'sverweij/dependency-cruiser':13,'fb55/htmlparser2':14,'hyperjump-io/json-schema':15,'unjs/ufo':16,'jsonata-js/jsonata':17,'dagrejs/dagre':18,'nodeca/js-yaml':19,'changesets/changesets':20};
-const BUGFIX_RANK={'apollographql/apollo-client':1,'typeorm/typeorm':2,'pydantic/pydantic':3,'mermaid-js/mermaid':4,'pygments/pygments':5,'sqlalchemy/sqlalchemy':6};
+const BUGFIX_RANK={'apollographql/apollo-client':1,'typeorm/typeorm':2,'nuxt/nuxt':3,'pydantic/pydantic':4,'ionic-team/ionic-framework':5,'reactivex/rxjs':6,'ueberdosis/tiptap':7,'scrapy/scrapy':8,'mermaid-js/mermaid':9,'pygments/pygments':10};
 const boardRankOf=r=>{const n=String((r&&r.fullName)||r||'').toLowerCase();
   if(r&&r.cat==='bugfix') return BUGFIX_RANK[n]||90;
   return BOARD_RANK[n]||90;};
@@ -1057,12 +1057,16 @@ repo('nodeca/js-yaml','https://github.com/nodeca/js-yaml','TypeScript','MIT','6.
 repo('changesets/changesets','https://github.com/changesets/changesets','TypeScript','MIT','12.4k',false,'bronze','VERSION GRAPH ENGINE. Linked and fixed package groups, dependent bumping, prerelease mode, ignore rules, changelog assembly. Dense ordering semantics. Higher fame -- run the platform saturation check first.','',[]),
 ];
 const SEED_BUGFIX=[
-repo('apollographql/apollo-client','https://github.com/apollographql/apollo-client','TypeScript','MIT','19.8k',false,'gold','STRONGEST MEASURED SIGNAL ANYWHERE: 153 hotspot files, 131 real fixes over 150 source lines, median fix 42 lines, and 20% of all real fixes reach 200+ -- the best rate of any repo tested. Normalized cache x links x local state x React hooks x SSR x incremental delivery x masking. A defect in cache normalization or link chaining is wrong across several of those at once. 410 open issues, 166 jest test files, no network in the graded path.','',[],'bugfix'),
-repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','36.7k',false,'gold','MOST HOTSPOTS OF ANY REPO TESTED: 156 files re-fixed 5+ times, 90 fixes over 150 lines, 12% reach 200+. 25 drivers x query-builder x schema-builder x metadata x relations x migrations x caching -- one bug in SQL generation, relation loading or metadata resolution must be fixed in the shared layer then verified per driver. 665 open issues, 2,770 test files. Use better-sqlite3 or sqljs for the graded suite: in-memory, offline, deterministic.','',[],'bugfix'),
-repo('pydantic/pydantic','https://github.com/pydantic/pydantic','Python','MIT','28.8k',false,'gold','BEST PYTHON LOC ODDS: 136 hotspots and 12% of real fixes at 200+ source lines. 35 core modules x validators x serializers x JSON-schema x dataclasses/TypedDict/generics. A defect in one validation or coercion rule is almost always wrong across several type paths at once. 583 open issues, 2,825 test functions, pytest, pure-Python determinism.','',[],'bugfix'),
-repo('mermaid-js/mermaid','https://github.com/mermaid-js/mermaid','TypeScript','MIT','90.3k',false,'silver','BIGGEST BACKLOG AND BIGGEST TYPICAL FIX: 1,793 open issues, median real fix 34 source lines (3x the usual), 91 fixes over 150 lines, 86 hotspots. 37 diagram types x parser x layout x renderer x theming x config -- a defect in shared layout or config resolution spans many diagram types at once. 244 vitest specs. CAVEAT: 90k stars, so run the platform saturation check first.','',[],'bugfix'),
-repo('pygments/pygments','https://github.com/pygments/pygments','Python','BSD-2-Clause','2.2k',false,'silver','BEST SATURATION ODDS ON THE BOARD: only 2.2k stars but 666 open issues and 91 hotspot files -- almost nobody is mining it. 263 lexers x 14 formatters over one shared RegexLexer state machine, so a defect in lexer state handling, token merging or a formatter escape rule spans many languages at once. pytest with golden-output fixtures, fully deterministic.','',[],'bugfix'),
-repo('sqlalchemy/sqlalchemy','https://github.com/sqlalchemy/sqlalchemy','Python','MIT','12.2k',false,'bronze','THE CLASSIC MULTI-DIALECT MATRIX: 5 dialects (postgresql, mysql, oracle, mssql, sqlite) x Core x ORM x the type system, 258 source modules, 225 test files. One bug in type coercion, SQL compilation or identifier quoting must be fixed in the shared layer then verified per dialect. 62 hotspots, 211 open issues -- the thinnest tail of these six, so treat it as the fallback. sqlite in-memory for the graded suite.','',[],'bugfix'),
+repo('apollographql/apollo-client','https://github.com/apollographql/apollo-client','TypeScript','MIT','19.8k',false,'gold','BEST TAIL MEASURED ANYWHERE: 153 hotspot files, 131 real fixes over 150 source lines, median fix 42, and 20% of all real fixes reach 200+. Normalized cache x links x local state x React hooks x SSR x incremental delivery x masking -- a defect in cache normalization or link chaining is wrong across several of those at once. 410 open issues, 166 jest files, no network in the graded path.','',[],'bugfix'),
+repo('typeorm/typeorm','https://github.com/typeorm/typeorm','TypeScript','MIT','36.7k',false,'gold','MOST HOTSPOTS OF ANY REPO TESTED: 156 files re-fixed 5+ times, 90 fixes over 150 lines, 12% reach 200+. 25 drivers x query-builder x schema-builder x metadata x relations x migrations x caching. One bug in SQL generation, relation loading or metadata resolution is fixed in the shared layer then verified per driver. 665 open, 2,770 test files. Use better-sqlite3 or sqljs: in-memory, offline, deterministic.','',[],'bugfix'),
+repo('nuxt/nuxt','https://github.com/nuxt/nuxt','TypeScript','MIT','60.9k',false,'gold','THIRD-MOST HOTSPOTS (146) AND A DEEP TAIL (82 fixes over 150 lines). Eleven packages -- kit, nitro-server, schema, vite, webpack, rspack, nuxi, test-utils -- over module resolution, auto-imports, SSR/hydration, routing, payload serialization and build pipelines. A defect in resolution or hydration surfaces across builders at once. 473 open, vitest. CAVEAT: large install; pin pnpm.','',[],'bugfix'),
+repo('pydantic/pydantic','https://github.com/pydantic/pydantic','Python','MIT','28.8k',false,'gold','BEST PYTHON LOC ODDS: 136 hotspots and 12% of real fixes at 200+ source lines. 35 core modules x validators x serializers x JSON-schema x dataclasses/TypedDict/generics. A defect in one validation or coercion rule is almost always wrong across several type paths at once. 583 open, 2,825 test functions, pytest, pure-Python determinism.','',[],'bugfix'),
+repo('ionic-team/ionic-framework','https://github.com/ionic-team/ionic-framework','TypeScript','MIT','52.7k',false,'gold','SECOND-BEST 200+ RATE (13%) WITH 99 LARGE FIXES AND 120 HOTSPOTS. 97 components x two platform modes (iOS / Material) x gestures x overlays x routing x form-control lifecycle -- one defect in the shared overlay, gesture or value-accessor layer repeats across many components. 585 open. Use the stencil spec lane (test.spec), not e2e.','',[],'bugfix'),
+repo('ReactiveX/rxjs','https://github.com/ReactiveX/rxjs','TypeScript','Apache-2.0','31.7k',false,'silver','CLEANEST DETERMINISM ON THE BOARD: ~120 operators as individual modules with 106 colocated spec files, all synchronous virtual-time testing -- zero flakiness risk by construction. 126 hotspots, 75 fixes over 150 lines, median 34. Operators x schedulers x subjects x subscription teardown: a defect in teardown or scheduling order is wrong in many operators at once. 188 open, vitest.','',[],'bugfix'),
+repo('ueberdosis/tiptap','https://github.com/ueberdosis/tiptap','TypeScript','MIT','38.5k',false,'silver','116 HOTSPOTS AND 829 OPEN ISSUES. 60 packages, 50 of them extensions, over a ProseMirror schema x commands x input rules x paste rules x marks/nodes x history core. A defect in command chaining, schema resolution or paste handling repeats across every extension that relies on it. Deterministic: headless editor, no browser needed for the unit lane.','',[],'bugfix'),
+repo('scrapy/scrapy','https://github.com/scrapy/scrapy','Python','BSD-3-Clause','64.4k',false,'silver','120 HOTSPOTS, 60 FIXES OVER 150 LINES. Spider middleware x downloader middleware x item pipelines x selectors x link extractors x http/1.1 and http/2 handlers x settings resolution x feed exports. A defect in the middleware chain or settings priority resolution reaches many components. 369 open. CAVEAT: 40 of 157 test files drive a live local server -- build the graded suite from the offline modules only.','',[],'bugfix'),
+repo('mermaid-js/mermaid','https://github.com/mermaid-js/mermaid','TypeScript','MIT','90.3k',false,'bronze','BIGGEST BACKLOG (1,793 open) AND BIG TYPICAL FIX: median real fix 34 source lines, 91 fixes over 150, 86 hotspots. 37 diagram types x parser x layout x renderer x theming x config -- a defect in shared layout or config resolution spans many diagram types. 244 vitest specs. CAVEAT: 90k stars, run the platform saturation check first.','',[],'bugfix'),
+repo('pygments/pygments','https://github.com/pygments/pygments','Python','BSD-2-Clause','2.2k',false,'bronze','BEST SATURATION ODDS ON THE BOARD: only 2.2k stars but 666 open issues and 91 hotspots -- almost nobody is mining it, which is exactly what killed ajv. 263 lexers x 14 formatters over one shared RegexLexer state machine, so a defect in lexer state handling, token merging or a formatter escape rule spans many languages at once. pytest with golden-output fixtures.','',[],'bugfix'),
 ];
 const SEED_OLYMPUS={batch:1,repos:[...SEED72,...SEED_BUGFIX,
 ]};
@@ -1415,25 +1419,50 @@ function copyBriefing(name,btn){
     'actually requires before designing anything.',
     '',
     'STUDY THE APPROVED CORPUS FIRST \u2014 not optional.',
-    'Go to ~/Desktop/OLYMPUS/ and go through every repo folder. If it has an Approved',
-    'folder (under _artifacts/ or artifacts/), study every approved submission inside it.',
+    'Go to ~/Desktop/OLYMPUS/. 58 approved submissions across the repo folders, under',
+    '_artifacts/Approved/ or artifacts/Approved/.',
     '',
-    '**Find the APPROVED BUG FIXES first and study them hardest** \u2014 they are the only',
-    'direct template for this category. There are two: turf/_artifacts/Approved/"Bug Fix 1"',
-    'and ajv/_artifacts/Approved/"Bug Fix 1 - evaluated annotations". Read their',
-    'problem_description.md, test.patch, solution.patch, tools/experience.md and',
-    'tools/PLATFORM_CHECK_REPORT.md end to end. They show how a real bug is worded as a',
-    'contract, how it was sized, and what every check said.',
+    '**FOUR of them are approved BUG FIXES. Study those hardest \u2014 they are the only',
+    'direct template for this category:**',
+    '  turf/_artifacts/Approved/Bug Fix 1          (unkinkPolygon winding rules)',
+    '  turf/_artifacts/Approved/Bug Fix 2          (lineSplit cut positions)',
+    '  ajv/_artifacts/Approved/Bug Fix 1 - evaluated annotations',
+    '  ajv/_artifacts/Approved/Bug Fix 2 - JTD parser scanning and integer syntax',
+    'Read each one whole: problem_description.md, test.patch, solution.patch,',
+    'tools/experience.md, tools/PLATFORM_CHECK_REPORT.md. Note especially HOW BIG the',
+    'contract is in each description \u2014 that is the thing to copy.',
     '',
-    'Then study the feature-request approvals too \u2014 all the others. They are not the',
-    'category template, but they carry the description voice, the test shape and the',
-    'behaviour of every platform check, and all of that transfers. Learn from both.',
+    'Then study the 54 feature approvals too. They are not the category template, but',
+    'they carry the description voice, the test shape and the behaviour of every',
+    'platform check, and all of that transfers. Learn from both.',
     '',
-    'HOW THE LOC IS REACHED \u2014 FIX THE CLASS, NOT THE INSTANCE.',
-    'A reported bug is one symptom. Find the one whose real cause is a violated invariant',
-    'showing up across many paths, fix it at the source, and repair every path that',
-    'inherited it. The LOC comes from the number of paths, never from padding. Enumerate',
-    'those paths from the source BEFORE you commit to a bug \u2014 that is your LOC estimate.',
+    'HOW THE LOC IS REACHED \u2014 READ THIS TWICE.',
+    '',
+    'The bug is the CORE of the submission. It does not have to carry the LOC on its own,',
+    'and it does not have to be a big or spectacular bug. What you ship is: the real bug,',
+    'plus everything a correct and complete fix legitimately drags in with it.',
+    '',
+    'Three ways to get there, all honest, usually combined:',
+    '  1. FIX THE CLASS, NOT THE INSTANCE. The report is one symptom. Find the invariant',
+    '     it violates, fix it at the source, and repair every path that inherited it.',
+    '  2. WIDEN THE CONTRACT TO THE WHOLE BEHAVIOUR. State the correct behaviour for the',
+    '     entire surface the bug lives on, not just the reported case \u2014 every sibling',
+    '     input, every adjacent option, every related entry point.',
+    '  3. INCLUDE THE COMPLETION WORK. If fixing it properly requires new machinery, build',
+    '     it. Adding a capability the correct fix genuinely needs is part of the fix, not',
+    '     scope creep \u2014 a bug fix surrounded by the feature work that makes it correct is',
+    '     a normal, approvable submission.',
+    '',
+    'PRECEDENT, from your own approved corpus: ajv Bug Fix 2 is worded "fix the parsers so',
+    'they read the whole text themselves" \u2014 the correct fix meant writing a complete JSON',
+    'scanner (strings with every escape, numbers, containers of any depth, whitespace).',
+    'turf Bug Fix 1 started as "holes come back filled" and became the full nonzero',
+    'winding rule over self-crossing rings. Both are one real bug plus the implementation',
+    'that makes the fix actually correct. That is the shape.',
+    '',
+    'Enumerate the paths and the completion work from the source BEFORE committing to a',
+    'bug \u2014 that enumeration is your LOC estimate. Never pad, never fabricate a defect,',
+    'never add scope the fix does not need.',
     '',
     'TARGETS',
     '  genuine solve rate  '+std.pass,
