@@ -26,8 +26,7 @@ exists in it, meeting ALL of:
    services / DBs / network is a POOR fit unless a real offline core exists to scope to.
 5. SOLVABLE: at least one strong agent can solve it from the description + repo alone.
 
-Accepted envelope: Olympus pass rate <=20% of 10 runs; 800-1000 LOC (700 platform floor) solution across 6+ files;
-description 479-500 words, ASCII, behavioural, non-prescriptive (names WHAT not HOW).
+Current acceptance (2026-10-10): >=8 Nova, 0% solved, official average sequence length >256,000; >=4 Orion OR >=4 Vega, all the same chosen model, genuine solved rate >0% and <=25% (one genuine pass for exactly four). Required checks, Scope Gate, Auto Review and FP must remain acceptable; no unfair/broken or environment/verifier-blocked runs, cheating <20% across all agents. Effective solution LOC >=210 without padding; no file-count quota. Description preferred 300–500 words, hard limit 1,000, behavioral and non-prescriptive. Read /Users/mac/Desktop/olympus-workflow/MEGA_UPDATE_2026-10-10.md and current repository evidence before applying this scouting standard. Scouting judgment is not measured qualification.
 
 olympusViable verdict:
 - "yes"   = a strong, hard, deterministic, unsolved feature clearly exists here.
