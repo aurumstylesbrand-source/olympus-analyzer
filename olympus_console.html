@@ -900,7 +900,7 @@ body.on-analyze .tb-search{opacity:.45;pointer-events:none}
     </nav>
     <div class="sn-promo">
       <div class="sn-promo-ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4 6.8 19.2l1-5.9L3.5 9.2l5.9-.8Z"/></svg></div>
-      <div><div class="sn-promo-t">Standards</div><div class="sn-promo-b">Nova <b>0/8+</b> · seq <b>&gt;256K</b> · Orion|Vega <b>1/4</b> · LOC <b>&ge;210</b></div></div>
+      <div><div class="sn-promo-t">Standards</div><div class="sn-promo-b">Nova <b>0/4</b> · Orion <b>1/4 &ge;256K</b> · Vega <b>&le;1/4</b> · Trial QA · LOC <b>&ge;210</b></div></div>
     </div>
     <div class="sn-theme"><span class="sn-theme-l"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>Dark Mode</span><button class="switch" id="themeBtn" title="Toggle light / dark"><i></i></button></div>
   </aside>
@@ -922,7 +922,7 @@ body.on-analyze .tb-search{opacity:.45;pointer-events:none}
     </div>
     <div class="wrap">
       <div id="view"></div>
-      <p class="foot">MEGA UPDATE 2026-10-10 &middot; Nova: &ge;8 runs, exactly 0% solved, average sequence length &gt;256K tokens &middot; Orion OR Vega: 4 runs of one model, exactly 1 genuine pass (Orion 6 / Vega 8 tokens) &middot; no unfair/broken flag, cheat &lt;20%, no env-blocked run &middot; effective LOC &ge;210 &middot; description 300-500 words (hard limit 1,000) &middot; pause platform spend at &le;50 tokens &middot; authoritative: olympus-workflow/MEGA_UPDATE_2026-10-10.md &middot; the Submission criteria panel outranks every number here.</p>
+      <p class="foot">PLATFORM UPDATE 2026-11-17 (snapshot &mdash; requirements change: check the live criteria panel and the Olympus Discord announcements) &middot; &ge;4 runs each of Nova, Orion and Vega &middot; Nova 0% &middot; Orion &ge;1 and &le;25%, solving runs average &ge;256K &middot; Vega &le;25% &middot; fair, cheat &lt;20%, no env blocker &middot; stepped checks + Reward Hacking &middot; Trial QA (FP + FN) = acceptance; Auto Review and FP Panel removed &middot; Nova 8 / Orion 16 / Vega 10 tokens &middot; effective LOC &ge;210 &middot; description 300-500 words (hard limit 1,000) &middot; pause platform spend at &le;30 tokens &middot; register: olympus-workflow/MEGA_UPDATE_2026-10-10.md &middot; the live criteria panel outranks every number here.</p>
     </div>
   </main>
 </div>
@@ -962,7 +962,7 @@ ANGLE_FAMILIES.forEach(f=>f.angles.forEach(a=>{ANGLE_CAT[a]=f.cats;ANGLE_FAM[a]=
 function angleCats(a){return ANGLE_CAT[a]||CATEGORIES;}
 // General field notes distilled from every accepted problem — the levers that get a clean pass in 1-2 iterations.
 const TIPS=[
- {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is now the mega-update target: Nova 0/8+ at >256K sequence length, plus exactly 1 genuine Orion|Vega pass in 4 -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
+ {h:'Name the gap before building',b:'A known algorithm ceilings at 60-100%; only an unfamiliar sibling path or a non-guessable invariant drops it to the Olympus bar. That bar is now the current target: Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4, then Trial QA (snapshot 2026-11-17 -- verify live) -- several accepted projects that passed at <=30% would be borderline today, so push the behaviour harder. If you cannot name the gap in one sentence, do not start.'},
  {h:'Claim-to-test matrix first',b:'Every description sentence maps to a test, and every test back to a sentence. Build the matrix before writing code — it kills the majority of alignment pre-check failures.'},
  {h:'Test through the public API',b:'Assert behaviour, not internals. Prefer replacing an implementational test with a fair fixture over describing internal structure — fewer fairness flags, cleaner Solution Quality.'},
  {h:'Signatures are permanent',b:'arg names and shapes are load-bearing. When you trim the description, never strip a signature — that is the lever that pulls an overshoot (0/N) back up without touching the gap.'},
@@ -980,10 +980,10 @@ const TIPS=[
 /* ---------- Accepted-project intelligence (calibration anchors) ----------
    Distilled from the 14 ACCEPTED projects (authoritative distillation: /Users/mac/Desktop/olympus-experience/ALL_TIME_PRINCIPLES.md; full debriefs in archive/)
    (experience-intelligence-extraction.md + cross-project-calibration.md, Jun 2026, adversarially
-   audited: 2 clean / 4 minor, zero fabrications). [STALE pre-2026-10-10: Nova 0% / Orion|Vega 1-of-4 band] -- design for Nova 0/8+ at >256K sequence length + exactly 1 genuine Orion|Vega pass in 4; see MEGA_UPDATE_2026-10-10.md. Older note: 41-50% was a spent margin only when every passer is FP-genuine; above 50% is broken. TWO WALLS, ONE CORRIDOR: over-solving is EXACTLY as broken as a 0-solve, and MEASURED (77 runs / 11 batches, Aug-16) it is ~8x more likely -- 8 of 10 valid batches OVER-solved, 1 under-solved. When uncertain, BIAS TOWARD HARDER,
-   with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive the FP panel). This drives bestFitAngle(). */
+   audited: 2 clean / 4 minor, zero fabrications). [STALE pre-2026-10-10: Nova 0% / Orion|Vega 1-of-4 band] -- design for Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4, then Trial QA (snapshot 2026-11-17 -- verify live); see MEGA_UPDATE_2026-10-10.md (top section). Older note: 41-50% was a spent margin only when every passer is FP-genuine; above 50% is broken. TWO WALLS, ONE CORRIDOR: over-solving is EXACTLY as broken as a 0-solve, and MEASURED (77 runs / 11 batches, Aug-16) it is ~8x more likely -- 8 of 10 valid batches OVER-solved, 1 under-solved. When uncertain, BIAS TOWARD HARDER,
+   with >=1 GENUINE FP-clean solve as the floor (genuine solvability: solves must survive Trial QA's FP/FN review). This drives bestFitAngle(). */
 const ACCEPTED_INTEL = {
-  bar:'Olympus target (2026-10-10): Nova 0/8+ at >256K sequence length + exactly 1 genuine Orion|Vega pass in 4. Any Nova pass = too easy - Flakiness MANDATORY - always aim for >=2 GENUINE FP-clean solvers; 1 is acceptable, 0 is broken.',
+  bar:'Olympus target (Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4, then Trial QA (snapshot 2026-11-17 -- verify live)). Any Nova pass = too easy - Flakiness MANDATORY - exactly 1 genuine long Orion solve in 4; Vega at most 1 in 4.',
   envelope:'accepted LOC has ranged 261-1380; there is NO design target and NO floor (platform floor is 200) -- a compact reference is acceptable ONLY when solver-LOC >> reference-LOC and pass in-band (mega-update target: Nova 0% at >256K, Orion|Vega 1/4) FP-Genuine, e.g. syft 1381-vs-745) - 6-29 files (6+ min) - solver ~100-125 msgs proven acceptable (HISTORICAL acceptances; the old 150+ DESIGN target is WITHDRAWN -- the metric behind it is broken and passing vs failing runs are statistically indistinguishable on effort) (Jul-2026 cohort: syft 117 / pebble ~118 / docusaurus 121 at 10%; pgx 103 at 30% -- 30% was ACCEPTED and sits at the top of our mega-update target (Nova 0% at >256K, Orion|Vega 1/4); MSGs are a diagnostic, the gate is pass rate + FP-Genuine) - description 300-500 words, pure ASCII, behavioural (name WHAT not HOW; naming the PUBLIC signatures hidden tests call is the required fairness exception).',
   // The two PROVEN difficulty archetypes. Edge-case volume on a known surface NEVER moved a pass rate.
   archetypes:[
@@ -999,7 +999,7 @@ const ACCEPTED_INTEL = {
      act:'Wire ONE feature into 5+ DIFFERENT-PATTERN variant paths + at least 2 silently-failing cross-cutting invariants (phase placement / ordering / shared cleanup). The variants are the (msgs are not an instrument); the invariants are the gap.',
      anchor:'trpc: 7 adapters each with a different existing pattern + 5 silent invariants -> Nova 133 median, 20%.'},
     {key:'census',when:r=>{const d=repoDiv(r);return d!=null&&d>=5;},name:'Discovery-layer census (if the algorithm is known)',
-     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely keeps Nova at 0% over 256K tokens; expect to add a second before the full 8+4.',
+     act:'List EVERY derivable simplification agents will reach for and a lever to strip each. One layer rarely keeps Nova at 0%; expect to add a second before the full 4/4/4.',
      anchor:'drizzle-chunked: offset->seek only moved 75->60%; a 2nd layer (non-unique column forcing PK auto-discovery) was needed for 20%.'},
     {key:'composes',when:()=>true,name:'"Composes with X" is a full-lifecycle contract',
      act:'For every "composes with X" claim, audit X against the framework EXECUTION ORDER in ONE pass (e.g. a Scope adding ORDER BY must be read AFTER executeScopes).',
@@ -1191,7 +1191,7 @@ const DOCTRINE = [
  {c:'gold',h:'THE GOAL — capacity + value + acceptance (read this first)',body:`<p>The job is to find repos that can host <b>MANY</b> features that are <b>hard AND valuable AND maintainer-acceptable</b> — not one hard trick. Judge every repo on three things, in order:</p><ol>
    <li><b>VALUE / feature richness</b> — is there a WIDE space of genuinely-missing, valuable capabilities a maintainer would want? (Panel <i>featureRichness</i>: rich / some / thin.)</li>
    <li><b>ACCEPTANCE / core-fit</b> — would the maintainers merge a substantial feature into core (an in-core seam, fits philosophy), or is it userland / a declined class? A DECLINED class wastes the whole project even if the feature is hard (the nestjs lesson). (Panel <i>acceptanceFit</i>: welcomes / neutral / declines.)</li>
-   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → mega-update target (Nova 0% at >256K, Orion|Vega 1/4) pass)?</li></ol>
+   <li><b>DIFFICULTY</b> — can it be made hard for a SOTA model (obvious approach WRONG, above the helper layer, a non-guessable intermediate-state invariant → current target (Nova 0/4, Orion 1/4 with a &ge;256K solve, Vega &le;1/4))?</li></ol>
    <p><b>Capacity is the headline, not one angle.</b> Subsystem breadth is the CAPACITY signal (and why cross-submission collision stays low), NOT the difficulty — the difficulty is the feature you pick as the maintainer. Acceptable-but-easy fails; hard-but-thin/declined fails; only hard + valuable + acceptable ships. Find the feature yourself like a maintainer — the console gives evidence + capacity, never a prescribed angle.</p>`},
  {c:'gold',h:'Accepted-project precedents (9 real anchors, recalibrated; pass-rate bands now STALE under the 2026-10-10 mega update)',body:
    '<p><b>Bar:</b> '+ACCEPTED_INTEL.bar+'<br><b>Accepted envelope:</b> '+ACCEPTED_INTEL.envelope+'</p>'+
@@ -1213,7 +1213,7 @@ const DOCTRINE = [
    <p><b>Build a feature that:</b> (1) sits ABOVE the helper layer so the target layer has NO free per-variant helpers; (2) adds only <b>1-2 new public symbols</b> but makes the BEHAVIOUR hard — design it so the first approach an agent reaches for is WRONG (more symbols = more prescriptive = agents follow the recipe = easier); (3) makes the <b>obvious implementation wrong</b> in a way that isn't visible from the signature; (4) is pinned with an intermediate-state invariant (count / ordering / lifecycle) that the naive implementation violates while still passing every value check.</p>
    <p>5+ variant paths is the structural precondition. Keep the public surface small; difficulty lives in behaviour and discovery, never in surface size.</p>`},
  {c:'gold',h:'Standards (last-known guidance — in-form panel is authoritative)',body:`<ul>
-   <li><b>Evaluation (mega update 2026-10-10): Nova &ge;8 runs at exactly 0% solved with average sequence length &gt;256K; plus 4 runs of ONE of Orion|Vega with exactly 1 genuine pass. Any Nova pass is too easy.</b> <i>[STALE pre-2026-10-10: the 30-40% / 10-40% / &gt;50% pass-rate bands]</i></li>
+   <li><b>Evaluation (platform update 2026-11-17, snapshot &mdash; verify on the live criteria panel and Discord announcements): &ge;4 runs each of Nova, Orion and Vega; Nova 0%; Orion &ge;1 and &le;25% with solving runs averaging &ge;256K; Vega &le;25%; then Trial QA (FP + FN). Any Nova pass is too easy.</b> <i>[STALE: the 2026-10-10 goal of &ge;8 Nova at &gt;256K + one of Orion|Vega at 1/4]</i> <i>[STALE pre-2026-10-10: the 30-40% / 10-40% / &gt;50% pass-rate bands]</i></li>
    <li><b>Verify Flakiness is now a MANDATORY check</b> — a flaky test (time / network / order / nondeterministic) fails the submission. Pick repos with deterministic suites and write only deterministic tests.</li>
    <li>Solution LOC 250-300 effective. Files: as the routes require (5 ok).</li>
    <li>Description 300-500 words preferred, platform hard limit 1,000 (the counter includes the title). Plagiarism ALL below 0.5.</li>
@@ -1709,13 +1709,18 @@ function copyBriefing(name,btn){
     '  effective LOC       '+std.loc,
     '  description         '+std.desc,
     '  flaky tests         zero (Verify Flakiness is mandatory)',    '',
-    'EVALUATION TARGET (platform mega update 2026-10-10 \u2014 read olympus-workflow/MEGA_UPDATE_2026-10-10.md):',
-    '  Nova           >= 8 runs, EXACTLY 0% solved, average sequence length > 256K tokens',
-    '  Orion or Vega  4 runs of ONE model, exactly 1 genuine pass (Orion 6 / Vega 8 tokens per run)',
-    '  Calibrate with evidence: ONE Nova diagnostic first. Nova passes = too easy, stop and deepen.',
-    '  Nova fails under 256K = not long-horizon enough. Then 1-2 runs of one stronger model.',
-    '  Commit to the full 8 + 4 only when both requirements credibly hold. Never mix Orion and Vega.',
-    '  FP every pass; never relabel a genuine pass, never manufacture a failure. Pause spend at <= 50 tokens.',
+    'EVALUATION TARGET (platform update 2026-11-17 \u2014 a SNAPSHOT: requirements change. Before relying on any',
+    'number, read the live criteria panel and the Olympus Discord announcements; the live source wins.',
+    'Register: olympus-workflow/MEGA_UPDATE_2026-10-10.md, top section):',
+    '  Nova    >= 4 runs, EXACTLY 0% solved (8 tokens/run)',
+    '  Orion   >= 4 runs, at least 1 and at most 25% solved; Orion\'s solving runs average >= 256K (16 tokens/run)',
+    '  Vega    >= 4 runs, at most 25% solved, 0 is fine (10 tokens/run)',
+    '  Checks run in steps: Verify Tests + Verify Solution + Flakiness + Task Prompt Quality, then Solution',
+    '  Quality, then Test Quality, plus the Reward Hacking check. Auto Review and the FP Panel are gone:',
+    '  Trial QA judges false positives AND false negatives over the rollouts, and its pass is acceptance.',
+    '  Design for ONE long genuine Orion solve. No approved Orion passer in our history reached 256K',
+    '  (best 198K) \u2014 plan the depth from the start. Never manufacture a failure or an unfair test.',
+    '  Pause platform spend at <= 30 tokens.',
     '',
     'Propose ~3 distinct candidates, run GATE ZERO yourself on the top one',
     '(same-repo plagiarism + the public-mechanism prior-art search, authenticated),',
@@ -1806,15 +1811,20 @@ function copyBriefing(name,btn){
     '  description         300-500 words (hard limit 1,000) describing WRONG BEHAVIOUR, not a missing capability',
     '  flaky tests         zero (Verify Flakiness is mandatory)',
     '',
-    'EVALUATION TARGET (platform mega update 2026-10-10 \u2014 read olympus-workflow/MEGA_UPDATE_2026-10-10.md):',
-    '  Nova           >= 8 runs, EXACTLY 0% solved, average sequence length > 256K tokens',
-    '  Orion or Vega  4 runs of ONE model, exactly 1 genuine pass (Orion 6 / Vega 8 tokens per run)',
-    '  Calibrate with evidence: ONE Nova diagnostic first. Nova passes = too easy, stop and deepen.',
-    '  Nova fails under 256K = not long-horizon enough. Then 1-2 runs of one stronger model.',
-    '  Commit to the full 8 + 4 only when both requirements credibly hold. Never mix Orion and Vega.',
-    '  FP every pass; never relabel a genuine pass, never manufacture a failure. Pause spend at <= 50 tokens.',
-    '  For a BUG FIX this means: the class + completion work must be deep enough that Nova cannot finish',
-    '  it inside 256K tokens, while Orion or Vega still solves it about one time in four.',
+    'EVALUATION TARGET (platform update 2026-11-17 \u2014 a SNAPSHOT: requirements change. Before relying on any',
+    'number, read the live criteria panel and the Olympus Discord announcements; the live source wins.',
+    'Register: olympus-workflow/MEGA_UPDATE_2026-10-10.md, top section):',
+    '  Nova    >= 4 runs, EXACTLY 0% solved (8 tokens/run)',
+    '  Orion   >= 4 runs, at least 1 and at most 25% solved; Orion\'s solving runs average >= 256K (16 tokens/run)',
+    '  Vega    >= 4 runs, at most 25% solved, 0 is fine (10 tokens/run)',
+    '  Checks run in steps: Verify Tests + Verify Solution + Flakiness + Task Prompt Quality, then Solution',
+    '  Quality, then Test Quality, plus the Reward Hacking check. Auto Review and the FP Panel are gone:',
+    '  Trial QA judges false positives AND false negatives over the rollouts, and its pass is acceptance.',
+    '  Design for ONE long genuine Orion solve. No approved Orion passer in our history reached 256K',
+    '  (best 198K) \u2014 plan the depth from the start. Never manufacture a failure or an unfair test.',
+    '  Pause platform spend at <= 30 tokens.',
+    '  For a BUG FIX this means: the class + completion work must be deep enough that Nova cannot finish it,',
+    '  Orion solves it about one time in four with a long run (>= 256K), and Vega stays at or below one in four.',
     '',
     'EXECUTION MINDSET \u2014 NO EXCUSES.',
     'You are the execution agent. Keep investigating, iterating and adapting until you',
@@ -1979,7 +1989,7 @@ function repoTier(r){
   else {why=paths+' subsystems but a '+(!approachFeasible?'name-thin ':'')+(!invariantFeasible?'stateless ':'')+'surface — verify a genuinely hard AND valuable feature fits before building.';}
   return {tier:'olympus', why, approachFeasible, invariantFeasible, paths, curated:!!curated};
 }
-function standardsFor(tier){return {loc:'>= 210 effective without padding (owner rule). Never pad; LOC follows span.', files:'as the feature routes require', desc:'300-500 words preferred, platform hard limit 1,000 (title counted); strict ASCII; no title line', msg:'RETIRED -- replaced by Nova sequence length (> 256K average)', pass:'Nova: >= 8 runs, EXACTLY 0% solved, avg sequence length > 256K. Orion OR Vega: 4 runs of ONE model, exactly 1 genuine pass. Any Nova pass = too easy.'};}
+function standardsFor(tier){return {loc:'>= 210 effective without padding (owner rule). Never pad; LOC follows span.', files:'as the feature routes require', desc:'300-500 words preferred, platform hard limit 1,000 (title counted); strict ASCII; no title line', msg:'RETIRED -- replaced by the Orion solving-run sequence length (>= 256K average)', pass:'(snapshot 2026-11-17, verify live) Nova: >= 4 runs, 0% solved. Orion: >= 4 runs, >= 1 and <= 25% solved, solving runs avg >= 256K. Vega: >= 4 runs, <= 25%. Then Trial QA (FP + FN). Any Nova pass = too easy.'};}
 // Fix 6 — a REAL signal (not a guess): GitHub code search for a symbol the operator names.
 // Honest limits: code search is token-gated (403 without auth), fuzzy, and blocked in the sandbox.
 async function ghCodeSearch(name,term){
@@ -2088,15 +2098,15 @@ function estPass(r){
   if(s.helpers==='free') return {lo:70,hi:95,label:'Free helpers — agents solve it cheaply (too easy for either tier)',cls:'bad',tier:t.tier};
   const hard=(s.approach==='wrong'?1:0)+(s.invariant==='fails'?1:0);
   // MEGA UPDATE 2026-10-10: the pass-rate bands are STALE. lo/hi below are the OLD-band projection, kept only as a relative difficulty signal.
-  // Live target: Nova 0/8+ with avg sequence length > 256K, and exactly 1 genuine pass in 4 runs of one of Orion|Vega.
+  // Live target (snapshot 2026-11-17): Nova 0/4, Orion 1/4 with solving runs >= 256K, Vega <= 1/4; then Trial QA.
   if(t.tier==='mars'){
     const over=(hard>=1);
     return over
       ? {lo:12,hi:26,label:'Mars-scale repo, hard picks — under the mega update Nova will likely still PASS this; the hard-behaviour parts read as bolted-on',cls:'ok',tier:'mars',overreach:true}
-      : {lo:18,hi:30,label:'Solid Mars structure — probably not enough long-horizon depth to keep Nova at 0% over 256K tokens',cls:'ok',tier:'mars'};
+      : {lo:18,hi:30,label:'Solid Mars structure — probably not enough depth to keep Nova at 0% and give Orion a long (>= 256K) solve',cls:'ok',tier:'mars'};
   }
-  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — the shape most likely to hold Nova at 0% while Orion|Vega solves ~1 in 4. Orion-only or 1/10 = BELOW-BAND recovery, run the ladder toward 3/10. Historical anchors (9-20%) predate the band.',cls:'ok',tier:'olympus'};
-  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — Nova will very likely PASS this (= too easy under the mega update): add a second independent execution-hard layer to land in the mega-update target (Nova 0% at >256K, Orion|Vega 1/4)',cls:'warn',tier:'olympus'};
+  if(hard===2) return {lo:30,hi:40,label:'Two execution-hard layers — the shape most likely to hold Nova at 0% while Orion solves ~1 in 4 with a long run and Vega stays <= 1 in 4. Historical anchors (9-20%) predate the current rules.',cls:'ok',tier:'olympus'};
+  if(hard===1) return {lo:40,hi:60,label:'ONE hard layer — Nova will very likely PASS this (= too easy under the mega update): add a second independent execution-hard layer to land in the current target (Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4)',cls:'warn',tier:'olympus'};
   return {lo:40,hi:60,label:'Obvious approach works + no invariant — TOO EASY (Nova solves it): make the obvious approach WRONG + add an intermediate-state invariant, or pick a harder feature. Never downgrade.',cls:'warn',tier:'olympus',demote:true};
 }
 function chartGauge(r){
@@ -2604,7 +2614,7 @@ function verdictCard(r){
   const confChip=v.confidence?`<span class="confpill ${v.confidence}">confidence: ${v.confidence}</span>`:'';
   const riskBox=v.risk?`<div class="riskbox"><b>⚠ Verify before building (the console is not certain):</b> ${esc(v.risk)}</div>`:'';
   const meaning=(v.cap?{
-    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard >=210-effectivee LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the mega-update target (Nova 0% at >256K, Orion|Vega 1/4) — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
+    go:'PASS (repo capacity) = this SOLID repo has the surface area (parallel code paths + a deterministic offline core) to host MANY hard >=210-effectivee LOC features via the two proven mechanisms (discovery gap / breadth). This answers your real goal. It is NOT a claim that any one feature will land in the current target (Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4) — that needs a real 10-agent batch. Your specific ANGLE is judged separately by the panel + novelty gate below.',
     risky:'RISKY (thin repo) = a shared base carries the contract here, so it hosts FEWER independent hard features. Usable, but scope each feature tightly and do not expect to mine many.',
     refine:'',nogo:'',pending:''
   }:{
@@ -2749,10 +2759,12 @@ function genLaunch(){
 
 **ONE ROUTE (2026-08-20).** There is no mode to pick: **/speed is RETIRED.** Every gate it carried was absorbed into the DIFFICULTY DOSSIER (DIFFICULTY_GATE.md D1-D6), which applies to every project; its one distinguishing bar (a narrower LOC band) sat INSIDE the normal default, so it relaxed nothing. Its STRAIGHT-APPROVAL PACK was never speed-specific and is now unconditional inside /new-sub as THE APPROVAL PACK. **Run /new-sub. That is the whole entry point.**
 
+**TPQ FOCUSED REPAIR:** Too many requirements / Too prescriptive -> complete feedback + description/test/solution diagnosis; suspend unrelated fixes, Agents and Trial QA spending; preserve core behavior while removing unnecessary extras and replacing implementation-specific tests. Meaningful correction -> local validation -> upload/readback -> focused TPQ where permitted. Freeze successful Description on PASS, restart full Phase 1, resume DURO; record both learning files. See DESCRIPTION FIX.
+
 **THE NUMBERS (design to OURS, never the platform floor):** pass ${std.pass} + >=1 GENUINE FP-clean solve - LOC ${std.loc} - files ${std.files} - description ${std.desc} - Flakiness 6x clean + 6x patched identical - plagiarism all <0.5 - zero comments in patches - Task + Solution Quality 3/3 every time - Auto Review 3/3 on all three scored lanes (Description/Tests/Solution & Code) with agent-runs green. SOLVER MSGS: ${std.msg}. The binding gate is pass-rate + FP-Genuine; the earliest too-hard alarm is a batch MEDIAN of >=20k completion tokens (~94% chance of 0-solve, NOVA_ATLAS deep-parse).
 
 **THE DIFFICULTY LAWS -- MEASURED AUG-16, AND THE #1 REASON PROJECTS GET REBUILT (nothing else in this briefing matters if you get this wrong):**
-- **TWO WALLS, ONE CORRIDOR -- BOTH FAILURES ARE EQUALLY BROKEN.** [STALE pre-2026-10-10 bands] Design for Nova 0/8+ at >256K sequence length + exactly 1 genuine Orion|Vega pass in 4. Older: 41-50% was a spent margin only when every passer is FP-genuine; above 50% and ZERO are broken. MEASURED across 77 runs / 11 batches: **8 of 10 valid batches OVER-solved, only 1 under-solved** -- over-solving is ~8x more likely, and it costs a REBUILD while a 0-solve is usually one surgical wave. **WHEN UNCERTAIN, BUILD IT HARDER.** Never treat 4/5 or 5/5 as a good batch; it is a difficulty failure.
+- **TWO WALLS, ONE CORRIDOR -- BOTH FAILURES ARE EQUALLY BROKEN.** [STALE pre-2026-10-10 bands] Design for Nova 0/4, Orion 1/4 with a >= 256K solve, Vega <= 1/4, then Trial QA (snapshot 2026-11-17 -- verify live). Older: 41-50% was a spent margin only when every passer is FP-genuine; above 50% and ZERO are broken. MEASURED across 77 runs / 11 batches: **8 of 10 valid batches OVER-solved, only 1 under-solved** -- over-solving is ~8x more likely, and it costs a REBUILD while a 0-solve is usually one surgical wave. **WHEN UNCERTAIN, BUILD IT HARDER.** Never treat 4/5 or 5/5 as a good batch; it is a difficulty failure.
 - **THE AUTHORSHIP LAW: DIFFICULTY IS INVENTED, NEVER FOUND.** No repo is a bad repo -- difficulty belongs to THE FEATURE YOU DESIGN. "This repo isn't hard enough" is BANNED; a 100% batch means YOU DID NOT BUILD A WALL. Inject it with 2-3 CONSTRUCTION MOVES (order-of-resolution, shape-sensitivity, composition corner, identity-aliasing, preservation-through-mutation, semantic accounting, atomicity-from-non-default, multi-target reach), MEASURE each against a plausible-wrong variant, then DISCLOSE it so it stays solvable.
 - **NEVER PIVOT THE REPO -- THE FEATURE IS THE PROBLEM.** If agents solve it easily, study WHY and strengthen with legitimate complexity, or pivot the FEATURE inside the SAME repo. NO ITERATION LIMIT: failure is INPUT, not a stopping condition. WE DO NOT SETTLE.
 - **THE DIVERGENCE-SELECTION LAW:** invent the candidate walls, then MANUFACTURE 2-3 real implementations and gate ONLY where they actually DIFFER. **Where they agree there is no wall to build.**
